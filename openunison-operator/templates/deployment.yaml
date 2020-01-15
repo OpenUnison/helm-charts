@@ -1,0 +1,77 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: openunison-operator
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: openunison-operator
+  name: openunison-operator
+  namespace: {{ .Release.Namespace }}
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: openunison-operator
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: openunison-operator
+    spec:
+      containers:
+      - env:
+        - name: JAVA_OPTS
+          value: -Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        image: docker.io/tremolosecurity/openunison-k8s-operator
+        command:
+        - java
+        - -jar
+        - /usr/local/openunison/javascript-operator.jar
+        - -tokenPath
+        - /var/run/secrets/kubernetes.io/serviceaccount/token
+        - -rootCaPath
+        - /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        - -kubernetesURL
+        - https://kubernetes.default.svc.cluster.local
+        - -namespace
+        - NAMESPACE
+        - -apiGroup
+        - openunison.tremolo.io/v1
+        - -objectType
+        - openunisons
+        - -jsPath
+        - /usr/local/openunison/js
+        - -configMaps
+        - /etc/extraMaps
+        imagePullPolicy: Always
+        name: openunison-operator
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /etc/extraMaps
+          name: extra-maps
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      serviceAccount: openunison-operator
+      volumes:
+        - name: extra-maps
+          emptyDir: {}
