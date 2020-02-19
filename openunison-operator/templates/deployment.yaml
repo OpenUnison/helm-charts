@@ -32,6 +32,8 @@ spec:
     spec:
       containers:
       - env:
+        - name: EXTRA_JS
+          value: /usr/local/openunison/js-external
         - name: JAVA_OPTS
           value: -Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom
         - name: NAMESPACE
