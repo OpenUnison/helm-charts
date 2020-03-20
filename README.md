@@ -34,7 +34,8 @@ Next, update `values.yaml` for your environment:
 | Property | Description |
 | -------- | ----------- |
 | network.openunison_host | The host name for OpenUnison.  This is what user's will put into their browser to login to Kubernetes |
-| network.dashboard_host | The host name for the dashboard.  This is what users will put into the browser to access to the dashboard. **NOTE:** `network.openunison_host` and `network.dashboard_host` **MUST** share the same DNS suffix. Both `network.openunison_host` and `network.dashboard_host` **MUST** point to OpenUnison |
+| network.dashboard_host | The host name for the dashboard.  This is what users will put into the browser to access to the dashboard. **NOTE:** `network.openunison_host` and `network.dashboard_host` Both `network.openunison_host` and `network.dashboard_host` **MUST** point to OpenUnison |
+| network.api_server_host | The host name to use for the api server reverse proxy.  This is what `kubectl` will interact with to access your cluster. **NOTE:** `network.openunison_host` and `network.dashboard_host` |
 | network.k8s_url | The URL for the Kubernetes API server | 
 | network.session_inactivity_timeout_seconds | The number of seconds of inactivity before the session is terminated, also the length of the refresh token's session |
 | active_directory.base | The search base for Active Directory |

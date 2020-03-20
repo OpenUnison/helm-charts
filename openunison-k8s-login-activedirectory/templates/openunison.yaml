@@ -1,3 +1,31 @@
+{{ if eq .Values.enable_impersonation true }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: impersonator
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - users
+  - groups
+  verbs:
+  - impersonate
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: orchestra-impersonator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: impersonator
+subjects:
+- kind: ServiceAccount
+  name: openunison-orchestra
+  namespace: {{ .Release.Namespace }}
+{{ end }}
 ---
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
@@ -69,6 +97,10 @@ spec:
       name: {{ .Values.network.openunison_host }}
     - env_var: K8S_DASHBOARD_HOST
       name: {{ .Values.network.dashboard_host }}
+    {{ if eq .Values.enable_impersonation true }}
+    - env_var: K8S_API_HOST
+      name: {{ .Values.network.api_server_host }}
+    {{ end }}
     secret_name: ou-tls-certificate
   key_store:
     update_controller:
@@ -102,7 +134,10 @@ spec:
             server_name: {{ .Values.network.openunison_host }}
             sign_by_k8s_ca: false
             subject_alternative_names:
-              - {{ .Values.network.dashboard_host }} 
+              - {{ .Values.network.dashboard_host }}
+              {{ if eq .Values.enable_impersonation true }}
+              - {{ .Values.network.api_server_host }}
+              {{ end }} 
           import_into_ks: certificate
           name: unison-ca
           tls_secret_name: ou-tls-certificate
@@ -175,7 +210,9 @@ spec:
     - name: K8S_DASHBOARD_NAMESPACE
       value: {{ .Values.dashboard.namespace }}
     - name: K8S_CLUSTER_NAME
-      values: {{ .Values.k8s_cluster_name }}
+      value: {{ .Values.k8s_cluster_name }}
+    - name: K8S_IMPERSONATION
+      value: {{ .Values.enable_impersonation | quote }}
   openunison_network_configuration:
     activemq_dir: "/tmp/amq"
     allowed_client_names: []
