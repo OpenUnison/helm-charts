@@ -57,6 +57,7 @@ Next, update `values.yaml` for your environment:
 | dashboard.service_name | The name of the service object for the dashboard |
 | k8s_cluster_name | The name of the cluster to use in the `./kube-config`.  Defaults to `kubernetes` |
 | image | The name of the image to use |
+| monitoring.prometheus_service_account | The prometheus service account to authorize access to the /monitoring endpoint |
 
 Additionally, add a base 64 encoded PEM certificate to your values under `trusted_certs` for `pem_b64`.  This will allow OpenUnison to talk to Active Directory using TLS.
 

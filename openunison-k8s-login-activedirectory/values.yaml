@@ -29,6 +29,9 @@ trusted_certs:
   - name: ldaps
     pem_b64: SDFGSDFGHDFHSDFGSDGSDFGDS
 
+monitoring:
+  prometheus_service_account: system:serviceaccount:monitoring:prometheus-k8s
+
 active_directory:
   base: cn=users,dc=ent2k12,dc=domain,dc=com
   host: "192.168.2.75"
