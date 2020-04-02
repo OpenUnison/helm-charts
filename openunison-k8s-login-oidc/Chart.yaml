@@ -1,0 +1,28 @@
+apiVersion: v2
+name: openunison-k8s-login-oidc
+description: A chart for deploying the Orchestra login portal for OpenID Connect
+
+# A chart can be either an 'application' or a 'library' chart.
+#
+# Application charts are a collection of templates that can be packaged into versioned archives
+# to be deployed.
+#
+# Library charts provide useful utilities or functions for the chart developer. They're included as
+# a dependency of application charts to inject those utilities and functions into the rendering
+# pipeline. Library charts do not define any templates and therefore cannot be deployed.
+type: application
+
+# This is the chart version. This version number should be incremented each time you make changes
+# to the chart and its templates, including the app version.
+version: 1.0.0
+
+# This is the version number of the application being deployed. This version number should be
+# incremented each time you make changes to the application.
+appVersion: 1.0.18
+home: https://github.com/OpenUnison/openunison-k8s-login-oidc
+icon: https://drive.google.com/open?id=1k3mhr9cVcFbDTRSSMRo_eKFfKISRVPwt
+sources:
+  - https://github.com/OpenUnison/openunison-k8s-login-oidc
+  - https://github.com/OpenUnison/helm-charts
+maintainers:
+  - name: mlbiam 

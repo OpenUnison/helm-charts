@@ -195,18 +195,6 @@ spec:
       {{ else }}
       value: {{ .Values.network.k8s_url }}
       {{ end }}
-    - name: AD_BASE_DN
-      value: {{ .Values.active_directory.base }}
-    - name: AD_HOST
-      value: {{ .Values.active_directory.host }}
-    - name: AD_PORT
-      value: {{ .Values.active_directory.port | quote }}
-    - name: AD_BIND_DN
-      value: {{ .Values.active_directory.bind_dn }}
-    - name: AD_CON_TYPE
-      value: {{ .Values.active_directory.con_type }}
-    - name: SRV_DNS
-      value: {{ .Values.active_directory.srv_dns | quote }}
     - name: SESSION_INACTIVITY_TIMEOUT_SECONDS
       value: {{ .Values.network.session_inactivity_timeout_seconds | quote }}
     - name: MYVD_CONFIG_PATH
@@ -219,6 +207,30 @@ spec:
       value: {{ .Values.enable_impersonation | quote }}
     - name: PROMETHEUS_SERVICE_ACCOUNT
       value: {{ .Values.monitoring.prometheus_service_account}}
+    - name: OIDC_CLIENT_ID
+      value: {{ .Values.oidc.client_id }}
+    - name: OIDC_IDP_AUTH_URL
+      value: {{ .Values.oidc.auth_url }}
+    - name: OIDC_IDP_TOKEN_URL
+      value: {{ .Values.oidc.token_url }}
+    - name: OIDC_IDP_LIMIT_DOMAIN
+      value: {{ .Values.oidc.domain | quote }}
+    - name: SUB_CLAIM
+      value: {{ .Values.oidc.claims.sub }}
+    - name: EMAIL_CLAIM
+      value: {{ .Values.oidc.claims.email }}
+    - name: GIVEN_NAME_CLAIM
+      value: {{ .Values.oidc.claims.given_name }}
+    - name: FAMILY_NAME_CLAIM
+      value: {{ .Values.oidc.claims.family_name }}
+    - name: DISPLAY_NAME_CLAIM
+      value: {{ .Values.oidc.claims.display_name }}
+    - name: GROUPS_CLAIM
+      value: {{ .Values.oidc.claims.groups }}
+    - name: OIDC_USER_IN_IDTOKEN
+      value: {{ .Values.oidc.user_in_idtoken | quote}}
+    - name: OIDC_IDP_USER_URL
+      value: {{ .Values.oidc.userinfo_url | quote }}
   openunison_network_configuration:
     activemq_dir: "/tmp/amq"
     allowed_client_names: []
@@ -241,9 +253,9 @@ spec:
     secure_port: 8443
   replicas: 1
   secret_data:
-    - AD_BIND_PASSWORD
     - K8S_DB_SECRET
     - unisonKeystorePassword
+    - OIDC_CLIENT_SECRET
   source_secret: orchestra-secrets-source
   image: {{ .Values.image }}
 ---
@@ -294,3 +306,31 @@ subjects:
 - kind: ServiceAccount
   name: openunison-orchestra
   namespace: openunison
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: openunison-cr-update
+  namespace: {{ .Release.Namespace }}
+rules:
+- apiGroups:
+  - openunison.tremolo.io
+  resources:
+  - openunisons
+  - users
+  verbs:
+  - '*'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: openunison-cr-update
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: openunison-cr-update
+subjects:
+- kind: ServiceAccount
+  name: openunison-orchestra
+  namespace: {{ .Release.Namespace }}
