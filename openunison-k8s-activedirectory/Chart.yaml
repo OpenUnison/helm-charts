@@ -1,6 +1,6 @@
 apiVersion: v2
 name: openunison-k8s-activedirectory
-description: A chart for deploying the OpenUnison portal for Active Directory and LDAP
+description: A chart for deploying the Orchestra identity and automation portal for Active Directory and LDAP
 
 # A chart can be either an 'application' or a 'library' chart.
 #
@@ -18,4 +18,11 @@ version: 1.0.0
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application.
-appVersion: 1.0.0
+appVersion: 1.0.18
+home: https://github.com/OpenUnison/openunison-k8s-activedirectory
+icon: https://drive.google.com/open?id=1k3mhr9cVcFbDTRSSMRo_eKFfKISRVPwt
+sources:
+  - https://github.com/OpenUnison/openunison-k8s-activedirectory
+  - https://github.com/OpenUnison/helm-charts
+maintainers:
+  - name: mlbiam 

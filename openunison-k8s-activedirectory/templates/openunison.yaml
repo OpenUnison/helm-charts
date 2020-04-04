@@ -1,3 +1,31 @@
+{{ if eq .Values.enable_impersonation true }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: impersonator
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - users
+  - groups
+  verbs:
+  - impersonate
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: orchestra-impersonator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: impersonator
+subjects:
+- kind: ServiceAccount
+  name: openunison-orchestra
+  namespace: {{ .Release.Namespace }}
+{{ end }}
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -111,6 +139,10 @@ spec:
       name: {{ .Values.network.openunison_host }}
     - env_var: K8S_DASHBOARD_HOST
       name: {{ .Values.network.dashboard_host }}
+    {{ if eq .Values.enable_impersonation true }}
+    - env_var: K8S_API_HOST
+      name: {{ .Values.network.api_server_host }}
+    {{ end }}
     secret_name: ou-tls-certificate
   key_store:
     update_controller:
@@ -145,6 +177,9 @@ spec:
             sign_by_k8s_ca: false
             subject_alternative_names:
               - {{ .Values.network.dashboard_host }} 
+              {{ if eq .Values.enable_impersonation true }}
+              - {{ .Values.network.api_server_host }}
+              {{ end }} 
           import_into_ks: certificate
           name: unison-ca
           tls_secret_name: ou-tls-certificate
@@ -224,7 +259,11 @@ spec:
     {{ end }}
   non_secret_data: 
     - name: K8S_URL
+      {{ if eq .Values.enable_impersonation true }}
+      value: https://{{ .Values.network.api_server_host }}
+      {{ else }}
       value: {{ .Values.network.k8s_url }}
+      {{ end }}
     - name: AD_BASE_DN
       value: {{ .Values.active_directory.base }}
     - name: AD_HOST
@@ -267,6 +306,10 @@ spec:
       value: {{ .Values.smtp.from }}
     - name: SMTP_TLS
       value: {{ .Values.smtp.tls | quote }}
+    - name: K8S_IMPERSONATION
+      value: {{ .Values.enable_impersonation | quote }}
+    - name: PROMETHEUS_SERVICE_ACCOUNT
+      value: {{ .Values.monitoring.prometheus_service_account}}
   openunison_network_configuration:
     activemq_dir: "/tmp/amq"
     allowed_client_names: []
@@ -530,4 +573,38 @@ data:
                            --oidc-username-claim=sub
                            --oidc-groups-claim=groups
                            --oidc-ca-file=/etc/kubernetes/pki/ou-ca.pem
-
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations:
+    audit2rbac.liggitt.net/version: v0.7.0
+  labels:
+    audit2rbac.liggitt.net/generated: "true"
+    audit2rbac.liggitt.net/user: system-serviceaccount-openunison-openunison-orchestra
+  name: audit2rbac:system:serviceaccount:openunison:openunison-orchestra
+rules:
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
+    audit2rbac.liggitt.net/version: v0.7.0
+  labels:
+    audit2rbac.liggitt.net/generated: "true"
+    audit2rbac.liggitt.net/user: system-serviceaccount-openunison-openunison-orchestra
+  name: audit2rbac:system:serviceaccount:openunison:openunison-orchestra
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: audit2rbac:system:serviceaccount:openunison:openunison-orchestra
+subjects:
+- kind: ServiceAccount
+  name: openunison-orchestra
+  namespace: openunison
