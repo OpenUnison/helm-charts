@@ -1,6 +1,6 @@
 apiVersion: v2
 name: openunison-k8s-login-oidc
-description: A chart for deploying the Orchestra login portal for OpenID Connect
+description: Use OpnID Connect to authenticate to your cluster and dashboard using OpenUnison Orchestra
 
 # A chart can be either an 'application' or a 'library' chart.
 #

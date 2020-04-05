@@ -1,6 +1,6 @@
 apiVersion: v2
 name: openunison-k8s-login-github
-description: A chart for deploying the Orchestra login portal for GitHub
+description: Use GitHub to authenticate to your cluster and dashboard using OpenUnison Orchestra
 
 # A chart can be either an 'application' or a 'library' chart.
 #
