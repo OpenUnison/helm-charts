@@ -19,3 +19,12 @@ version: 1.0.0
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application.
 appVersion: 1.0.0
+
+appVersion: 1.0.18
+home: https://github.com/TremoloSecurity/openunison-k8s-operator
+icon: https://drive.google.com/open?id=1k3mhr9cVcFbDTRSSMRo_eKFfKISRVPwt
+sources:
+  - https://github.com/TremoloSecurity/openunison-k8s-operator
+  - https://github.com/OpenUnison/helm-charts
+maintainers:
+  - name: mlbiam 

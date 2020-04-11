@@ -1,6 +1,6 @@
 apiVersion: v2
-name: openunison-k8s-login-activedirectory
-description: Use Active Directory or LDAP to authenticate to your cluster with kubectl and dashboard using OpenUnison Orchestra.
+name: openunison-k8s-login-oidc
+description: Use OpnID Connect to authenticate to your cluster with kubectl and dashboard using OpenUnison Orchestra.
 
 # A chart can be either an 'application' or a 'library' chart.
 #
@@ -19,10 +19,10 @@ version: 1.0.0
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application.
 appVersion: 1.0.18
-home: https://github.com/OpenUnison/openunison-k8s-login-activedirectory
+home: https://github.com/OpenUnison/openunison-k8s-login-oidc
 icon: https://drive.google.com/open?id=1k3mhr9cVcFbDTRSSMRo_eKFfKISRVPwt
 sources:
-  - https://github.com/OpenUnison/openunison-k8s-login-activedirectory
+  - https://github.com/OpenUnison/openunison-k8s-login-oidc
   - https://github.com/OpenUnison/helm-charts
 maintainers:
   - name: mlbiam 
