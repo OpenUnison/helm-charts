@@ -298,6 +298,32 @@ spec:
       value: {{ .Values.enable_impersonation | quote }}
     - name: PROMETHEUS_SERVICE_ACCOUNT
       value: {{ .Values.monitoring.prometheus_service_account}}
+    - name: OIDC_CLIENT_ID
+      value: {{ .Values.oidc.client_id }}
+    - name: OIDC_IDP_AUTH_URL
+      value: {{ .Values.oidc.auth_url }}
+    - name: OIDC_IDP_TOKEN_URL
+      value: {{ .Values.oidc.token_url }}
+    - name: OIDC_IDP_LIMIT_DOMAIN
+      value: {{ .Values.oidc.domain | quote }}
+    - name: SUB_CLAIM
+      value: {{ .Values.oidc.claims.sub }}
+    - name: EMAIL_CLAIM
+      value: {{ .Values.oidc.claims.email }}
+    - name: GIVEN_NAME_CLAIM
+      value: {{ .Values.oidc.claims.given_name }}
+    - name: FAMILY_NAME_CLAIM
+      value: {{ .Values.oidc.claims.family_name }}
+    - name: DISPLAY_NAME_CLAIM
+      value: {{ .Values.oidc.claims.display_name }}
+    - name: GROUPS_CLAIM
+      value: {{ .Values.oidc.claims.groups }}
+    - name: OIDC_USER_IN_IDTOKEN
+      value: {{ .Values.oidc.user_in_idtoken | quote}}
+    - name: OIDC_IDP_USER_URL
+      value: {{ .Values.oidc.userinfo_url | quote }}
+    - name: OIDC_SCOPES
+      value: {{ .Values.oidc.scopes }}
   openunison_network_configuration:
     activemq_dir: "/tmp/amq"
     allowed_client_names: []
@@ -320,23 +346,11 @@ spec:
     secure_port: 8443
   replicas: 1
   secret_data:
+    - OIDC_CLIENT_SECRET
     - K8S_DB_SECRET
     - unisonKeystorePassword
     - SMTP_PASSWORD
     - OU_JDBC_PASSWORD
-  saml_remote_idp:
-    - mapping:
-        encryption_cert_alias: idp-saml2-enc
-        entity_id: IDP_ENTITY_ID
-        logout_url: IDP_LOGOUT
-        post_url: IDP_POST
-        redirect_url: IDP_REDIR
-        signing_cert_alias: idp-saml2-sig
-      source: {{ $length := len .Values.saml.idp_url }} {{ if gt $length 0 }}
-        url: {{ .Values.saml.idp_url }}
-{{ else }}
-        xml: {{ .Values.saml.metadata_xml_b64 }}
-{{ end }}
   source_secret: orchestra-secrets-source
   image: {{ .Values.image }}
   run_sql: |-

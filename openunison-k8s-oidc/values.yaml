@@ -12,7 +12,8 @@ cert_template:
   st: "State of Cluster"
   c: "MyCountry"
 
-image: "docker.io/tremolosecurity/openunison-k8s-login-oidc:latest"
+image: "docker.io/tremolosecurity/openunison-k8s-idm-oidc:latest"
+amq_image: "docker.io/tremolosecurity/activemq-docker:latest"
 myvd_config_path: "WEB-INF/myvd.conf"
 k8s_cluster_name: kubernetes
 enable_impersonation: false
@@ -25,12 +26,11 @@ dashboard:
 certs:
   use_k8s_cm: false
 
-trusted_certs:
-  - name: idp
-    pem_b64: SDFGSDFGHDFHSDFGSDGSDFGDS
+#trusted_certs: []
 
-monitoring:
-  prometheus_service_account: system:serviceaccount:monitoring:prometheus-k8s
+trusted_certs:
+  - name: idp-tls
+    pem_b64: SDFGSDFGHDFHSDFGSDGSDFGDS
 
 oidc:
   client_id: myid
@@ -47,4 +47,21 @@ oidc:
     family_name: family_name
     display_name: name
     groups: groups
-       
+
+database:
+  hibernate_dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+  quartz_dialect: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+  driver: com.mysql.jdbc.Driver
+  url: jdbc:mysql://dbs.tremolo.lan:3308/unison
+  user: root
+  validation: SELECT 1
+
+smtp:
+  host: smtp.gmail.com
+  port: 587
+  user: donotreply@domain.com
+  from: donotreply@domain.com
+  tls: true
+
+monitoring:
+  prometheus_service_account: system:serviceaccount:monitoring:prometheus-k8s

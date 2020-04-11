@@ -231,6 +231,8 @@ spec:
       value: {{ .Values.oidc.user_in_idtoken | quote}}
     - name: OIDC_IDP_USER_URL
       value: {{ .Values.oidc.userinfo_url | quote }}
+    - name: OIDC_SCOPES
+      value: {{ .Values.oidc.scopes }}
   openunison_network_configuration:
     activemq_dir: "/tmp/amq"
     allowed_client_names: []

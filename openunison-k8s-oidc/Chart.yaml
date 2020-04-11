@@ -1,6 +1,6 @@
 apiVersion: v2
-name: openunison-k8s-oidc
-description: Use SAML2 to authenticate to your cluster and dashboard using OpenUnison Orchestra
+name: openunison-k8s-activedirectory
+description: Use OpenID Connect to authenticate to your cluster and dashboard using OpenUnison Orchestra
 
 # A chart can be either an 'application' or a 'library' chart.
 #
@@ -19,10 +19,10 @@ version: 1.0.0
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application.
 appVersion: 1.0.18
-home: https://github.com/OpenUnison/openunison-k8s-saml2
+home: https://github.com/OpenUnison/openunison-k8s-idm-oidc
 icon: https://drive.google.com/open?id=1k3mhr9cVcFbDTRSSMRo_eKFfKISRVPwt
 sources:
-  - https://github.com/OpenUnison/openunison-k8s-saml2
+  - https://github.com/OpenUnison/openunison-k8s-idm-oidc
   - https://github.com/OpenUnison/helm-charts
 maintainers:
   - name: mlbiam 

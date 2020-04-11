@@ -1,6 +1,6 @@
 apiVersion: v2
 name: openunison-k8s-activedirectory
-description: Use Active Directory or LDAP to authenticate to your cluster and dashboard using OpenUnison Orchestra
+description: An automation portal for Kubernetes providing authentication via Active Directory / LDAP and self service for creating namespaces.
 
 # A chart can be either an 'application' or a 'library' chart.
 #
