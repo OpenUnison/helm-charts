@@ -1,6 +1,6 @@
 apiVersion: v2
 name: openunison-k8s-login-github
-description: Use GitHub to authenticate to your cluster and dashboard using OpenUnison Orchestra
+description: Use GitHub to authenticate to your cluster with kubectl and dashboard using OpenUnison Orchestra.
 
 # A chart can be either an 'application' or a 'library' chart.
 #

@@ -1,6 +1,6 @@
 apiVersion: v2
-name: openunison-k8s-activedirectory
-description: Use OpenID Connect to authenticate to your cluster and dashboard using OpenUnison Orchestra
+name: openunison-k8s-oidc
+description: An automation portal for Kubernetes providing authentication via OpenID Connect and self service for creating namespaces and granting access to namespaces based on an approval based workflow.
 
 # A chart can be either an 'application' or a 'library' chart.
 #

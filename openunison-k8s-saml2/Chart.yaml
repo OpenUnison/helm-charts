@@ -1,6 +1,6 @@
 apiVersion: v2
-name: openunison-k8s-oidc
-description: Use SAML2 to authenticate to your cluster and dashboard using OpenUnison Orchestra
+name: openunison-k8s-saml2
+description: An automation portal for Kubernetes providing authentication via SAML2 and self service for creating namespaces and granting access to namespaces based on an approval based workflow.
 
 # A chart can be either an 'application' or a 'library' chart.
 #
