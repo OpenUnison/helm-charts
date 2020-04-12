@@ -20,7 +20,7 @@ k8s_cluster_name: kubernetes
 enable_impersonation: true
 
 dashboard:
-  namespace: "kube-system"
+  namespace: "kubernetes-dashboard"
   cert_name: "kubernetes-dashboard-certs"
   label: "k8s-app=kubernetes-dashboard"
   service_name: kubernetes-dashboard
