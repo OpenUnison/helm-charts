@@ -104,7 +104,7 @@ spec:
     secret_name: ou-tls-certificate
   key_store:
     update_controller:
-      image: docker.io/tremolosecurity/kubernetes-artifact-deployment:1.1.0
+      image: {{ .Values.cert_update_image | default "docker.io/tremolosecurity/kubernetes-artifact-deployment:1.1.0" }}
       schedule: 0 2 * * *
       days_to_expire: 10
     key_pairs:
