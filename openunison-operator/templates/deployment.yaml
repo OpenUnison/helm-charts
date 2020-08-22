@@ -35,7 +35,7 @@ spec:
         - name: EXTRA_JS
           value: /usr/local/openunison/js-external
         - name: JAVA_OPTS
-          value: -Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom
+          value: -Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom -Dsun.net.inetaddr.ttl=0
         - name: NAMESPACE
           valueFrom:
             fieldRef:

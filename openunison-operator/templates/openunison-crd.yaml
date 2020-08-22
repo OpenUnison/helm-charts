@@ -344,4 +344,147 @@ spec:
                                     type: string
                                   key_name:
                                     type: string
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: trusts.openunison.tremolo.io
+spec:
+  group: openunison.tremolo.io
+  versions:
+    - name: v1
+      served: true
+      storage: true
+  version: v1
+  scope: Namespaced
+  names:
+    plural: trusts
+    singular: trust
+    kind: Trust
+    shortNames:
+    - trust
+  validation:
+   # openAPIV3Schema is the schema for validating custom objects.
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            clientId:
+              type: string
+            clientSecret:
+              type: object
+              properties:
+                secretName:
+                  type: string
+                keyName:
+                  type: string
+            publicEndpoint:
+              type: boolean
+            redirectURI:
+              type: array
+              items:
+                type: string
+            codeLastMileKeyName:
+              type: string
+            authChainName:
+              type: string
+            codeTokenSkewMilis:
+              type: integer
+            accessTokenTimeToLive:
+              type: integer
+            accessTokenSkewMillis:
+              type: integer
+            signedUserInfo:
+              type: boolean
+            verifyRedirect:
+              type: boolean
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: portalurls.openunison.tremolo.io
+spec:
+  group: openunison.tremolo.io
+  versions:
+    - name: v1
+      served: true
+      storage: true
+  version: v1
+  scope: Namespaced
+  names:
+    plural: portalurls
+    singular: portalurl
+    kind: PortalUrl
+    shortNames:
+    - portalurl
+  validation:
+   # openAPIV3Schema is the schema for validating custom objects.
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            label:
+              type: string
+            url:
+              type: string
+            org:
+              type: string
+            icon:
+              type: string
+            azRules:
+              type: array
+              items:
+                type: object
+                properties:
+                  scope:
+                    type: string
+                  constraint:
+                    type: string
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: orgs.openunison.tremolo.io
+spec:
+  group: openunison.tremolo.io
+  versions:
+    - name: v1
+      served: true
+      storage: true
+  version: v1
+  scope: Namespaced
+  names:
+    plural: orgs
+    singular: org
+    kind: Org
+    shortNames:
+    - orgs
+  validation:
+   # openAPIV3Schema is the schema for validating custom objects.
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            description:
+              type: string
+            uuid:
+              type: string
+            parent:
+              type: string
+            showInPortal:
+              type: boolean
+            showInRequestAccess:
+              type: boolean
+            showInReports:
+              type: boolean
+            azRules:
+              type: array
+              items:
+                type: object
+                properties:
+                  scope:
+                    type: string
+                  constraint:
+                    type: string
+---
 {{ end }}

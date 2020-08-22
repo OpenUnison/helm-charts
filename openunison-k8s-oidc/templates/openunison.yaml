@@ -622,3 +622,57 @@ subjects:
 - kind: ServiceAccount
   name: openunison-orchestra
   namespace: openunison
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: openunison-secrets
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs:
+  - get
+  - list
+  - watch
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: openunison-secrets
+  namespace: {{ .Release.Namespace }}
+subjects:
+- kind: ServiceAccount
+  name: openunison-orchestra
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: openunison-secrets
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: openunison-trusts-get
+rules:
+- apiGroups: ["openunison.tremolo.io"]
+  resources: ["trusts","portalurls","orgs"]
+  verbs:
+  - get
+  - list
+  - watch
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: openunison-trusts-get
+  namespace: {{ .Release.Namespace }}
+subjects:
+- kind: ServiceAccount
+  name: openunison-orchestra
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: openunison-trusts-get
+  apiGroup: rbac.authorization.k8s.io
