@@ -82,7 +82,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 
 ---
-apiVersion: openunison.tremolo.io/v1
+apiVersion: openunison.tremolo.io/v2
 kind: OpenUnison
 metadata:
   name: orchestra
@@ -129,7 +129,7 @@ spec:
           import_into_ks: keypair
           name: unison-tls
         - create_data:
-            ca_cert: true
+            ca_cert: false
             key_size: 2048
             server_name: {{ .Values.network.openunison_host }}
             sign_by_k8s_ca: false

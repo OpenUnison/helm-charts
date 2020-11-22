@@ -217,6 +217,14 @@ spec:
           import_into_ks: keypair
           name: unison-saml2-rp-sig
         - create_data:
+            ca_cert: false
+            key_size: 2048
+            server_name: remote-k8s-idp-sig
+            sign_by_k8s_ca: false
+            subject_alternative_names: []
+          import_into_ks: keypair
+          name: remote-k8s-idp-sig
+        - create_data:
             {{ if .Values.certs.use_k8s_cm }}
             ca_cert: false
             {{ else }}
