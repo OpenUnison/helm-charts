@@ -2,7 +2,7 @@
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: orchestra-certs
+  name: orchestra-certs-{{ .Release.Name }}
 rules:
 - apiGroups:
   - certificates.k8s.io
@@ -15,7 +15,7 @@ rules:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: openunison-orchestra-cluster-administrators
+  name: openunison-orchestra-cluster-administrators-{{ .Release.Name }}
 subjects:
 - kind: ServiceAccount
   name: openunison-management-proxy
@@ -28,14 +28,14 @@ roleRef:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: orchestra-certs
+  name: orchestra-certs-{{ .Release.Name }}
 subjects:
 - kind: ServiceAccount
   name: openunison-operator
   namespace: {{ .Release.Namespace }}
 roleRef:
   kind: ClusterRole
-  name: orchestra-certs
+  name: orchestra-certs-{{ .Release.Name }}
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: openunison.tremolo.io/v2
@@ -168,7 +168,7 @@ metadata:
   labels:
     audit2rbac.liggitt.net/generated: "true"
     audit2rbac.liggitt.net/user: system-serviceaccount-openunison-openunison-orchestra
-  name: audit2rbac:system:serviceaccount:openunison:openunison-orchestra
+  name: audit2rbac:system:serviceaccount:openunison:openunison-orchestra-{{ .Release.Name }}
 rules:
 - apiGroups:
   - authentication.k8s.io
@@ -185,11 +185,11 @@ metadata:
   labels:
     audit2rbac.liggitt.net/generated: "true"
     audit2rbac.liggitt.net/user: system-serviceaccount-openunison-openunison-orchestra
-  name: audit2rbac:system:serviceaccount:openunison:openunison-orchestra
+  name: audit2rbac:system:serviceaccount:openunison:openunison-orchestra-{{ .Release.Name }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: audit2rbac:system:serviceaccount:openunison:openunison-orchestra
+  name: audit2rbac:system:serviceaccount:openunison:openunison-orchestra-{{ .Release.Name }}
 subjects:
 - kind: ServiceAccount
   name: openunison-orchestra

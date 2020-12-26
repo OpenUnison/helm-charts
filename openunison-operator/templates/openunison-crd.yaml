@@ -345,6 +345,23 @@ spec:
                                         type: string
                                       key_name:
                                         type: string
+            status:
+              type: object
+              properties:
+                conditions:
+                  properties:
+                    lastTransitionTime:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  type: object
+                digest:
+                  type: string
+                idpCertificateFingerprints:
+                  type: object
+                  additionalProperties: true   
     - name: v2
       served: true
       storage: true
@@ -446,6 +463,26 @@ spec:
                             type: string
                           value:
                             type: string
+                    pull_secret:
+                      type: string
+                    resources:
+                      type: object
+                      properties:
+                        requests:
+                          type: object
+                          properties:
+                            memory:
+                              type: string
+                            cpu:
+                              type: string
+                        limits:
+                          type: object
+                          properties:
+                            memory:
+                              type: string
+                            cpu:
+                              type: string
+
                     
                 non_secret_data:
                   type: array
@@ -641,6 +678,23 @@ spec:
                                         type: string
                                       key_name:
                                         type: string
+            status:
+              type: object
+              properties:
+                conditions:
+                  properties:
+                    lastTransitionTime:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  type: object
+                digest:
+                  type: string
+                idpCertificateFingerprints:
+                  type: object
+                  additionalProperties: true  
   scope: Namespaced
   names:
     plural: openunisons
@@ -666,6 +720,8 @@ spec:
             spec:
               type: object
               properties:
+                label:
+                  type: string
                 clientId:
                   type: string
                 clientSecret:
@@ -762,6 +818,8 @@ spec:
             spec:
               type: object
               properties:
+                label:
+                  type: string
                 description:
                   type: string
                 uuid:
@@ -791,4 +849,272 @@ spec:
     shortNames:
     - orgs
 ---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: targets.openunison.tremolo.io
+spec:
+  group: openunison.tremolo.io
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                className:
+                  type: string
+                params:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      value:
+                        type: string
+                secretParams:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      secretName:
+                        type: string
+                      secretKey:
+                        type: string
+                targetAttributes:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      source:
+                        type: string
+                      sourceType:
+                        type: string
+                        enum: 
+                        - static
+                        - user
+                        - custom
+                      targetType:
+                        type: string
+                        enum: 
+                        - string
+                        - int
+                        - long
+                        - date
+                        - timestamp
+  scope: Namespaced
+  names:
+    plural: targets
+    singular: target
+    kind: Target
+    shortNames:
+    - target     
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: workflows.openunison.tremolo.io
+spec:
+  group: openunison.tremolo.io
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                label:
+                  type: string
+                description:
+                  type: string
+                inList:
+                  type: boolean
+                orgId:
+                  type: string
+                dynamicConfiguration:
+                  type: object
+                  properties:
+                    dynamic:
+                      type: boolean
+                    className:
+                      type: string
+                    params:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                tasks:
+                  type: string
+  scope: Namespaced
+  names:
+    plural: workflows
+    singular: workflow
+    kind: Workflow
+    shortNames:
+    - workflow
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: reports.openunison.tremolo.io
+spec:
+  group: openunison.tremolo.io
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                groupBy:
+                  type: string
+                groupings:
+                  type: boolean
+                orgId:
+                  type: string
+                parameters:
+                  type: object
+                  properties:
+                    beginDate:
+                      type: boolean
+                    endDate:
+                      type: boolean
+                    userKey:
+                      type: boolean
+                    currentUser:
+                      type: boolean
+                sql:
+                  type: string
+                headerFields:
+                  type: array
+                  items:
+                    type: string
+                dataFields:
+                  type: array
+                  items:
+                    type: string
+  
+  scope: Namespaced
+  names:
+    plural: reports
+    singular: report
+    kind: Report
+    shortNames:
+    - report
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: oujobs.openunison.tremolo.io
+spec:
+  group: openunison.tremolo.io
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                cronSchedule:
+                  type: object
+                  properties:
+                    seconds:
+                      type: string
+                    minutes:
+                      type: string
+                    hours:
+                      type: string
+                    dayOfMonth:
+                      type: string
+                    month:
+                      type: string
+                    dayOfWeek:
+                      type: string
+                    year:
+                      type: string
+                className:
+                  type: string
+                group:
+                  type: string
+                params:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      value:
+                        type: string  
+  scope: Namespaced
+  names:
+    plural: oujobs
+    singular: oujob
+    kind: OUJob
+    shortNames:
+    - oujob
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: messagelisteners.openunison.tremolo.io
+spec:
+  group: openunison.tremolo.io
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                className:
+                  type: string
+                params:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      value:
+                        type: string
+  scope: Namespaced
+  names:
+    plural: messagelisteners
+    singular: messagelistener
+    kind: MessageListener
+    shortNames:
+    - msglstnr
 {{ end }}

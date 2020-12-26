@@ -25,5 +25,17 @@ trusted_certs:
 monitoring:
   prometheus_service_account: system:serviceaccount:monitoring:prometheus-k8s
 
-
-       
+network_policies:
+  enabled: true
+  ingress:
+    enabled: true
+    labels:
+      app.kubernetes.io/name: ingress-nginx
+  monitoring:
+    enabled: true
+    labels:
+      app.kubernetes.io/name: monitoring
+  apiserver:
+    enabled: false
+    labels:
+      app.kubernetes.io/name: kube-system
