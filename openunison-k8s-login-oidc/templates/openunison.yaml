@@ -82,7 +82,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 
 ---
-apiVersion: openunison.tremolo.io/v1
+apiVersion: openunison.tremolo.io/v2
 kind: OpenUnison
 metadata:
   name: orchestra
@@ -102,6 +102,17 @@ spec:
       name: {{ .Values.network.api_server_host }}
     {{ end }}
     secret_name: ou-tls-certificate
+    ingress_type: {{ .Values.network.ingress_type | default "nginx" }}
+    {{ $ingress_annotations := .Values.network.ingress_annotations }}
+    {{ $length := len $ingress_annotations }}
+    {{ if eq $length 0  }}
+    annoations: []
+    {{ else }}
+    annotations: {{ range $key,$value := $ingress_annotations }}
+    - name: {{ $key }}
+      value: {{ $value }}
+      {{ end }}
+    {{ end }}
   key_store:
     update_controller:
       image: {{ .Values.cert_update_image | default "docker.io/tremolosecurity/kubernetes-artifact-deployment:1.1.0" }}
@@ -123,18 +134,18 @@ spec:
         - create_data:
             ca_cert: true
             key_size: 2048
-            server_name: openunison.openunison.svc.cluster.local
+            server_name: openunison-{{ .Release.Name }}.openunison.svc
             sign_by_k8s_ca: {{ .Values.certs.use_k8s_cm }}
             subject_alternative_names: []
           import_into_ks: keypair
           name: unison-tls
         - create_data:
-            ca_cert: true
+            ca_cert: false
             key_size: 2048
             server_name: {{ .Values.network.openunison_host }}
             sign_by_k8s_ca: false
             subject_alternative_names:
-              - {{ .Values.network.dashboard_host }}
+              - {{ .Values.network.dashboard_host }} 
               {{ if eq .Values.enable_impersonation true }}
               - {{ .Values.network.api_server_host }}
               {{ end }} 
@@ -148,7 +159,7 @@ spec:
             ca_cert: true
             {{ end }}
             key_size: 2048
-            server_name: {{ .Values.dashboard.service_name }}.{{ .Values.dashboard.namespace }}.svc.cluster.local
+            server_name: {{ .Values.dashboard.service_name }}.{{ .Values.dashboard.namespace }}.svc
             sign_by_k8s_ca: {{ .Values.certs.use_k8s_cm }}
             subject_alternative_names: []
             target_namespace: {{ .Values.dashboard.namespace }}
@@ -233,6 +244,10 @@ spec:
       value: {{ .Values.oidc.userinfo_url | quote }}
     - name: OIDC_SCOPES
       value: {{ .Values.oidc.scopes }}
+    {{ range $key,$value := .Values.openunison.non_secret_data }}
+    - name: {{ $key }}
+      value: {{ $value }}
+      {{ end }}
   openunison_network_configuration:
     activemq_dir: "/tmp/amq"
     allowed_client_names: []
@@ -253,13 +268,59 @@ spec:
     secure_external_port: 443
     secure_key_alias: unison-tls
     secure_port: 8443
-  replicas: 1
+  replicas: {{ .Values.openunison.replicas }}
   secret_data:
     - K8S_DB_SECRET
     - unisonKeystorePassword
     - OIDC_CLIENT_SECRET
+    {{ range .Values.openunison.secrets }}
+    - {{ . }}
+    {{ end }}
   source_secret: orchestra-secrets-source
   image: {{ .Values.image }}
+  deployment_data:
+    tokenrequest_api:
+      enabled: {{ .Values.services.enable_tokenrequest | default false }}
+      audience: {{ .Values.services.token_request_audience | default "api" }}
+      expirationSeconds: {{ .Values.services.token_request_expiration_seconds | default 60000 }}
+    liveness_probe_command:
+    - /usr/local/openunison/bin/check_alive.py
+    readiness_probe_command:
+    - /usr/local/openunison/bin/check_alive.py
+    - "https://127.0.0.1:8443/auth/idp/k8sIdp/.well-known/openid-configuration"
+    - "issuer"
+    pull_secret: {{ .Values.services.pullSecret | quote }}
+    
+    {{ $length := len .Values.services.node_selectors }}
+    {{ if eq $length 0  }}
+    node_selectors: []
+    {{ else }}
+    node_selectors: {{ range $key,$value := .Values.services.node_selectors }}
+    - name: {{ $key }}
+      value: {{ $value }}
+      {{ end }}
+    {{ end }}
+    {{ if .Values.services.resources }}
+    resources:
+      {{ if .Values.services.resources.requests }}
+      requests:
+        {{ if .Values.services.resources.requests.memory }}
+          memory: {{ .Values.services.resources.requests.memory | quote }}
+        {{ end }}
+        {{ if .Values.services.resources.requests.cpu }}
+          cpu: {{ .Values.services.resources.requests.cpu | quote }}
+        {{ end }}
+      {{ end }}
+      {{ if .Values.services.resources.limits }}
+      limits:
+        {{ if .Values.services.resources.limits.memory }}
+          memory: {{ .Values.services.resources.limits.memory | quote }}
+        {{ end }}
+        {{ if .Values.services.resources.limits.cpu }}
+          cpu: {{ .Values.services.resources.limits.cpu | quote }}
+        {{ end }}
+      {{ end }}
+    {{ end }}
 ---
 apiVersion: v1
 kind: ConfigMap

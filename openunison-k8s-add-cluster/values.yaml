@@ -1,0 +1,43 @@
+cluster:
+  name: managed
+  label: Managed Cluster
+  description: A managed remote cluster
+  parent: B158BD40-0C1B-11E3-8FFD-0800200C9A66
+  az:
+    constraint: o=Tremolo
+    scope: dn
+  target:
+    url: https://k8sapi.apps.192.168.2.148.nip.io
+    base64_certificate: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUQrekNDQXVPZ0F3SUJBZ0lHQVhYOVRKY1pNQTBHQ1NxR1NJYjNEUUVCQ3dVQU1JR1VNU2t3SndZRFZRUUQKRENCck9ITmhjR2t1WVhCd2N5NHhPVEl1TVRZNExqSXVNVFE0TG01cGNDNXBiekVUTUJFR0ExVUVDd3dLUzNWaQpaWEp1WlhSbGN6RU9NQXdHQTFVRUNnd0ZUWGxQY21jeEV6QVJCZ05WQkFjTUNrMTVJRU5zZFhOMFpYSXhHVEFYCkJnTlZCQWdNRUZOMFlYUmxJRzltSUVOc2RYTjBaWEl4RWpBUUJnTlZCQVlUQ1UxNVEyOTFiblJ5ZVRBZUZ3MHkKTURFeE1qVXdNalEzTXpaYUZ3MHlNVEV4TWpVd01qUTNNelphTUlHVU1Ta3dKd1lEVlFRRERDQnJPSE5oY0drdQpZWEJ3Y3k0eE9USXVNVFk0TGpJdU1UUTRMbTVwY0M1cGJ6RVRNQkVHQTFVRUN3d0tTM1ZpWlhKdVpYUmxjekVPCk1Bd0dBMVVFQ2d3RlRYbFBjbWN4RXpBUkJnTlZCQWNNQ2sxNUlFTnNkWE4wWlhJeEdUQVhCZ05WQkFnTUVGTjAKWVhSbElHOW1JRU5zZFhOMFpYSXhFakFRQmdOVkJBWVRDVTE1UTI5MWJuUnllVENDQVNJd0RRWUpLb1pJaHZjTgpBUUVCQlFBRGdnRVBBRENDQVFvQ2dnRUJBS2pucUpFMXVKTGJSMXgxL2lDL3k0Y0EzMWFIT0pHcld1Z29iRTYyClRJNzFzclhndVhiMjRyWTNrTmVSMi8rOGE4aHMxUUkzOHVvbTZNU3kvdU5tbjBleUZiaHJLencwczJkenE3L1AKOWlHV3ZIZHdxYWpqbTBoVmJvOVVLOEN6V25IY09SOEJ4bUltRVRlYWhYTXIxN1NhZjlvS0JUOTFCaDNuZWErUQpWd2g2SXdCdlJ4WndVbUdPbnZjQ3l6NkYzL0xLRDFVR0FCblhyU0M1OVpucEVOZU0rZTBzalBRcUhvREthY3o2ClhTejdYN3BRYmtzSFFVc0J0dTR3eGFoRmM1cHZDZHR0QVlPQWFBSTJRMVFHc3VNZjBBczlQZms3OGFaeGZFYjkKM085Vkh4QSt4c2tsTVFHa3pRaFNyNFZKQkpxTGQ0MUxMM3F0ajFXRzZhcndvRGNDQXdFQUFhTlJNRTh3VFFZRApWUjBSQkVZd1JJSWdhemh6WVhCcExtRndjSE11TVRreUxqRTJPQzR5TGpFME9DNXVhWEF1YVcrQ0lHczRjMkZ3CmFTNWhjSEJ6TGpFNU1pNHhOamd1TWk0eE5EZ3VibWx3TG1sdk1BMEdDU3FHU0liM0RRRUJDd1VBQTRJQkFRQTIKMzg1Z0pFcEJHODlYNncrM2ZicG1mSW5QMndRdWQ3NGsxVkJMSjYyWGQzSW81MVg5MTJwWlh6d2N0cFMrWmZweQpOWmV1RTlJSnYzYklkeXJqcm04TThnSDJxcXVRWHhSblVIQzQ2dXkxeTc2WXBYV29BSlVLQ3dBRmo3V0VaTU9uCnZxODVyYmduL2dWWGl0ak9NOFM3aHMrdW1WeHJIb0xpa3h4RlF3eVlaRkR0cDQ5U21IT3QreXIvSkQrSWFGL1oKM241RldsSVg4MlNUdEV6dzFJRFozbHlyQTRMT0I3OGFHczR5V25GR3ZjT1YyQ1dPeW1MVUtTanlxUkVyNlJvUQptK1JjT2Y2RmRPbmVIc3NJZUtVbndzLzRxM3BzME1XUkRjWWY4VmdLcWhvR09lK2t0MGNoWWc1cHdzaTZFWUluCkhnN1AzZENYK3kyaEJMMStkK1NqCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0KCg==
+    useToken: true
+    tokenType: oidc
+    staticSecret:
+      secretName: orchestra-secrets-source
+      keyName: cluster-secret
+  admins:
+    enabled: true
+    az:
+      constraint: o=Tremolo
+      scope: dn
+  viewers:
+    enabled: true
+    az:
+      constraint: o=Tremolo
+      scope: dn
+  approvers:
+    az:
+      constraint: o=Tremolo
+      scope: dn
+  sso:
+    enabled: true
+    type: oidc
+    secret:
+      objectName: orchestra-secrets-source
+      key: managed-secret
+    portalHost: ksou.apps.192-168-2-140.nip.io
+    dashboardHost: k8sdb.apps.192-168-2-140.nip.io
+    az:
+      constraint: o=Tremolo
+      scope: dn
+    
+    

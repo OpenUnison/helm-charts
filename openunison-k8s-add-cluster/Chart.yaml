@@ -1,6 +1,6 @@
 apiVersion: v2
-name: openunison-k8s-login-github
-description: Use GitHub to authenticate to your cluster with kubectl and dashboard using OpenUnison Orchestra. github kubernetes authentication.
+name: openunison-k8s-add-cluster
+description: This chart adds a new cluster to an OpenUnison deployment for management and SSO
 
 # A chart can be either an 'application' or a 'library' chart.
 #
@@ -14,15 +14,15 @@ type: application
 
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
-version: 1.0.3
+version: 1.0.2
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application.
 appVersion: 1.0.20
-home: https://github.com/OpenUnison/openunison-k8s-login-github
+home: https://github.com/OpenUnison/openunison-k8s-activedirectory
 icon: https://nexus.tremolo.io/repository/images/shield.png
 sources:
-  - https://github.com/OpenUnison/openunison-k8s-login-github
+  - https://github.com/OpenUnison/openunison-k8s-activedirectory
   - https://github.com/OpenUnison/helm-charts
 maintainers:
   - name: mlbiam 

@@ -1,0 +1,197 @@
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: orchestra-certs-{{ .Release.Name }}
+rules:
+- apiGroups:
+  - certificates.k8s.io
+  resources:
+  - certificatesigningrequests
+  - certificatesigningrequests/approval
+  verbs:
+  - "*"
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: openunison-orchestra-cluster-administrators-{{ .Release.Name }}
+subjects:
+- kind: ServiceAccount
+  name: openunison-management-proxy
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: orchestra-certs-{{ .Release.Name }}
+subjects:
+- kind: ServiceAccount
+  name: openunison-operator
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: orchestra-certs-{{ .Release.Name }}
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: openunison.tremolo.io/v2
+kind: OpenUnison
+metadata:
+  name: management-proxy
+  namespace: {{ .Release.Namespace }}
+spec:
+  dest_secret: orchestra
+  enable_activemq: false
+  hosts:
+  - ingress_name: openunison
+    names:
+    - env_var: K8S_API_HOST
+      name: {{ .Values.services.api_server_host }}
+    secret_name: ou-tls-certificate
+    annotations: []
+  key_store:
+    update_controller:
+      image: {{ .Values.cert_update_image | default "docker.io/tremolosecurity/kubernetes-artifact-deployment:1.1.0" }}
+      schedule: 0 2 * * *
+      days_to_expire: 10
+    key_pairs:
+      create_keypair_template:
+      - name: ou
+        value: {{ .Values.cert_template.ou }}
+      - name: o
+        value: {{ .Values.cert_template.o }}
+      - name: l
+        value: {{ .Values.cert_template.l }}
+      - name: st
+        value: {{ .Values.cert_template.st }}
+      - name: c
+        value: {{ .Values.cert_template.c }}
+      keys: 
+        - create_data:
+            ca_cert: false
+            key_size: 2048
+            server_name: openunison.{{ .Release.Namespace }}.svc
+            sign_by_k8s_ca: {{ .Values.certs.use_k8s_cm }}
+            subject_alternative_names: []
+          import_into_ks: keypair
+          name: unison-tls
+        - create_data:
+            ca_cert: false
+            key_size: 2048
+            server_name: {{ .Values.services.api_server_host }}
+            sign_by_k8s_ca: false
+            subject_alternative_names:
+              - {{ .Values.services.api_server_host }}
+              
+          import_into_ks: certificate
+          name: unison-ca
+          tls_secret_name: ou-tls-certificate
+        - create_data:
+            ca_cert: true
+            key_size: 2048
+            server_name: unison-saml2-rp-sig
+            sign_by_k8s_ca: false
+            subject_alternative_names: []
+          import_into_ks: keypair
+          name: unison-saml2-rp-sig
+    static_keys: 
+    - name: session-unison
+      version: 1
+    - name: lastmile-oidc
+      version: 1
+    
+    {{ $length := len .Values.trusted_certs }}
+    {{ if eq $length 0 }}
+    trusted_certificates: []
+    {{ else }}
+    trusted_certificates: {{ range .Values.trusted_certs }}
+      - name: {{ .name }}
+        pem_data: {{ .pem_b64 }} {{ end }}
+    {{ end }}
+  non_secret_data: 
+    - name: PROMETHEUS_SERVICE_ACCOUNT
+      value: {{ .Values.monitoring.prometheus_service_account}}
+    - name: ISSUER_URL
+      value: {{ .Values.services.issuer_url }}
+    {{ if eq .Values.services.enable_tokenrequest true }}
+    - name: K8S_TOKEN_TYPE
+      value: tokenapi
+    {{ else }}
+    - name: K8S_TOKEN_TYPE
+      value: legacy
+    {{ end }}
+  openunison_network_configuration:
+    activemq_dir: "/tmp/amq"
+    allowed_client_names: []
+    ciphers:
+    - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+    - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+    - TLS_RSA_WITH_AES_256_GCM_SHA384
+    - TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384
+    - TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384
+    - TLS_DHE_RSA_WITH_AES_256_GCM_SHA384
+    client_auth: none
+    force_to_secure: true
+    open_external_port: 80
+    open_port: 8080
+    path_to_deployment: "/usr/local/openunison/work"
+    path_to_env_file: "/etc/openunison/ou.env"
+    quartz_dir: "/tmp/quartz"
+    secure_external_port: 443
+    secure_key_alias: unison-tls
+    secure_port: 8443
+  replicas: 1
+  secret_data:
+    - unisonKeystorePassword
+  source_secret: orchestra-secrets-source
+  image: {{ .Values.image }}
+  deployment_data:
+    tokenrequest_api:
+      enabled: {{ .Values.services.enable_tokenrequest }}
+      audience: {{ .Values.services.token_request_audience }}
+      expirationSeconds: {{ .Values.services.token_request_expiration_seconds }}
+    liveness_probe_command:
+    - /usr/local/openunison/bin/check_alive.py
+    readiness_probe_command:
+    - /usr/local/openunison/bin/check_alive.py
+    node_selectors: []
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations:
+    audit2rbac.liggitt.net/version: v0.7.0
+  labels:
+    audit2rbac.liggitt.net/generated: "true"
+    audit2rbac.liggitt.net/user: system-serviceaccount-openunison-openunison-orchestra
+  name: audit2rbac:system:serviceaccount:openunison:openunison-orchestra-{{ .Release.Name }}
+rules:
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
+    audit2rbac.liggitt.net/version: v0.7.0
+  labels:
+    audit2rbac.liggitt.net/generated: "true"
+    audit2rbac.liggitt.net/user: system-serviceaccount-openunison-openunison-orchestra
+  name: audit2rbac:system:serviceaccount:openunison:openunison-orchestra-{{ .Release.Name }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: audit2rbac:system:serviceaccount:openunison:openunison-orchestra-{{ .Release.Name }}
+subjects:
+- kind: ServiceAccount
+  name: openunison-orchestra
+  namespace: openunison
+---

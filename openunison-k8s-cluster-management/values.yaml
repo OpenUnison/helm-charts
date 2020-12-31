@@ -1,0 +1,3 @@
+primaryCluster:
+  name: Control Plane Cluster
+  description: Central control plane cluster used to manage other clusters
