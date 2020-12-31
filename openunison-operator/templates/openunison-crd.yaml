@@ -250,7 +250,7 @@ spec:
                             type: string
                           logout_url:
                             type: string
-                          signing_cert_alis:
+                          signing_cert_alias:
                             type: string
                           encryption_cert_alias:
                             type: string
@@ -576,7 +576,7 @@ spec:
                             type: string
                           logout_url:
                             type: string
-                          signing_cert_alis:
+                          signing_cert_alias:
                             type: string
                           encryption_cert_alias:
                             type: string

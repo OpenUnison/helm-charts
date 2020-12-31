@@ -63,7 +63,7 @@ network_policies:
     labels:
       app.kubernetes.io/name: monitoring
   apiserver:
-    enabled: true
+    enabled: false
     labels:
       app.kubernetes.io/name: kube-system
 
@@ -75,5 +75,6 @@ services:
   pullSecret: ""
 
 openunison:
+  replicas: 1
   non_secret_data: {}
   secrets: []

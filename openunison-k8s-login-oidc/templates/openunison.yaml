@@ -268,7 +268,7 @@ spec:
     secure_external_port: 443
     secure_key_alias: unison-tls
     secure_port: 8443
-  replicas: 1
+  replicas: {{ .Values.openunison.replicas }}
   secret_data:
     - K8S_DB_SECRET
     - unisonKeystorePassword

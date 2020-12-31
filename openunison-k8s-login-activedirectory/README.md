@@ -93,6 +93,8 @@ Copy `values.yaml` (https://raw.githubusercontent.com/OpenUnison/helm-charts/mas
 | network.api_server_host | The host name to use for the api server reverse proxy.  This is what `kubectl` will interact with to access your cluster. **NOTE:** `network.openunison_host` and `network.dashboard_host` |
 | network.k8s_url | The URL for the Kubernetes API server | 
 | network.session_inactivity_timeout_seconds | The number of seconds of inactivity before the session is terminated, also the length of the refresh token's session |
+| network.ingress_type | The type of `Ingress` object to create.  Right now only `nginx` is supported |
+| network.ingress_annotations | Annotations to add to the `Ingress` object |
 | active_directory.base | The search base for Active Directory |
 | active_directory.host | The host name for a domain controller or VIP.  If using SRV records to determine hosts, this should be the fully qualified domain name of the domain |
 | active_directory.port | The port to communicate with Active Directory |
@@ -114,6 +116,25 @@ Copy `values.yaml` (https://raw.githubusercontent.com/OpenUnison/helm-charts/mas
 | image | The name of the image to use |
 | enable_impersonation | If `true`, OpenUnison will run in impersonation mode.  Instead of OpenUnison being integrated with Kubernetes via OIDC, OpenUnison will be a reverse proxy and impersonate users.  This is useful with cloud deployments where oidc is not an option |
 | monitoring.prometheus_service_account | The prometheus service account to authorize access to the /monitoring endpoint |
+| network_policies.enabled | If `true`, creates a deny-all network policy and additional policies based on below configurations |
+| network_policies.ingress.enabled | if `true`, a policy will be created that allows access from the `Namespace` identified by the `labels` |
+| network_policies.ingress.labels | Labels for the `Namespace` hosting the `Ingress` |
+| network_policies.monitoring.enabled | if `true`, a policy will be created that allows access from the `Namespace` identified by the `labels` to support monitoring |
+| network_policies.monitoring.labels | Labels for the `Namespace` hosting monitoring |
+| network_policies.apiserver.enabled | if `true`, a policy will be created that allows access from the `kube-ns` `Namespace` identified by the `labels` |
+| network_policies.apiserver.labels | Labels for the `Namespace` hosting the api server |
+| services.enable_tokenrequest | If `true`, the OpenUnison `Deployment` will use the `TokenRequest` API instead of static `ServiceAccount` tokens.  *** NOT AVAILABLE UNTIL OPENUNISON 1.0.21 *** |
+| services.token_request_audience | The audience expected by the API server *** NOT AVAILABLE UNTIL OPENUNISON 1.0.21 *** |
+| services.token_request_expiration_seconds | The number of seconds TokenRequest tokens should be valid for, minimum 600 seconds *** NOT AVAILABLE UNTIL OPENUNISON 1.0.21 *** | 
+| services.node_selectors | annotations to use when choosing nodes to run OpenUnison, maps to the `Deployment` `nodeSelector` |
+| services.pullSecret | The name of the `Secret` that stores the pull secret for pulling the OpenUnison image |
+| services.resources.requests.memory | Memory requested by OpenUnison |
+| services.resources.requests.cpu | CPU requested by OpenUnison |
+| services.resources.limits.memory | Maximum memory allocated to OpenUnison |
+| services.resources.limits.cpu | Maximum CPU allocated to OpenUnison |
+| openunison.replicas | The number of OpenUnison replicas to run, defaults to 1 |
+| openunison.non_secret_data | Add additional non-secret configuration options, added to the `non_secret_data` secrtion of the `OpenUnison` object |
+| openunison.secrets | Add additional keys from the `orchestra-secrets-source` `Secret` |
 
 Additionally, add a base 64 encoded PEM certificate to your values under `trusted_certs` for `pem_b64`.  This will allow OpenUnison to talk to Active Directory using TLS.
 
@@ -129,6 +150,11 @@ If using impersonation, you can skip this section.  Run `kubectl describe config
 ## First Login
 
 To login, open your browser and go to the host you specified for `network.openunison_host` in your `values.yaml`.  For instance if `network.openunison_host` is `k8sou.tremolo.lan` then navigate to https://k8sou.tremolo.lan.  You'll be prompted for your Active Directory username and password.  Once authenticated you'll be able login to the portal and generate your `.kube/config` from the Tokens screen.
+
+## CLI Login
+
+You can bypass manually launching a browser with the `oulogin` kubectl plugin - https://github.com/TremoloSecurity/kubectl-login.  This plugin will launch a browser for you, authenticate you then configure your kubectl configuration without any pre-configuration on your clients. 
+
 
 ## Authorizing Access via RBAC
 
@@ -176,6 +202,165 @@ roleRef:
 3.  Easy to get wrong - If you mistype a user's login id Kubernetes won't tell you
 
 If you can't use Active Directory groups, take a look at the OpenUnison Identity Manager for Kubernetes - https://github.com/TremoloSecurity/openunison-qs-kubernetes/tree/activedirectory.  This tool adds on to the login capabilities with the ability to manage access to the cluster and namespaces, along with providing a self service way for users to request new namespaces and manage access.
+
+# Adding Applications and Clusters for Authentication
+
+OpenUnison can support more applications for SSO then just Kubernetes and the dashboard.  You can add other clusters and applications that support OpenID Connect by adding some custom resources to your `openunison` namespace.
+
+## Add a Trust
+
+The `Trust` tells your OpenID Connect enabled application it can trust authentication requests from your OpenUnison.  To start you'll need:
+
+1. **Callback URL** - This URL is where OpenUnison redirects the user after authenticating.
+2. **Client Secret** - Web applications, like GitLab, will need a secret that is shared between the two systems.  Applications with CLI components, like ArgoCD, don't need a client secret.
+3. **Client ID** - This is how you identify your application to OpenUnison.
+
+OpenUnison will provide the following claims for your application to consume:
+
+| Claim | Description |
+| ----- | ----------- |
+| sub   | Unique identifier as supplied from authentication |
+| name  | Combination of first name and last name |
+| preferred_username | A username supplied from authentication |
+| email | The user's email address |
+| groups | The list of groups provided by the authentication source |
+
+Once you have everything you need to get started, create the `Trust` object.  
+
+### Create a Secret
+
+If you're application is using a client secret, a `Secret` needs to be created to hold it.  This can either be a new `Secret` or it can be a new one.  Which ever `Secret` you add it to, keep a note of the name of the `Secret` and the key in the `data` section used to store it.
+
+If your application doesn't have a client secret, skip this step.
+
+### Create the `Trust`
+
+Create a `Trust` object in the `openunison` namespace.  Here's one for GitLab you can use as an example:
+
+```
+apiVersion: openunison.tremolo.io/v1
+kind: Trust
+metadata:
+  name: gitlab
+  namespace: openunison
+spec:
+  accessTokenSkewMillis: 120000
+  accessTokenTimeToLive: 60000
+  authChainName: LoginService
+  clientId: gitlab
+  clientSecret:
+    keyName: gitlab
+    secretName: orchestra-secrets-source
+  codeLastMileKeyName: lastmile-oidc
+  codeTokenSkewMilis: 60000
+  publicEndpoint: false
+  redirectURI:
+  - https://gitlab.local.tremolo.dev/users/auth/openid_connect/callback
+  signedUserInfo: false
+  verifyRedirect: true
+```
+
+Here are the details for each option:
+
+| Option | Desription |
+| ------ | ---------- |
+| accessTokenSkewMillis | Milliseconds milliseconds added to account for clock skew |
+| accessTokenTimeToLive | Time an access token should live in milliseconds |
+| authChainName | The authentication chain to use for login, do not change |
+| clientId | The client id shared by your application | 
+| clientSecret.scretName | If using a client secret, the name of the `Secret` storing the client secret |
+| clientSecret.keyName | The key in the `data` section of the `Secret` storing the client secret |
+| codeLastMileKeyName | The name of the key used to encrypt the code token, do not change |
+| codeTokenSkewMilis | Milliseconds to add to code token lifetime to account for clock skew |
+| publicEndpoint | If `true`, a client secret is required.  If `false`, no client secret is needed |
+| redirectURI | List of URLs that are authorized for callback.  If a URL is provided by your application that isn't in this list SSO will fail |
+| signedUserInfo | if `true`, the userinfo endpoint will return a signed JSON Web Token.  If `false` it will return plain JSON |
+| verifyRedirect | If `true`, the redirect URL provided by the client **MUST** be listed in the `redirectURI` section.  Should **ALLWAYS** be `true` if not in a development environment |
+
+Once the `Trust` is added to the namespace, OpenUnison will pick it up automatically.  You can test by trying to login to your application.
+
+## Add a "Badge" to Your Portal
+
+When you login to the Orchestra portal, there are badges for your tokens and for the dashboard.  You can dynamically add a badge for your application too.  Here's an example `PortalUrl` object for ArgoCD:
+
+```
+apiVersion: openunison.tremolo.io/v1
+kind: PortalUrl
+metadata:
+  name: argocs
+  namespace: openunison
+spec:
+  label: ArgoCD
+  org: B158BD40-0C1B-11E3-8FFD-0800200C9A66
+  url: https://ArgoCD.apps.192-168-2-140.nip.io
+  icon: iVBORw0KGgoAAAANSUhEUgAAANIAAADwCAYAAAB1/Tp/AAAfQ3pUWHRSYXcgcHJvZ...
+  azRules:
+  - constraint: o=Tremolo
+    scope: dn
+```
+
+| Option | Descriptoin |
+| ------ | ----------- |
+| label  | The label shown on badge in the portal |
+| org    | If using orgnaizations to organize badges, the uuid of the org.  If not using organizations, leave as is |
+| url    | The URL the badge should send the user to |
+| icon   | A base64 encoded icon with a width of 210 pixels and a height of 240 pixels |
+| azRules | Who is authorized to see this badge?  See https://portal.apps.tremolo.io/docs/tremolosecurity-docs/1.0.19/openunison/openunison-manual.html#_applications_applications for an explination of the authorization rules |
+
+Once created, the badge will appear in the Orchestra portal!  No need to restart the containers.
+
+## Organizing Badges
+
+If you're adding multiple badges or clusters, you may find that the number of badges on your front page become difficult to manage.  In that case you can enable orgnaizations in OpenUnison and organize your badges using an orgnaization tree.
+
+### Enable Organizations on your Portal Page
+
+Edit the `orchestra` object in the `openunison` namespace (`kubectl edit openunison orchestra -n openunison`).  Look for the `non_secret_data` section and add the following:
+
+```
+- name: SHOW_PORTAL_ORGS
+  value: "true"
+```
+
+Once you save, OpenUnison will restart and when you login there will now be a tree that describes your organizations.  
+
+![Orchestra with Organizations](imgs/ou_with_orgs.png)
+
+### Creating Organizations
+
+Add an `Org` object to the `openunison` namespace.  Here's an example `Org`:
+
+```
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: cluster2
+  namespace: openunison
+spec:
+  description: "My second cluster"
+  uuid: 04901973-5f4c-46d9-9e22-55e88e168776
+  parent: B158BD40-0C1B-11E3-8FFD-0800200C9A66
+  showInPortal: true
+  showInRequestAccess: false
+  showInReports: false
+  azRules:
+  - scope: dn
+    constraint: o=Tremolo
+```
+
+| Option | Description |
+| ------ | ----------- |
+| description | What appears in the blue box describing the organization |
+| uuid | A unique ID, recommend using Type 4 UUIDs |
+| parent | The unique id of the parent.  `B158BD40-0C1B-11E3-8FFD-0800200C9A66` is the root organization |
+| showInPortal | Should be `true` |
+| showInRequestAccess | N/A |
+| showInReports | N/A |
+| azRules | Who is authorized to see this badge?  See https://portal.apps.tremolo.io/docs/tremolosecurity-docs/1.0.19/openunison/openunison-manual.html#_applications_applications for an explination of the authorization rules |
+
+Once added, the new organizations will be loaded dynamiclly by OpenUnison.  Change the `org` in your `PortalUrl` object to match the `uuid` of the `Org` you want it to appear in.
+
+
 
 # Using Your Own Certificates
 
@@ -290,3 +475,7 @@ This will trigger the operator to update your OpenUnison pods.  To update certif
 # Customizing Orchestra
 
 To customize Orchestra - https://github.com/TremoloSecurity/OpenUnison/wiki/troubleshooting#customizing-orchestra
+
+# Example Implementations
+Amazon EKS - https://www.tremolosecurity.com/post/multi-tenant-amazon-eks-the-easy-way-part-i-authentication
+Multi-Cluster Portal - https://www.tremolosecurity.com/post/building-a-multi-cluster-authentication-portal
