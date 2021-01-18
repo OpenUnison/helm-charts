@@ -1,3 +1,4 @@
 # If set to true the CRDs will be deployed.  Otherwise the CRs are ignored.
 crd:
   deploy: true
+  betas: false

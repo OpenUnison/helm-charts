@@ -1,4 +1,4 @@
-{{ if and (.Values.crd.deploy) (eq (int64 .Capabilities.KubeVersion.Major) 1) (lt (int64 .Capabilities.KubeVersion.Minor) 16) }}
+{{ if and (.Values.crd.deploy) (eq .Values.crd.betas true) }}
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -83,10 +83,10 @@ metadata:
 spec:
   group: openunison.tremolo.io
   versions:
-    - name: v1
+    - name: v2
       served: true
       storage: true
-  version: v1
+  version: v2
   scope: Namespaced
   subresources:
     status: {}
@@ -101,6 +101,7 @@ spec:
     openAPIV3Schema:
       properties:
         spec:
+          type: object
           properties:
             image:
               type: string
@@ -148,9 +149,11 @@ spec:
                           type: string
                   ingress_name: 
                     type: string
+                  ingress_type:
+                    type: string
                   secret_name:
                     type: string
-                  node_selectors:
+                  annotations:
                     type: array
                     items:
                       type: object
@@ -159,6 +162,56 @@ spec:
                           type: string
                         value:
                           type: string
+            deployment_data:
+              type: object
+              properties:
+                tokenrequest_api:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                    audience:
+                      type: string
+                    expirationSeconds:
+                      type: integer
+                readiness_probe_command:
+                  type: array
+                  items:
+                    type: string
+                liveness_probe_command:
+                  type: array
+                  items:
+                    type: string
+                node_selectors:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      value:
+                        type: string
+                pull_secret:
+                  type: string
+                resources:
+                  type: object
+                  properties:
+                    requests:
+                      type: object
+                      properties:
+                        memory:
+                          type: string
+                        cpu:
+                          type: string
+                    limits:
+                      type: object
+                      properties:
+                        memory:
+                          type: string
+                        cpu:
+                          type: string
+
+                
             non_secret_data:
               type: array
               items:
@@ -194,7 +247,7 @@ spec:
                 ciphers:
                   type: array
                   items:
-                   type: string
+                    type: string
                 path_to_deployment:
                   type: string
                 path_to_env_file:
@@ -251,7 +304,7 @@ spec:
                         type: string
                       logout_url:
                         type: string
-                      signing_cert_alis:
+                      signing_cert_alias:
                         type: string
                       encryption_cert_alias:
                         type: string
@@ -319,6 +372,8 @@ spec:
                           create_data:
                             type: object
                             properties:
+                              target_namespace:
+                                type: string
                               sign_by_k8s_ca:
                                 type: boolean
                               server_name:
@@ -335,6 +390,13 @@ spec:
                                 type: array
                                 items:
                                   type: string
+                              patch_info:
+                                type: object
+                                properties:
+                                  url:
+                                    type: string
+                                  annotation_name:
+                                    type: string
                               secret_info:
                                 type: object
                                 properties:
@@ -344,6 +406,23 @@ spec:
                                     type: string
                                   key_name:
                                     type: string
+            status:
+              type: object
+              properties:
+                conditions:
+                  properties:
+                    lastTransitionTime:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  type: object
+                digest:
+                  type: string
+                idpCertificateFingerprints:
+                  type: object
+                  additionalProperties: true
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
