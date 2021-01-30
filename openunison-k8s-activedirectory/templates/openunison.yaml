@@ -201,7 +201,7 @@ spec:
     {{ else }}
     annotations: {{ range $key,$value := $ingress_annotations }}
     - name: {{ $key }}
-      value: {{ $value }}
+      value: {{ quote $value }}
       {{ end }}
     {{ end }}
   key_store:
