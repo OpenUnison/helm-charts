@@ -118,6 +118,9 @@ Copy `values.yaml` (https://raw.githubusercontent.com/OpenUnison/helm-charts/mas
 | network.api_server_host | The host name to use for the api server reverse proxy.  This is what `kubectl` will interact with to access your cluster. **NOTE:** `network.openunison_host` and `network.dashboard_host` |
 | network.k8s_url | The URL for the Kubernetes API server | 
 | network.session_inactivity_timeout_seconds | The number of seconds of inactivity before the session is terminated, also the length of the refresh token's session |
+| network.createIngressCertificate | If true (default), the operator will create a self signed Ingress certificate.  Set to false if using an existing certificate or LetsEncrypt |
+| network.ingress_type | The type of `Ingress` object to create.  Right now only `nginx` is supported |
+| network.ingress_annotations | Annotations to add to the `Ingress` object |
 | active_directory.base | The search base for Active Directory |
 | active_directory.host | The host name for a domain controller or VIP.  If using SRV records to determine hosts, this should be the fully qualified domain name of the domain |
 | active_directory.port | The port to communicate with Active Directory |

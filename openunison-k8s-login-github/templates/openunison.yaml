@@ -139,6 +139,8 @@ spec:
             subject_alternative_names: []
           import_into_ks: keypair
           name: unison-tls
+        
+        {{ if .Values.network.createIngressCertificate }}
         - create_data:
             ca_cert: false
             key_size: 2048
@@ -152,6 +154,7 @@ spec:
           import_into_ks: certificate
           name: unison-ca
           tls_secret_name: ou-tls-certificate
+        {{ end }}
         - create_data:
             {{ if .Values.certs.use_k8s_cm }}
             ca_cert: false
