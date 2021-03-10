@@ -72,6 +72,23 @@ spec:
   uuid: org-cluster-{{ .Values.cluster.name }}-approvers
 ---
 apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: {{ .Values.cluster.name }}-delete
+  namespace: {{ .Release.Namespace }}
+spec:
+  label: Delete Namespace
+  azRules:
+  - constraint: {{ .Values.cluster.approvers.az.constraint }}
+    scope: {{ .Values.cluster.approvers.az.scope }}
+  description: Namespaces you are authorized to request deletion for
+  parent: org-cluster-{{ .Values.cluster.name }}
+  showInPortal: false
+  showInReports: false
+  showInRequestAccess: true
+  uuid: org-cluster-{{ .Values.cluster.name }}-delete
+---
+apiVersion: openunison.tremolo.io/v1
 kind: Target
 metadata:
   name: k8s-{{ .Values.cluster.name }}
@@ -95,9 +112,9 @@ spec:
     value: kubernetes
   - name: label
     value: {{ .Values.cluster.label }}
-  {{ if .Values.cluster.label }}
+  {{ if .Values.cluster.target.gitUrl }}
   - name: gitUrl
-    value: {{ .Values.cluster.target.gitUrl }}
+    value: {{ quote .Values.cluster.target.gitUrl }}
   {{ end }}
   {{ if eq .Values.cluster.target.tokenType "static" }}
   secretParams:
@@ -207,6 +224,37 @@ spec:
   tasks: |-
            - taskType: callWorkflow
              name: k8s-add-approver
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: {{ .Values.cluster.name }}-delete-namespace
+  namespace: {{ .Release.Namespace }}
+spec:
+  description: Request namespace deletion
+  inList: true
+  label: $namespaceName$
+  orgId: org-cluster-{{ .Values.cluster.name }}-delete
+  dynamicConfiguration:
+    dynamic: true
+    className: com.tremolosecurity.scalejs.ListClusterApproverGroups
+    params:
+    - name: cluster
+      value: k8s-{{ .Values.cluster.name }}
+    - name: groupsAttribute
+      value: groups
+    - name: groupsAreDN
+      value: "false"
+    - name: groupPrefix
+      value: approvers-k8s-
+  tasks: |-
+           - taskType: addAttribute
+             name: cluster
+             value: k8s-{{ .Values.cluster.name }}
+             remove: false
+             addToRequest: true
+           - taskType: callWorkflow
+             name: k8s-delete-workflow
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Trust

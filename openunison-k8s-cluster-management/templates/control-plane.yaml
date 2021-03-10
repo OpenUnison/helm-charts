@@ -163,6 +163,23 @@ spec:
   uuid: org-cluster-control-plane-approvers
 ---
 apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: control-plan-delete
+  namespace: {{ .Release.Namespace }}
+spec:
+  label: Delete Namespace
+  azRules:
+  - constraint: o=Tremolo
+    scope: dn
+  description: Namespaces you are authorized to request deletion for
+  parent: org-cluster-control-plane
+  showInPortal: false
+  showInReports: false
+  showInRequestAccess: true
+  uuid: org-cluster-control-plane-delete
+---
+apiVersion: openunison.tremolo.io/v1
 kind: Workflow
 metadata:
   name: control-plane-namespace-admins
@@ -253,3 +270,34 @@ spec:
   tasks: |-
            - taskType: callWorkflow
              name: k8s-add-approver
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: controlplane-delete-namespace
+  namespace: {{ .Release.Namespace }}
+spec:
+  description: Request namespace deletion
+  inList: true
+  label: $namespaceName$
+  orgId: org-cluster-control-plane-delete
+  dynamicConfiguration:
+    dynamic: true
+    className: com.tremolosecurity.scalejs.ListClusterApproverGroups
+    params:
+    - name: cluster
+      value: k8s
+    - name: groupsAttribute
+      value: groups
+    - name: groupsAreDN
+      value: "false"
+    - name: groupPrefix
+      value: approvers-k8s-
+  tasks: |-
+           - taskType: addAttribute
+             name: cluster
+             value: k8s
+             remove: false
+             addToRequest: true
+           - taskType: callWorkflow
+             name: k8s-delete-workflow

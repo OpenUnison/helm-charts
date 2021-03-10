@@ -54,7 +54,7 @@ spec:
         - -namespace
         - NAMESPACE
         - -apiGroup
-        - openunison.tremolo.io/v2,openunison.tremolo.io/v1
+        - openunison.tremolo.io/v3,openunison.tremolo.io/v2,openunison.tremolo.io/v1
         - -objectType
         - openunisons
         - -jsPath
