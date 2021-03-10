@@ -117,7 +117,7 @@ Copy `values.yaml` (https://raw.githubusercontent.com/OpenUnison/helm-charts/mas
 | monitoring.prometheus_service_account | The prometheus service account to authorize access to the /monitoring endpoint |
 | github.client_id | The client id from your OAuth2 application configuration |
 | github.teams | A comma separated list of authorized teams and organizations.  An organization is listed in the format `OrgName/` and a team in the formate `OrgName/TeamName` |
- network_policies.enabled | If `true`, creates a deny-all network policy and additional policies based on below configurations |
+| network_policies.enabled | If `true`, creates a deny-all network policy and additional policies based on below configurations |
 | network_policies.ingress.enabled | if `true`, a policy will be created that allows access from the `Namespace` identified by the `labels` |
 | network_policies.ingress.labels | Labels for the `Namespace` hosting the `Ingress` |
 | network_policies.monitoring.enabled | if `true`, a policy will be created that allows access from the `Namespace` identified by the `labels` to support monitoring |
