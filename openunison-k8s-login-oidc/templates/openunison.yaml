@@ -249,6 +249,15 @@ spec:
       value: {{ .Values.oidc.userinfo_url | quote }}
     - name: OIDC_SCOPES
       value: {{ .Values.oidc.scopes }}
+    - name: OU_SVC_NAME
+      value: openunison-{{ .Release.Name }}.{{ .Release.Namespace }}.svc
+    {{ if eq .Values.services.enable_tokenrequest true }}
+    - name: K8S_TOKEN_TYPE
+      value: tokenapi
+    {{ else }}
+    - name: K8S_TOKEN_TYPE
+      value: legacy
+    {{ end }}
     {{ range $key,$value := .Values.openunison.non_secret_data }}
     - name: {{ $key }}
       value: {{ $value }}
