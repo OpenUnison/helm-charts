@@ -1,0 +1,80 @@
+{{ if and (eq .Values.enable_impersonation true) (eq .Values.impersonation.use_jetstack true)  }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: kube-oidc-proxy-{{ .Release.Name }}
+  name: kube-oidc-proxy-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kube-oidc-proxy-{{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: kube-oidc-proxy-{{ .Release.Name }}
+    spec:
+      serviceAccountName: openunison-{{ .Release.Name }}
+      containers:
+      - image: {{ .Values.impersonation.jetstack_oidc_proxy_image}}
+        ports:
+        - containerPort: 8443
+        - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        name: kube-oidc-proxy-{{ .Release.Name }}
+        command: ["kube-oidc-proxy"]
+        args:
+          - "--secure-port=8443"
+          - "--tls-cert-file=/etc/oidc/tls/crt.pem"
+          - "--tls-private-key-file=/etc/oidc/tls/key.pem"
+          - "--oidc-client-id=kubernetes"
+          - "--oidc-issuer-url=https://{{ .Values.network.openunison_host }}/auth/idp/k8sIdp"
+          - "--oidc-username-claim=sub"
+          - "--oidc-groups-claim=groups"
+          - "--oidc-ca-file=/etc/oidc/oidc-ca.pem"
+        volumeMounts:
+          - name: kube-oidc-proxy-config
+            mountPath: /etc/oidc
+            readOnly: true
+          - name: kube-oidc-proxy-tls
+            mountPath: /etc/oidc/tls
+            readOnly: true
+      volumes:
+        - name: kube-oidc-proxy-config
+          secret:
+            secretName: ou-tls-certificate
+            items:
+            - key: tls.crt
+              path: oidc-ca.pem
+        - name: kube-oidc-proxy-tls
+          secret:
+            secretName: unison-tls
+            items:
+            - key: tls.crt
+              path: crt.pem
+            - key: tls.key
+              path: key.pem
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: kube-oidc-proxy-{{ .Release.Name }}
+  name: kube-oidc-proxy-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    app: kube-oidc-proxy-{{ .Release.Name }}
+{{ end }}
