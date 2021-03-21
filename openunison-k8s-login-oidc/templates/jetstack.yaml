@@ -7,7 +7,7 @@ metadata:
   name: kube-oidc-proxy-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.openunison.replicas }}
   selector:
     matchLabels:
       app: kube-oidc-proxy-{{ .Release.Name }}
@@ -38,21 +38,48 @@ spec:
           - "--oidc-issuer-url=https://{{ .Values.network.openunison_host }}/auth/idp/k8sIdp"
           - "--oidc-username-claim=sub"
           - "--oidc-groups-claim=groups"
+          {{ if .Values.impersonation.explicit_certificate_trust }}
           - "--oidc-ca-file=/etc/oidc/oidc-ca.pem"
+          {{ end }}
         volumeMounts:
+          {{ if .Values.impersonation.explicit_certificate_trust }}
           - name: kube-oidc-proxy-config
             mountPath: /etc/oidc
             readOnly: true
+          {{ end }}
           - name: kube-oidc-proxy-tls
             mountPath: /etc/oidc/tls
             readOnly: true
+        {{ if .Values.impersonation.resources }}
+        resources:
+          {{ if .Values.impersonation.resources.requests }}
+          requests:
+            {{ if .Values.impersonation.resources.requests.memory }}
+            memory: {{ quote .Values.impersonation.resources.requests.memory }}
+            {{ end }}
+            {{ if .Values.impersonation.resources.requests.cpu }}
+            cpu: {{ quote .Values.impersonation.resources.requests.cpu }}
+            {{ end }}
+          {{ end }}
+          {{ if .Values.impersonation.resources.limits }}
+          limits:
+            {{ if .Values.impersonation.resources.limits.memory }}
+            memory: {{ quote .Values.impersonation.resources.limits.memory }}
+            {{ end }}
+            {{ if .Values.impersonation.resources.limits.cpu }}
+            cpu: {{ quote .Values.impersonation.resources.limits.cpu }}
+            {{ end }}
+          {{ end }}
+        {{ end }}
       volumes:
+        {{ if .Values.impersonation.explicit_certificate_trust }}
         - name: kube-oidc-proxy-config
           secret:
             secretName: ou-tls-certificate
             items:
             - key: tls.crt
               path: oidc-ca.pem
+        {{ end }}
         - name: kube-oidc-proxy-tls
           secret:
             secretName: unison-tls
@@ -61,6 +88,19 @@ spec:
               path: crt.pem
             - key: tls.key
               path: key.pem
+      {{ $length := len .Values.services.node_selectors }}
+      {{ if eq $length 0  }}
+      nodeSelector: {}
+      {{ else }}
+      nodeSelector: {{ range $key,$value := .Values.services.node_selectors }}
+        {{ $key }}: {{ quote $value }}
+      {{ end }}
+      {{ end }}
+
+      {{ if .Values.services.pullSecret }}
+      imagePullSecrets:
+      - name: {{ .Values.services.pullSecret }}
+      {{ end }}
 ---
 apiVersion: v1
 kind: Service
