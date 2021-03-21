@@ -41,6 +41,11 @@ spec:
           {{ if .Values.impersonation.explicit_certificate_trust }}
           - "--oidc-ca-file=/etc/oidc/oidc-ca.pem"
           {{ end }}
+        imagePullPolicy: Always
+        securityContext:
+          runAsUser: 10001
+          runAsGroup: 10001
+          allowPrivilegeEscalation: false
         volumeMounts:
           {{ if .Values.impersonation.explicit_certificate_trust }}
           - name: kube-oidc-proxy-config
