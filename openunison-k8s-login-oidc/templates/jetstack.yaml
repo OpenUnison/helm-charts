@@ -75,7 +75,7 @@ spec:
         {{ if .Values.impersonation.explicit_certificate_trust }}
         - name: kube-oidc-proxy-config
           secret:
-            secretName: ou-tls-certificate
+            secretName: {{ .Values.impersonation.ca_secret_name }}
             items:
             - key: tls.crt
               path: oidc-ca.pem
