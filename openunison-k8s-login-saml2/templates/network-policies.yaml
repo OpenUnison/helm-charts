@@ -28,6 +28,27 @@ spec:
         {{ end }}
   policyTypes:
   - Ingress
+{{ if and (eq .Values.enable_impersonation true) (eq .Values.impersonation.use_jetstack true)  }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: oidc-proxy-allow-from-ingress
+  namespace: {{ .Release.Namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app: kube-oidc-proxy-{{ .Release.Name }}
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels: {{ range $key,$value := .Values.network_policies.ingress.labels }}
+            {{ $key }}: {{ $value }}
+        {{ end }}
+  policyTypes:
+  - Ingress
+{{ end }}
+
 {{ end }}
 {{ if .Values.network_policies.monitoring.enabled }}
 ---

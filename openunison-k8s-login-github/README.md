@@ -136,6 +136,17 @@ Copy `values.yaml` (https://raw.githubusercontent.com/OpenUnison/helm-charts/mas
 | openunison.replicas | The number of OpenUnison replicas to run, defaults to 1 |
 | openunison.non_secret_data | Add additional non-secret configuration options, added to the `non_secret_data` secrtion of the `OpenUnison` object |
 | openunison.secrets | Add additional keys from the `orchestra-secrets-source` `Secret` |
+| impersonation.use_jetstack | if `true`, the operator will deploy an instance of JetStack's OIDC Proxy (https://github.com/jetstack/kube-oidc-proxy).  Default is `false` |
+| impersonation.jetstack_oidc_proxy_image | The name of the image to use |
+| impersonation.explicit_certificate_trust | If `true`, oidc-proxy will explicitly trust the `tls.crt` key of the `Secret` named in `impersonation.ca_secret_name`.  Defaults to `true` |
+| impersonation.ca_secret_name | If `impersonation.explicit_certificate_trust` is `true`, the name of the tls `Secret` that stores the certificate for OpenUnison that the oidc proxy needs to trust.  Defaults to `ou-tls-secret` |
+| impersonation.resources.requests.memory | Memory requested by oidc proxy |
+| impersonation.resources.requests.cpu | CPU requested by oidc proxy |
+| impersonation.resources.limits.memory | Maximum memory allocated to oidc proxy |
+| impersonation.resources.limits.cpu | Maximum CPU allocated to oidc proxy |
+
+
+Additionally, you can add your identity provider's TLS base64 encoded PEM certificate to your values under `trusted_certs` for `pem_b64`.  This will allow OpenUnison to talk to your identity provider using TLS if it doesn't use a commercially signed certificate.  If you don't need a certificate to talk to your identity provider, replace the `trusted_certs` section with `trusted_certs: []`.
 
 Finally, run the helm chart:
 
@@ -149,6 +160,22 @@ Run `kubectl describe configmap api-server-config -n openunison` to get the SSO 
 ## First Login
 
 To login, open your browser and go to the host you specified for `OU_HOST` in your `input.props`.  For instance if `OU_HOST` is `k8sou.tremolo.lan` then navigate to https://k8sou.tremolo.lan.  You'll be prompted for your Active Directory username and password.  Once authenticated you'll be able login to the portal and generate your `.kube/config` from the Tokens screen.
+
+## CLI Login
+
+You can bypass manually launching a browser with the `oulogin` kubectl plugin - https://github.com/TremoloSecurity/kubectl-login.  This plugin will launch a browser for you, authenticate you then configure your kubectl configuration without any pre-configuration on your clients. 
+
+
+## Enabling JetStack OIDC Proxy for Impersonation
+
+OpenUnison's built in reverse proxy doesn't support the SPDY protocol which kubectl, and the client-go sdk, uses for `exec`, `cp`, and `port-forward`.  If you require these options, and are using impersonation, you can now enable the JetStack OIDC proxy (https://github.com/jetstack/kube-oidc-proxy) instead of using OpenUnison's built in reverse proxy.  To enable it, add the `impersonation` options from the helm chart configuration to your chart.  **NOTE** when using the oidc-proxy `services.enable_tokenrequest` must be `false`.  The `Deployment` created for the oidc proxy will inherrit the `ServiceAccount` from OpenUnison, as well as the `services.pullSecret` and `services.node_selectors` configuration in your helm chart.  Resource requests and limits should be set specifically for the OIDC proxy under the `impersonation` section.  The proxy is run as a non-privileged unix user as well.  An example configuration when deploying with Let's Encrypt:
+
+```
+impersonation:
+  use_jetstack: true
+  jetstack_oidc_proxy_image: quay.io/jetstack/kube-oidc-proxy:v0.3.0
+  explicit_certificate_trust: false
+```
 
 ## Authorizing Access via RBAC
 
@@ -194,6 +221,8 @@ roleRef:
 1.  Hard to audit - There is no easy way to say "what role bindings is `mmosley` a member of?
 2.  Difficult to remove access - Same reason as #1, you need to figure out every role binding a user is a member of to remove
 3.  Easy to get wrong - If you mistype a user's login id Kubernetes won't tell you
+
+If you can't use Active Directory groups, take a look at the OpenUnison Identity Manager for Kubernetes - https://github.com/TremoloSecurity/openunison-qs-kubernetes/tree/activedirectory.  This tool adds on to the login capabilities with the ability to manage access to the cluster and namespaces, along with providing a self service way for users to request new namespaces and manage access.
 
 # Adding Applications and Clusters for Authentication
 
@@ -352,6 +381,8 @@ spec:
 
 Once added, the new organizations will be loaded dynamiclly by OpenUnison.  Change the `org` in your `PortalUrl` object to match the `uuid` of the `Org` you want it to appear in.
 
+
+
 # Using Your Own Certificates
 
 If you want to integrate your own certificates see our wiki entry - https://github.com/TremoloSecurity/OpenUnison/wiki/troubleshooting#how-do-i-change-openunisons-certificates
@@ -371,3 +402,7 @@ Now you can begin mapping OpenUnison's capabilities to your business and complia
 # Customizing Orchestra
 
 To customize Orchestra - https://github.com/TremoloSecurity/OpenUnison/wiki/troubleshooting#customizing-orchestra
+
+# Examples
+
+Using GitHub To Login to Kubernetes - https://www.tremolosecurity.com/post/using-github-to-access-kubernetes
