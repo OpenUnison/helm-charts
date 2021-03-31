@@ -125,6 +125,14 @@ Copy `values.yaml` (https://raw.githubusercontent.com/OpenUnison/helm-charts/mas
 | openunison.replicas | The number of OpenUnison replicas to run, defaults to 1 |
 | openunison.non_secret_data | Add additional non-secret configuration options, added to the `non_secret_data` secrtion of the `OpenUnison` object |
 | openunison.secrets | Add additional keys from the `orchestra-secrets-source` `Secret` |
+| impersonation.use_jetstack | if `true`, the operator will deploy an instance of JetStack's OIDC Proxy (https://github.com/jetstack/kube-oidc-proxy).  Default is `false` |
+| impersonation.jetstack_oidc_proxy_image | The name of the image to use |
+| impersonation.explicit_certificate_trust | If `true`, oidc-proxy will explicitly trust the `tls.crt` key of the `Secret` named in `impersonation.ca_secret_name`.  Defaults to `true` |
+| impersonation.ca_secret_name | If `impersonation.explicit_certificate_trust` is `true`, the name of the tls `Secret` that stores the certificate for OpenUnison that the oidc proxy needs to trust.  Defaults to `ou-tls-secret` |
+| impersonation.resources.requests.memory | Memory requested by oidc proxy |
+| impersonation.resources.requests.cpu | CPU requested by oidc proxy |
+| impersonation.resources.limits.memory | Maximum memory allocated to oidc proxy |
+| impersonation.resources.limits.cpu | Maximum CPU allocated to oidc proxy |
 
 Additionally, if your SAML2 identity provider uses a self signed certificate in its chain, add its base 64 encoded PEM certificate to your values under `trusted_certs` for `pem_b64`.  This will allow OpenUnison to talk to your identity provider to retrieve metadata using TLS.
 
@@ -162,6 +170,16 @@ If using impersonation, you can skip this step.  Run `kubectl describe configmap
 
 To login, open your browser and go to the host you specified for `OU_HOST` in your `input.props`.  For instance if `OU_HOST` is `k8sou.tremolo.lan` then navigate to https://k8sou.tremolo.lan.  You'll be prompted for your Active Directory username and password.  Once authenticated you'll be able login to the portal and generate your `.kube/config` from the Tokens screen.
 
+## Enabling JetStack OIDC Proxy for Impersonation
+
+OpenUnison's built in reverse proxy doesn't support the SPDY protocol which kubectl, and the client-go sdk, uses for `exec`, `cp`, and `port-forward`.  If you require these options, and are using impersonation, you can now enable the JetStack OIDC proxy (https://github.com/jetstack/kube-oidc-proxy) instead of using OpenUnison's built in reverse proxy.  To enable it, add the `impersonation` options from the helm chart configuration to your chart.  **NOTE** when using the oidc-proxy `services.enable_tokenrequest` must be `false`.  The `Deployment` created for the oidc proxy will inherrit the `ServiceAccount` from OpenUnison, as well as the `services.pullSecret` and `services.node_selectors` configuration in your helm chart.  Resource requests and limits should be set specifically for the OIDC proxy under the `impersonation` section.  The proxy is run as a non-privileged unix user as well.  An example configuration when deploying with Let's Encrypt:
+
+```
+impersonation:
+  use_jetstack: true
+  jetstack_oidc_proxy_image: quay.io/jetstack/kube-oidc-proxy:v0.3.0
+  explicit_certificate_trust: false
+```
 ## Authorizing Access via RBAC
 
 On first login, if you haven't authorized access to any Kubernetes roles you won't be able to do anything.  There are two approaches you can take:

@@ -82,7 +82,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 
 ---
-apiVersion: openunison.tremolo.io/v2
+apiVersion: openunison.tremolo.io/v4
 kind: OpenUnison
 metadata:
   name: orchestra
@@ -100,6 +100,9 @@ spec:
     {{ if eq .Values.enable_impersonation true }}
     - env_var: K8S_API_HOST
       name: {{ .Values.network.api_server_host }}
+      {{ if eq .Values.impersonation.use_jetstack true }}
+      service_name: kube-oidc-proxy-{{ .Release.Name }}
+      {{ end }}
     {{ end }}
     secret_name: ou-tls-certificate
     ingress_type: {{ .Values.network.ingress_type | default "nginx" }}

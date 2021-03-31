@@ -21,6 +21,7 @@ myvd_config_path: "WEB-INF/myvd.conf"
 k8s_cluster_name: kubernetes
 enable_impersonation: false
 
+
 dashboard:
   namespace: "kubernetes-dashboard"
   cert_name: "kubernetes-dashboard-certs"
@@ -53,6 +54,12 @@ oidc:
     groups: groups
        
 
+impersonation:
+  use_jetstack: false
+  jetstack_oidc_proxy_image: quay.io/jetstack/kube-oidc-proxy:v0.3.0
+  explicit_certificate_trust: true
+  ca_secret_name: ou-tls-secret
+  
 network_policies:
   enabled: false
   ingress:
