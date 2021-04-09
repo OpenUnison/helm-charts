@@ -11,6 +11,7 @@ rules:
   - certificatesigningrequests/approval
   verbs:
   - "*"
+{{ if .Values.services.enable_cluster_admin }}
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -37,6 +38,7 @@ roleRef:
   kind: ClusterRole
   name: orchestra-certs-{{ .Release.Name }}
   apiGroup: rbac.authorization.k8s.io
+{{ end }}
 ---
 apiVersion: openunison.tremolo.io/v2
 kind: OpenUnison
@@ -79,6 +81,8 @@ spec:
             subject_alternative_names: []
           import_into_ks: keypair
           name: unison-tls
+        
+        {{ if .Values.services.createIngressCertificate }}
         - create_data:
             ca_cert: false
             key_size: 2048
@@ -90,6 +94,7 @@ spec:
           import_into_ks: certificate
           name: unison-ca
           tls_secret_name: ou-tls-certificate
+        {{ end }}
         - create_data:
             ca_cert: true
             key_size: 2048
@@ -116,7 +121,7 @@ spec:
     - name: PROMETHEUS_SERVICE_ACCOUNT
       value: {{ .Values.monitoring.prometheus_service_account}}
     - name: ISSUER_URL
-      value: {{ .Values.services.issuer_url }}
+      value: {{ quote .Values.services.issuer_url }}
     {{ if eq .Values.services.enable_tokenrequest true }}
     - name: K8S_TOKEN_TYPE
       value: tokenapi
@@ -124,6 +129,14 @@ spec:
     - name: K8S_TOKEN_TYPE
       value: legacy
     {{ end }}
+    - name: FROM_WELL_KNOWN
+      value: {{ quote .Values.services.issuer_from_well_known }}
+    - name: ISSUER_CERTIFICATE_ALIAS
+      value: {{ quote .Values.services.issuer_certificate_alias }}
+    {{ range $key,$value := .Values.openunison.non_secret_data }}
+    - name: {{ $key }}
+      value: {{ quote $value }}
+      {{ end }}
   openunison_network_configuration:
     activemq_dir: "/tmp/amq"
     allowed_client_names: []
@@ -144,9 +157,12 @@ spec:
     secure_external_port: 443
     secure_key_alias: unison-tls
     secure_port: 8443
-  replicas: 1
+  replicas: {{ .Values.openunison.replicas }}
   secret_data:
     - unisonKeystorePassword
+    {{ range .Values.openunison.secrets }}
+    - {{ . }}
+    {{ end }}
   source_secret: orchestra-secrets-source
   image: {{ .Values.image }}
   deployment_data:
@@ -158,7 +174,38 @@ spec:
     - /usr/local/openunison/bin/check_alive.py
     readiness_probe_command:
     - /usr/local/openunison/bin/check_alive.py
+    pull_secret: {{ .Values.services.pullSecret | quote }}
+    
+    {{ $length := len .Values.services.node_selectors }}
+    {{ if eq $length 0  }}
     node_selectors: []
+    {{ else }}
+    node_selectors: {{ range $key,$value := .Values.services.node_selectors }}
+    - name: {{ $key }}
+      value: {{ $value }}
+      {{ end }}
+    {{ end }}
+    {{ if .Values.services.resources }}
+    resources:
+      {{ if .Values.services.resources.requests }}
+      requests:
+        {{ if .Values.services.resources.requests.memory }}
+          memory: {{ .Values.services.resources.requests.memory | quote }}
+        {{ end }}
+        {{ if .Values.services.resources.requests.cpu }}
+          cpu: {{ .Values.services.resources.requests.cpu | quote }}
+        {{ end }}
+      {{ end }}
+      {{ if .Values.services.resources.limits }}
+      limits:
+        {{ if .Values.services.resources.limits.memory }}
+          memory: {{ .Values.services.resources.limits.memory | quote }}
+        {{ end }}
+        {{ if .Values.services.resources.limits.cpu }}
+          cpu: {{ .Values.services.resources.limits.cpu | quote }}
+        {{ end }}
+      {{ end }}
+    {{ end }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole

@@ -65,6 +65,12 @@ smtp:
 monitoring:
   prometheus_service_account: system:serviceaccount:monitoring:prometheus-k8s
 
+impersonation:
+  use_jetstack: false
+  jetstack_oidc_proxy_image: quay.io/jetstack/kube-oidc-proxy:v0.3.0
+  explicit_certificate_trust: true
+  ca_secret_name: ou-tls-secret
+
 network_policies:
   enabled: true
   ingress:
@@ -85,8 +91,9 @@ services:
   token_request_audience: api
   token_request_expiration_seconds: 600
   node_selectors: []
-  pullSecretName: ""
+  pullSecret: ""
 
 openunison:
+  replicas: 1
   non_secret_data: {}
   secrets: []

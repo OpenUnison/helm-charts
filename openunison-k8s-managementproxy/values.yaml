@@ -1,9 +1,15 @@
 services:
   api_server_host: "k8sapi.apps.192.168.2.148.nip.io"
   issuer_url: https://ou.apps.192.168.2.119.nip.io/auth/idp/remotek8s
+  issuer_from_well_known: true
+  issuer_certificate_alias: ""
   enable_tokenrequest: true
   token_request_audience: api
   token_request_expiration_seconds: 600
+  createIngressCertificate: true
+  node_selectors: []
+  pullSecret: ""
+  enable_cluster_admin: false
 
 
 cert_template:
@@ -39,3 +45,8 @@ network_policies:
     enabled: false
     labels:
       app.kubernetes.io/name: kube-system
+
+openunison:
+  replicas: 1
+  non_secret_data: {}
+  secrets: []
