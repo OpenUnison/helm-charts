@@ -172,7 +172,7 @@ roleRef:
   name: openunison-operator-update-validatingwebhooks
   apiGroup: rbac.authorization.k8s.io
 ---
-apiVersion: openunison.tremolo.io/v2
+apiVersion: openunison.tremolo.io/v4
 kind: OpenUnison
 metadata:
   name: orchestra
@@ -191,6 +191,9 @@ spec:
     {{ if eq .Values.enable_impersonation true }}
     - env_var: K8S_API_HOST
       name: {{ .Values.network.api_server_host }}
+      {{ if eq .Values.impersonation.use_jetstack true }}
+      service_name: kube-oidc-proxy-{{ .Release.Name }}
+      {{ end }}
     {{ end }}
     secret_name: ou-tls-certificate
     ingress_type: {{ .Values.network.ingress_type | default "nginx" }}
@@ -416,7 +419,7 @@ spec:
     secure_external_port: 443
     secure_key_alias: unison-tls
     secure_port: 8443
-  replicas: 1
+  replicas: {{ .Values.openunison.replicas }}
   secret_data:
     - AD_BIND_PASSWORD
     - K8S_DB_SECRET
@@ -448,6 +451,27 @@ spec:
     node_selectors: {{ range $key,$value := .Values.services.node_selectors }}
     - name: {{ $key }}
       value: {{ $value }}
+      {{ end }}
+    {{ end }}
+    {{ if .Values.services.resources }}
+    resources:
+      {{ if .Values.services.resources.requests }}
+      requests:
+        {{ if .Values.services.resources.requests.memory }}
+          memory: {{ .Values.services.resources.requests.memory | quote }}
+        {{ end }}
+        {{ if .Values.services.resources.requests.cpu }}
+          cpu: {{ .Values.services.resources.requests.cpu | quote }}
+        {{ end }}
+      {{ end }}
+      {{ if .Values.services.resources.limits }}
+      limits:
+        {{ if .Values.services.resources.limits.memory }}
+          memory: {{ .Values.services.resources.limits.memory | quote }}
+        {{ end }}
+        {{ if .Values.services.resources.limits.cpu }}
+          cpu: {{ .Values.services.resources.limits.cpu | quote }}
+        {{ end }}
       {{ end }}
     {{ end }}
     
