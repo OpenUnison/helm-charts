@@ -80,3 +80,26 @@ subjects:
 - kind: ServiceAccount
   name: openunison-operator
   namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: openunison-operator-webhooks
+rules:
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources: ["validatingwebhookconfigurations"]
+    verbs: ["*"] 
+    resourceNames: ["openunison-workflow-validation"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: openunison-operator-webhooks
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole 
+  name: openunison-operator-webhooks
+subjects:
+- kind: ServiceAccount
+  name: openunison-operator
+  namespace: {{ .Release.Namespace }}
