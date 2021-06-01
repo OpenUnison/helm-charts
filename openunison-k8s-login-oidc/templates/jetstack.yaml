@@ -87,7 +87,7 @@ spec:
         {{ end }}
         - name: kube-oidc-proxy-tls
           secret:
-            secretName: unison-tls
+            secretName: {{ .Values.impersonation.oidc_tls_secret_name }}
             items:
             - key: tls.crt
               path: crt.pem
