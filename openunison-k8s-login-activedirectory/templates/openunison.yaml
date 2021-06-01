@@ -357,7 +357,7 @@ spec:
     - TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384
     - TLS_DHE_RSA_WITH_AES_256_GCM_SHA384
     client_auth: none
-    force_to_secure: {{ .Values.network.force_to_secure }}
+    force_to_secure: {{ .Values.network.force_redirect_to_tls }}
     open_external_port: 80
     open_port: 8080
     path_to_deployment: "/usr/local/openunison/work"

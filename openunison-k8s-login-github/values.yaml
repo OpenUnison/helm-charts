@@ -8,6 +8,11 @@ network:
   ingress_type: nginx
   ingress_annotations:
     kubernetes.io/ingress.class: nginx
+  force_redirect_to_tls: true
+  istio:
+    selectors:
+      istio: ingressgateway
+  ingress_certificate: ou-tls-certificate
 
 cert_template:
   ou: "Kubernetes"
@@ -20,6 +25,8 @@ image: "docker.io/tremolosecurity/openunison-k8s-login-github:latest"
 myvd_config_path: "WEB-INF/myvd.conf"
 k8s_cluster_name: kubernetes
 enable_impersonation: false
+myvd_configmap: ""
+
 
 dashboard:
   namespace: "kubernetes-dashboard"
@@ -43,7 +50,7 @@ impersonation:
   use_jetstack: false
   jetstack_oidc_proxy_image: quay.io/jetstack/kube-oidc-proxy:v0.3.0
   explicit_certificate_trust: true
-  ca_secret_name: ou-tls-secret
+  ca_secret_name: ou-tls-certificate
   
 network_policies:
   enabled: false
