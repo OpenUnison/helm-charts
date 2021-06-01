@@ -65,6 +65,7 @@ impersonation:
   jetstack_oidc_proxy_image: quay.io/jetstack/kube-oidc-proxy:v0.3.0
   explicit_certificate_trust: true
   ca_secret_name: ou-tls-certificate
+  oidc_tls_secret_name: unison-tls
   
 network_policies:
   enabled: false

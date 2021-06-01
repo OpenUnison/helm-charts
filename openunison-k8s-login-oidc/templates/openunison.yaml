@@ -190,7 +190,7 @@ spec:
       service_name: kube-oidc-proxy-{{ .Release.Name }}
       {{ end }}
     {{ end }}
-    secret_name: ou-tls-certificate
+    secret_name: {{ .Values.network.ingress_certificate }}
     ingress_type: {{ .Values.network.ingress_type | default "nginx" }}
     {{ $ingress_annotations := .Values.network.ingress_annotations }}
     {{ $length := len $ingress_annotations }}
