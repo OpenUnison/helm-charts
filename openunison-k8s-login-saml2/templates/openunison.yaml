@@ -296,7 +296,7 @@ spec:
       - name: {{ .name }}
         pem_data: {{ .pem_b64 }} {{ end }}
     {{ end }}
-  myvd_configmap: {{ .Values.myvd_configmap }}
+  myvd_configmap: {{ .Values.myvd_configmap | quote }}
   non_secret_data: 
     - name: K8S_URL
       {{ if eq .Values.enable_impersonation true }}
