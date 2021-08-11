@@ -2527,6 +2527,17 @@ spec:
                                 params:
                                   type: object
                                   additionalProperties: true  
+                                secretParams:
+                                  type: array
+                                  items:
+                                    type: object
+                                    properties:
+                                      name:
+                                        type: string
+                                      secretName:
+                                        type: string
+                                      secretKey:
+                                        type: string   
                 cookieConfig:
                   type: object
                   properties:

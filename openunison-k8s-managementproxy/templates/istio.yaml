@@ -1,0 +1,67 @@
+{{ if eq .Values.services.ingress_type "istio" }}
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: openunison-gateway-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    {{ range $key,$value := .Values.services.istio.selectors }}
+        {{ $key }}: {{ quote $value }}
+    {{ end }}
+  servers:
+  - hosts:
+    - {{ .Values.services.api_server_host }}
+    port:
+      name: http
+      number: 80
+      protocol: HTTP
+    tls:
+      httpsRedirect: true
+  - hosts:
+    - {{ .Values.services.api_server_host }}
+    port:
+      name: https-443
+      number: 443
+      protocol: HTTPS
+    tls:
+      credentialName: {{ .Values.services.ingress_certificate }}
+      mode: SIMPLE
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: openunison-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  gateways:
+  - openunison-gateway-{{ .Release.Name }}
+  hosts:
+  - {{ .Values.services.api_server_host }}
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: openunison-{{ .Release.Name }}
+        port:
+          number: 80
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: openunison-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  host: openunison-{{ .Release.Name }}
+  trafficPolicy:
+    loadBalancer:
+      consistentHash:
+        httpCookie:
+          name: openunison-{{ .Release.Name }}
+          path: /
+          ttl: 0s
+    tls:
+      mode: ISTIO_MUTUAL
+{{ end }}

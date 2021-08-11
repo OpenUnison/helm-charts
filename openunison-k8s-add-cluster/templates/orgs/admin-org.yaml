@@ -1,0 +1,19 @@
+{{ if and .Values.cluster.management.enabled .Values.cluster.management.admins.enabled }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: {{ .Values.cluster.name }}-namespace-admins
+  namespace: {{ .Release.Namespace }}
+spec:
+  label: Administrators
+  azRules:
+  - constraint: {{ .Values.cluster.management.admins.az.constraint }}
+    scope: {{ .Values.cluster.management.admins.az.scope }}
+  description: Namespace Administrators
+  parent: org-cluster-{{ .Values.cluster.name }}
+  showInPortal: false
+  showInReports: false
+  showInRequestAccess: true
+  uuid: org-cluster-{{ .Values.cluster.name }}-admins
+{{ end }}

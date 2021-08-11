@@ -17,6 +17,7 @@ rules:
   - route.openshift.io
   - user.openshift.io
   - batch
+  - networking.k8s.io
   resources:
   - routes/custom-host
   - imagestreamimports

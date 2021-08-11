@@ -1,0 +1,169 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: check-hosts-{{ .Release.Name }}
+  namespace: {{.Release.Namespace }}
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed,before-hook-creation
+data:
+  check-hosts.py: |-
+    from os import environ
+    import base64
+    import re
+    import sys 
+    import ssl
+
+    def is_valid_hostname(hostname):
+        if len(hostname) > 255:
+            return False
+        if hostname[-1] == ".":
+            hostname = hostname[:-1] # strip exactly one dot from the right, if present
+        allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
+        return all(allowed.match(x) for x in hostname.split("."))
+
+
+    print("Checking all three hosts are unique")
+
+    ouhost = '{{ .Values.network.openunison_host }}'
+    print("network.openunison_host : " + ouhost)
+
+    dbhost = '{{ .Values.network.dashboard_host }}'
+    print("network.dashboard_host : " + dbhost)
+
+    apihost = '{{ .Values.network.api_server_host }}'
+    print("network.api_server_host : " + apihost)
+
+    hosts = [ouhost,dbhost,apihost]
+
+    uniqueEntries = len(set(hosts))
+
+    if uniqueEntries != 3:
+        print("network.openunison_host, network.dashboard_host, and network.api_server_host MUST be different from each other")
+        exit(1)
+
+    print("Making sure that hosts are host names")
+
+    if not is_valid_hostname(ouhost):
+        print("network.openunison_host is not a host name")
+        exit(1)
+
+    if not is_valid_hostname(dbhost):
+        print("network.dashboard_host is not a host name")
+        exit(1)
+
+    if apihost and not is_valid_hostname(apihost):
+        print("network.api_server_host is not a host name")
+        exit(1)
+
+    enable_impersonation = '{{ .Values.enable_impersonation }}'
+
+    if enable_impersonation == "true" and not apihost:
+        print("Impersonation enabled, but network.api_server_host not set ")
+        exit(1)
+    
+    print("Checking trusted_certs")
+
+    {{ range .Values.trusted_certs }}
+    cert_name =  '{{ .name }}'
+    print("Checking certificate : " + cert_name)
+
+    b64encoded = '{{ .pem_b64 }}' 
+    print("base64 encoded certificate: " + b64encoded)
+
+    try:
+        decoded = base64.b64decode(b64encoded,validate=True)
+        pemdata = decoded.decode('utf-8')
+        f = open('/tmp-pad/cert.pem','w')
+        f.write(pemdata)
+        f.close()
+        cert_dict = ssl._ssl._test_decode_cert('/tmp-pad/cert.pem')
+    except UnicodeDecodeError:
+        print("Certificate " + cert_name + " not properly base64 encoded")
+        exit(1)
+    except ssl.SSLError:
+        print("Certificate " + cert_name + " base64 encoded value is not a PEM encoded certificate chain")
+        exit(1)
+    except:
+        print("Could not decode certificate " + cert_name + ": " , sys.exc_info())
+        exit(1)
+    
+    {{ end }}
+
+    num_auth = 0
+    is_ad = False
+    is_oidc = False
+    is_github = False
+    is_saml = False
+
+    {{ if .Values.active_directory }}
+    is_ad = True
+    num_auth = num_auth + 1
+    {{ end }}
+
+    {{ if .Values.oidc }}
+    is_oidc = True
+    num_auth = num_auth + 1
+    {{ end }}
+
+    {{ if .Values.github }}
+    is_github = True
+    num_auth = num_auth + 1
+    {{ end }}
+
+    {{ if .Values.saml }}
+    is_saml = True
+    num_auth = num_auth + 1
+    {{ end }}
+
+    if num_auth == 0:
+      print("At least one authentication configuration must be specified or active_directory, oidc, github, or saml")
+      exit(1)
+
+    if num_auth > 1:
+      auths = ""
+      if is_ad:
+        auths = auths + " active_directory"
+
+      if is_oidc:
+        auths = auths + " oidc"
+
+      if is_saml:
+        auths = auths + " saml"
+
+      if is_github:
+        auths = auths + " github"
+
+      print("You have specified multiple authentication systems : [" + auths + "], only one can be specified")
+      exit(1)
+      
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-orchestra-{{ .Release.Name }}
+  namespace: {{.Release.Namespace }}
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+spec:
+  restartPolicy: Never
+  containers:
+    - name: test-values
+      image: {{ .Values.openunison.precheck.image | default "docker.io/tremolosecurity/python3" }}
+      command: ["python", "/scripts/check-hosts.py"]
+      volumeMounts:
+      - name: scripts
+        mountPath: "/scripts"
+        readOnly: true
+      - name: tmp-pad
+        mountPath: "/tmp-pad"
+  volumes:
+    - name: scripts
+      configMap:
+        name: check-hosts-{{ .Release.Name }}
+    - name: tmp-pad
+      emptyDir: {}

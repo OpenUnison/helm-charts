@@ -1,0 +1,45 @@
+{{ if .Values.cluster.management.enabled  }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Target
+metadata:
+  name: k8s-{{ .Values.cluster.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  className: com.tremolosecurity.unison.openshiftv3.OpenShiftTarget
+  params:
+  - name: url
+    value: {{ .Values.cluster.management.target.url }}
+  - name: useToken
+    value: {{ .Values.cluster.management.target.useToken | quote }}
+  {{ if .Values.cluster.management.target.certificate }}
+  - name: certificate
+    value: {{ .Values.cluster.management.target.base64_certificate | quote }}
+  {{ end }}
+  - name: tokenType
+    value: {{ .Values.cluster.management.target.tokenType }}
+  - name: oidcIdp
+    value: remotek8s
+  - name: oidcSub
+    value: openunison
+  - name: oidcAudience
+    value: kubernetes
+  - name: label
+    value: {{ .Values.cluster.label }}
+  {{ if .Values.cluster.management.target.gitUrl }}
+  - name: gitUrl
+    value: {{ quote .Values.cluster.management.target.gitUrl }}
+  {{ end }}
+  {{ if eq .Values.cluster.management.target.tokenType "static" }}
+  secretParams:
+    - name: token
+      secretKey: {{ .Values.cluster.management.target.staticSecret.keyName }}
+      secretName: {{ .Values.cluster.management.target.staticSecret.secretName }}
+  {{ else }}
+  secretParams: []
+  {{ end }}
+  targetAttributes:
+  - name: fullName
+    source: displayName
+    sourceType: user
+  {{ end }}

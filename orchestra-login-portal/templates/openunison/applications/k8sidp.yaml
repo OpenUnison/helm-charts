@@ -1,0 +1,95 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Application
+metadata:
+  name: k8sidp
+  namespace: {{ .Release.Namespace }}
+spec:
+  azTimeoutMillis: 3000
+  isApp: false
+  urls:
+  - hosts:
+    - "#[OU_HOST]"
+    - "127.0.0.1"
+    filterChain: []
+    uri: "/auth/idp/k8sIdp"
+    azRules:
+    {{ $length := len .Values.openunison.az_groups }}
+    {{ if eq $length 0 }}
+    - scope: dn
+      constraint: o=Tremolo
+    {{ else }}
+    {{ range $az_group := .Values.openunison.az_groups }}
+    - scope: filter
+      constraint: (groups={{ $az_group }})
+    {{ end }}
+    {{ end }}
+    results:
+      azFail: default-login-failure
+      auFail: default-login-failure
+    idp:
+      className: com.tremolosecurity.idp.providers.OpenIDConnectIdP
+      params:
+        jwtSigningKey: "unison-saml2-rp-sig"
+        sessionStoreClassName: "com.tremolosecurity.oidc.k8s.K8sSessionStore"
+        k8sTarget: "k8s"
+        k8sNameSpace: "#[K8S_OPENUNISON_NS:openunison]"
+        trustConfigurationClassName: "com.tremolosecurity.oidc.k8s.K8sLoadTrusts"
+        trusts.k8starget: "k8s"
+        trusts.namespace: "#[K8S_OPENUNISON_NS:openunison]"
+      mappings:
+        strict: true
+        map:
+        - targetAttributeName: sub
+          targetAttributeSource: sub
+          sourceType: user
+        - targetAttributeName: name
+          targetAttributeSource: ${giveName} ${sn}
+          sourceType: composite
+        - targetAttributeName: preferred_username
+          targetAttributeSource: uid
+          sourceType: user
+        - targetAttributeName: email
+          targetAttributeSource: mail
+          sourceType: user
+        - targetAttributeName: groups
+          targetAttributeSource: groups
+          sourceType: user
+      trusts:
+      - name: "#[K8S_URL]"
+        params:
+          clientID: "kubernetes"
+          clientSecret: ""
+          publicEndpoint: "true"
+          redirectURI: "#[K8S_URL]/redirect_uri"
+          codeLastMileKeyName: lastmile-oidc
+          authChainName: login-service
+          codeTokenSkewMilis: "#[K8S_TOKEN_LIFE_MILLIS:60000]"
+          accessTokenTimeToLive: "#[K8S_TOKEN_LIFE_MILLIS:60000]"
+          accessTokenSkewMillis: "120000"
+      {{ if eq (.Values.openunison.non_secret_data.K8S_DB_SSO | default "oidc") "oidc" }}
+      - name: "https://#[K8S_DASHBOARD_HOST]"
+        params:
+          clientID: "openunison"
+          publicEndpoint: "false"
+          redirectURI: "https://#[K8S_DASHBOARD_HOST]/auth/oidc"
+          codeLastMileKeyName: lastmile-oidc
+          authChainName: login-service
+          codeTokenSkewMilis: "#[K8S_TOKEN_LIFE_MILLIS:60000]"
+          accessTokenTimeToLive: "#[K8S_TOKEN_LIFE_MILLIS:60000]"
+          accessTokenSkewMillis: "120000"
+        secretParams:
+        - name: clientSecret
+          secretName: orchestra-secrets-source
+          secretKey: K8S_DB_SECRET
+      {{ end }}
+  cookieConfig:
+    sessionCookieName: tremolosession
+    domain: "#[OU_HOST]"
+    secure: true
+    httpOnly: true
+    logoutURI: "/logout"
+    keyAlias: session-unison
+    timeout: {{ .Values.network.session_inactivity_timeout_seconds }}
+    scope: -1
+    cookiesEnabled: true

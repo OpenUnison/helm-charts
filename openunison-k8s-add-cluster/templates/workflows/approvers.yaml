@@ -1,0 +1,28 @@
+{{ if .Values.cluster.management.enabled }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: {{ .Values.cluster.name }}-approvers
+  namespace: {{ .Release.Namespace }}
+spec:
+  description: Add new approvers
+  inList: true
+  label: $namespaceName$ Approver
+  orgId: org-cluster-{{ .Values.cluster.name }}-approvers
+  dynamicConfiguration:
+    dynamic: true
+    className: com.tremolosecurity.scalejs.ListClusterApproverGroups
+    params:
+    - name: cluster
+      value: k8s-{{ .Values.cluster.name }}
+    - name: groupsAttribute
+      value: groups
+    - name: groupsAreDN
+      value: "false"
+    - name: groupPrefix
+      value: approvers-k8s-
+  tasks: |-
+           - taskType: callWorkflow
+             name: k8s-add-approver
+{{ end }}

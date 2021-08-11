@@ -1,0 +1,19 @@
+{{ if .Values.cluster.management.enabled  }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: {{ .Values.cluster.name }}-approvers
+  namespace: {{ .Release.Namespace }}
+spec:
+  label: Approvers
+  azRules:
+  - constraint: {{ .Values.cluster.management.approvers.az.constraint }}
+    scope: {{ .Values.cluster.management.approvers.az.scope }}
+  description: Approvers
+  parent: org-cluster-{{ .Values.cluster.name }}
+  showInPortal: false
+  showInReports: false
+  showInRequestAccess: true
+  uuid: org-cluster-{{ .Values.cluster.name }}-approvers
+{{ end }}

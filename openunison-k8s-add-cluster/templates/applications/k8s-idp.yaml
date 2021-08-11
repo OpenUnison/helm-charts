@@ -1,0 +1,80 @@
+{{ if .Values.cluster.sso.enabled | default false }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Application
+metadata:
+  name: cluster-idp-{{ .Values.cluster.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  azTimeoutMillis: 3000
+  isApp: false
+  urls:
+  - hosts:
+    - "#[OU_HOST]"
+    filterChain: []
+    uri: "/auth/idp/cluster-idp-{{ .Values.cluster.name }}"
+    azRules:
+    {{ $length := len .Values.cluster.az_groups }}
+    {{ if eq $length 0 }}
+    - scope: dn
+      constraint: o=Tremolo
+    {{ else }}
+    {{ range $az_group := .Values.cluster.az_groups }}
+    - scope: filter
+      constraint: (groups={{ $az_group }})
+    {{ end }}
+    {{ end }}
+    results:
+      azFail: default-login-failure
+      auFail: default-login-failure
+    idp:
+      className: com.tremolosecurity.idp.providers.OpenIDConnectIdP
+      params:
+        jwtSigningKey: "unison-saml2-rp-sig"
+        sessionStoreClassName: "com.tremolosecurity.oidc.k8s.K8sSessionStore"
+        k8sTarget: "k8s"
+        k8sNameSpace: "#[K8S_OPENUNISON_NS:openunison]"
+      mappings:
+        strict: true
+        map:
+        - targetAttributeName: sub
+          targetAttributeSource: sub
+          sourceType: user
+        - targetAttributeName: name
+          targetAttributeSource: ${giveName} ${sn}
+          sourceType: composite
+        - targetAttributeName: preferred_username
+          targetAttributeSource: uid
+          sourceType: user
+        - targetAttributeName: email
+          targetAttributeSource: mail
+          sourceType: user
+        - targetAttributeName: groups
+          targetAttributeSource: groups
+          sourceType: user
+      trusts:
+      - name: "cluster-idp-{{ .Values.cluster.name }}"
+        params:
+          clientID: "cluster-idp-{{ .Values.cluster.name }}"
+          publicEndpoint: "false"
+          redirectURI: "https://{{ .Values.cluster.hosts.portal }}/auth/oidc"
+          codeLastMileKeyName: lastmile-oidc
+          authChainName: login-service
+          codeTokenSkewMilis: "#[K8S_TOKEN_LIFE_MILLIS:60000]"
+          accessTokenTimeToLive: "#[K8S_TOKEN_LIFE_MILLIS:60000]"
+          accessTokenSkewMillis: "120000"
+        secretParams:
+        - name: clientSecret
+          secretName: orchestra-secrets-source
+          secretKey: cluster-idp-{{ .Values.cluster.name }}
+  cookieConfig:
+    sessionCookieName: tremolosession
+    domain: "#[OU_HOST]"
+    secure: true
+    httpOnly: true
+    logoutURI: "/logout"
+    keyAlias: session-unison
+    timeout: {{ .Values.cluster.sso.inactivityTimeoutSeconds }}
+    scope: -1
+    cookiesEnabled: true
+{{ end }}

@@ -1,0 +1,33 @@
+{{ if .Values.cluster.management.enabled }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: {{ .Values.cluster.name }}-delete-namespace
+  namespace: {{ .Release.Namespace }}
+spec:
+  description: Request namespace deletion
+  inList: true
+  label: $namespaceName$
+  orgId: org-cluster-{{ .Values.cluster.name }}-delete
+  dynamicConfiguration:
+    dynamic: true
+    className: com.tremolosecurity.scalejs.ListClusterApproverGroups
+    params:
+    - name: cluster
+      value: k8s-{{ .Values.cluster.name }}
+    - name: groupsAttribute
+      value: groups
+    - name: groupsAreDN
+      value: "false"
+    - name: groupPrefix
+      value: approvers-k8s-
+  tasks: |-
+           - taskType: addAttribute
+             name: cluster
+             value: k8s-{{ .Values.cluster.name }}
+             remove: false
+             addToRequest: true
+           - taskType: callWorkflow
+             name: k8s-delete-workflow
+{{ end }}
