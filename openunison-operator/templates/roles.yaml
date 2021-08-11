@@ -16,6 +16,7 @@ rules:
   - image.openshift.io
   - route.openshift.io
   - user.openshift.io
+  - networking.k8s.io
   - batch
   - networking.k8s.io
   resources:
