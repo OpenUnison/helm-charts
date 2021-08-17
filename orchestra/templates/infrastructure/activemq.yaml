@@ -1,0 +1,105 @@
+{{ if and .Values.openunison.enable_provisioning .Values.openunison.enable_activemq }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: amq-{{ .Release.Name  }}
+    operated-by: openunison-operator
+  name: amq-{{ .Release.Name  }}
+  namespace: {{ .Release.Namespace  }}
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: amq-{{ .Release.Name  }}
+  template:
+    metadata:
+      creationTimestamp:
+      labels:
+        app: amq-{{ .Release.Name  }}
+        operated-by: openunison-operator
+    spec:
+      containers:
+      - env:
+        - name: ACTIVEMQ_DEBUG_OPTS
+          value: "-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom"
+        - name: JDBC_DRIVER
+          valueFrom:
+            secretKeyRef:
+              name: amq-env-secrets-{{ .Release.Name  }}
+              key: JDBC_DRIVER
+        - name: JDBC_URL
+          valueFrom:
+            secretKeyRef:
+              name: amq-env-secrets-{{ .Release.Name  }}
+              key: JDBC_URL
+        - name: JDBC_USER
+          valueFrom:
+            secretKeyRef:
+              name: amq-env-secrets-{{ .Release.Name  }}
+              key: JDBC_USER
+        - name: JDBC_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: amq-env-secrets-{{ .Release.Name  }}
+              key: JDBC_PASSWORD
+        - name: TLS_KS_PWD
+          valueFrom:
+            secretKeyRef:
+              name: amq-env-secrets-{{ .Release.Name  }}
+              key: TLS_KS_PWD
+        image: {{ .Values.amq_image }}
+        imagePullPolicy: Always
+        livenessProbe:
+          exec:
+            command:
+            - "/usr/bin/health_check.sh"
+          failureThreshold: 10
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 10
+        name: amq-{{ .Release.Name  }}
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        - containerPort: 8443
+          name: https
+          protocol: TCP
+        readinessProbe:
+          exec:
+            command:
+            - "/usr/bin/health_check.sh"
+          failureThreshold: 3
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 10
+        resources: {}
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: "/etc/activemq"
+          name: secret-volume
+          readOnly: true
+        - name: local-data
+          mountPath: "/usr/local/activemq/data"
+        - name: jetty-tmp
+          mountPath: "/usr/local/activemq/tmp"
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: secret-volume
+        secret:
+          defaultMode: 420
+          secretName: amq-secrets-{{ .Release.Name  }}
+      - name: local-data
+        emptyDir: {}
+      - name: jetty-tmp
+        emptyDir: {}
+{{ end }}

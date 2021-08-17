@@ -6,6 +6,11 @@ metadata:
   namespace: {{ .Release.Namespace }}
   annotations:
     helm-update: {{ now | date "Jan 2 15:04:05 2006 MST" }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison
+    app.kubernetes.io/part-of: openunison
 spec:
   dest_secret: {{ .Release.Name }}
   

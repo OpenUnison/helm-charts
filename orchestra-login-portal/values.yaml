@@ -114,3 +114,5 @@ openunison:
     image: docker.lab.tremolo.dev/nginx
   enable_provisioning: false
   az_groups: []
+  precheck:
+    image: docker.io/tremolosecurity/python3

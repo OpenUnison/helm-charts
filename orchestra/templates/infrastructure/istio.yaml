@@ -4,6 +4,11 @@ kind: Gateway
 metadata:
   name: openunison-gateway-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: ingress-istio
+    app.kubernetes.io/part-of: openunison
 spec:
   selector:
     {{ range $key,$value := .Values.network.istio.selectors }}
@@ -41,6 +46,11 @@ kind: VirtualService
 metadata:
   name: openunison-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: ingress-istio
+    app.kubernetes.io/part-of: openunison
 spec:
   gateways:
   - openunison-gateway-{{ .Release.Name }}
@@ -66,6 +76,11 @@ kind: Gateway
 metadata:
   name: openunison-api-gateway-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: ingress-istio
+    app.kubernetes.io/part-of: openunison
 spec:
   selector:
     {{ range $key,$value := .Values.network.istio.selectors }}
@@ -94,6 +109,11 @@ kind: VirtualService
 metadata:
   name: openunison-api-{{ .Release.Name }}-jetstack
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: ingress-istio
+    app.kubernetes.io/part-of: openunison
 spec:
   gateways:
   - openunison-api-gateway-{{ .Release.Name }}
@@ -116,6 +136,11 @@ kind: DestinationRule
 metadata:
   name: openunison-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: ingress-istio
+    app.kubernetes.io/part-of: openunison
 spec:
   host: openunison-{{ .Release.Name }}
   trafficPolicy:

@@ -5,6 +5,11 @@ kind: NetworkPolicy
 metadata:
   name: default-deny-ingress
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: network-policeis
+    app.kubernetes.io/part-of: openunison
 spec:
   podSelector: {}
   policyTypes:
@@ -15,6 +20,11 @@ kind: NetworkPolicy
 metadata:
   name: openunison-to-activemq
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: network-policeis
+    app.kubernetes.io/part-of: openunison
 spec:
   ingress:
   - from:
@@ -33,6 +43,11 @@ kind: NetworkPolicy
 metadata:
   name: allow-from-ingress
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: network-policeis
+    app.kubernetes.io/part-of: openunison
 spec:
   podSelector:
     matchLabels:
@@ -53,6 +68,11 @@ kind: NetworkPolicy
 metadata:
   name: oidc-proxy-allow-from-ingress
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: network-policeis
+    app.kubernetes.io/part-of: openunison
 spec:
   podSelector:
     matchLabels:
@@ -75,6 +95,11 @@ kind: NetworkPolicy
 metadata:
   name: allow-from-prometheus
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: network-policeis
+    app.kubernetes.io/part-of: openunison
 spec:
   podSelector:
     matchLabels:
@@ -95,6 +120,11 @@ kind: NetworkPolicy
 metadata:
   name: allow-from-apiserver
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: network-policeis
+    app.kubernetes.io/part-of: openunison
 spec:
   podSelector:
     matchLabels:

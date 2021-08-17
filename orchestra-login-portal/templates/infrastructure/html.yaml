@@ -3,6 +3,11 @@ kind: ServiceAccount
 metadata:
   name: ouhtml-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: openunison
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -11,6 +16,11 @@ metadata:
     app: ouhtml-{{ .Release.Name }}
   name: ouhtml-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: html
+    app.kubernetes.io/part-of: openunison
 spec:
   progressDeadlineSeconds: 600
   replicas: {{ .Values.openunison.replicas }}
@@ -50,12 +60,51 @@ spec:
             httpHeaders: []
           initialDelaySeconds: 3
           periodSeconds: 30
+        {{ if .Values.services.resources }}
+        resources:
+          {{ if .Values.services.resources.requests }}
+          requests: 
+            {{ if .Values.services.resources.requests.memory }}
+            memory: {{ .Values.services.resources.requests.memory | quote }}
+            {{ end }}
+            
+            {{ if .Values.services.resources.requests.cpu }}
+            cpu: {{ .Values.services.resources.requests.cpu | quote }}
+            {{ end }}
+          
+          {{ end }}
+
+          {{ if .Values.services.resources.limits }}
+          limits: 
+            {{ if .Values.services.resources.limits.memory }}
+            memory: {{ .Values.services.resources.limits.memory | quote }}
+            {{ end }}
+            
+            {{ if .Values.services.resources.limits.cpu }}
+            cpu: {{ .Values.services.resources.limits.cpu | quote }}
+            {{ end }}
+          
+          {{ end }}
+        {{ end }}
       dnsPolicy: ClusterFirst
       serviceAccountName: ouhtml-{{ .Release.Name }}
       automountServiceAccountToken: false
       restartPolicy: Always
       securityContext: {}
       terminationGracePeriodSeconds: 30
+      {{ $length := len .Values.services.node_selectors }}
+      {{ if eq $length 0  }}
+      nodeSelector: {}
+      {{ else }}
+      nodeSelector: {{ range $key,$value := .Values.services.node_selectors }}
+        {{ $key }}: {{ $value | quote }}
+      {{ end }}
+      {{ end }}
+      {{ if .Values.services.pullSecret }}
+      imagePullSecrets:
+      - name: {{  .Values.services.pullSecret | quote }}
+      {{ end }}
+      
 ---
 apiVersion: v1
 kind: Service

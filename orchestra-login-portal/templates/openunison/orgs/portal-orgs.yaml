@@ -5,6 +5,11 @@ kind: Org
 metadata:
   name: local-deployment
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-orgs
+    app.kubernetes.io/part-of: openunison
 spec:
   label: "#[K8S_DEPLOYMENT_NAME:Local Deployment]"
   azRules:

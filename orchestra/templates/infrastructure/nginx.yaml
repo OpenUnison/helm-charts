@@ -16,6 +16,11 @@ metadata:
     {{ end }}
   name: openunison-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: ingress-nginx
+    app.kubernetes.io/part-of: openunison
 spec:
   rules:
   - host: {{ .Values.network.openunison_host }}

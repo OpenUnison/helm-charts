@@ -5,6 +5,11 @@ kind: Application
 metadata:
   name: k8sdb-saml2
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-applications
+    app.kubernetes.io/part-of: openunison
 spec:
   azTimeoutMillis: 3000
   isApp: false

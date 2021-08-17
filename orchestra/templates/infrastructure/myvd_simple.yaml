@@ -4,7 +4,12 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: myvd
-  namespace: {{.Release.Namespace}}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: myvd
+    app.kubernetes.io/part-of: openunison
 data:
   myvd.conf: |-
     #Global AuthMechConfig

@@ -11,6 +11,11 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: "openunison-workflow-validation-{{ .Release.Name }}"
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: webhooks
+    app.kubernetes.io/part-of: openunison
 webhooks:
 - name: "workflows-openunison.tremolo.io"
   rules:

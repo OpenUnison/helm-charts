@@ -112,3 +112,6 @@ openunison:
   html:
     image: docker.lab.tremolo.dev/nginx
   enable_provisioning: false
+  enable_activemq: true
+  precheck:
+    image: docker.io/tremolosecurity/python3

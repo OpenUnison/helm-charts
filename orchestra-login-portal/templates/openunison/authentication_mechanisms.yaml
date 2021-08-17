@@ -4,6 +4,11 @@ kind: AuthenticationMechanism
 metadata:
   name: login-form
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-authmechs
+    app.kubernetes.io/part-of: openunison
 spec:
   className: com.tremolosecurity.proxy.auth.FormLoginAuthMech
   uri: "/auth/formlogin"
@@ -15,6 +20,11 @@ kind: AuthenticationMechanism
 metadata:
   name: jit
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-authmechs
+    app.kubernetes.io/part-of: openunison
 spec:
   className: com.tremolosecurity.provisioning.auth.JITAuthMech
   uri: "/auth/jit"
@@ -26,6 +36,11 @@ kind: AuthenticationMechanism
 metadata:
   name: genoidctoken
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-authmechs
+    app.kubernetes.io/part-of: openunison
 spec:
   className: com.tremolosecurity.proxy.auth.GenerateOIDCTokens
   uri: "/auth/oidctoken"
@@ -37,6 +52,11 @@ kind: AuthenticationMechanism
 metadata:
   name: login-service
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-authmechs
+    app.kubernetes.io/part-of: openunison
 spec:
   className: com.tremolosecurity.proxy.auth.LoginService
   uri: "/auth/loginservice"
@@ -48,6 +68,11 @@ kind: AuthenticationMechanism
 metadata:
   name: oidc
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-authmechs
+    app.kubernetes.io/part-of: openunison
 spec:
   className: com.tremolosecurity.unison.proxy.auth.openidconnect.OpenIDConnectAuthMech
   uri: "/auth/oidc"
@@ -59,6 +84,11 @@ kind: AuthenticationMechanism
 metadata:
   name: saml2
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-authmechs
+    app.kubernetes.io/part-of: openunison
 spec:
   className: com.tremolosecurity.proxy.auth.SAML2Auth
   uri: "/auth/saml2"
@@ -70,6 +100,11 @@ kind: AuthenticationMechanism
 metadata:
   name: oauth2jwt
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-authmechs
+    app.kubernetes.io/part-of: openunison
 spec:
   className: com.tremolosecurity.proxy.auth.oauth2.OAuth2JWT
   uri: "/auth/oauth2jwt"
@@ -81,6 +116,11 @@ kind: AuthenticationMechanism
 metadata:
   name: oauth2k8s
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-authmechs
+    app.kubernetes.io/part-of: openunison
 spec:
   className: com.tremolosecurity.proxy.auth.OAuth2K8sServiceAccount
   uri: "/auth/oauth2k8s"
@@ -92,6 +132,11 @@ kind: AuthenticationMechanism
 metadata:
   name: map
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-authmechs
+    app.kubernetes.io/part-of: openunison
 spec:
   className: com.tremolosecurity.proxy.auth.FullMappingAuthMech
   uri: "/auth/map"
@@ -103,6 +148,11 @@ kind: AuthenticationMechanism
 metadata:
   name: github
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-authmechs
+    app.kubernetes.io/part-of: openunison
 spec:
   className: com.tremolosecurity.unison.proxy.auth.github.GithubAuthMech
   uri: "/auth/github"
@@ -114,6 +164,11 @@ kind: AuthenticationMechanism
 metadata:
   name: az
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-authmechs
+    app.kubernetes.io/part-of: openunison
 spec:
   className: com.tremolosecurity.proxy.auth.AuthorizationAuthMech
   uri: "/auth/az"

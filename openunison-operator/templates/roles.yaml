@@ -4,6 +4,11 @@ kind: Role
 metadata:
   name: openunison-operator-role
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: openunison
 rules:
 - apiGroups:
   - openunison.tremolo.io
@@ -50,6 +55,11 @@ kind: RoleBinding
 metadata:
   name: openunison-operator-rolebinding
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: openunison
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role

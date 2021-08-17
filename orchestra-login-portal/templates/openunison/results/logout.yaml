@@ -4,6 +4,11 @@ kind: ResultGroup
 metadata:
   name: logout
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-resultgroups
+    app.kubernetes.io/part-of: openunison
 spec:
 - resultType: redirect
   source: static

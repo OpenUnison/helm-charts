@@ -5,6 +5,11 @@ kind: PortalUrl
 metadata:
   name: k8sdb
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-portalurls
+    app.kubernetes.io/part-of: openunison
 spec:
   label: Kubernetes Dashboard
   org: b1bf4c92-7220-4ad2-91af-ee0fe0af7312
@@ -27,6 +32,11 @@ kind: PortalUrl
 metadata:
   name: oauth2token
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-portalurls
+    app.kubernetes.io/part-of: openunison
 spec:
   label: Kubernetes Tokens
   org: b1bf4c92-7220-4ad2-91af-ee0fe0af7312

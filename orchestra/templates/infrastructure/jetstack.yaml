@@ -4,6 +4,10 @@ kind: Deployment
 metadata:
   labels:
     app: kube-oidc-proxy-{{ .Release.Name }}
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: kube-oidc-proxy
+    app.kubernetes.io/part-of: openunison
   name: kube-oidc-proxy-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
 spec:
@@ -15,6 +19,10 @@ spec:
     metadata:
       labels:
         app: kube-oidc-proxy-{{ .Release.Name }}
+        app.kubernetes.io/name: openunison
+        app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+        app.kubernetes.io/component: kube-oidc-proxy
+        app.kubernetes.io/part-of: openunison
     spec:
       serviceAccountName: openunison-{{ .Release.Name }}
       containers:
@@ -113,6 +121,10 @@ metadata:
   creationTimestamp: null
   labels:
     app: kube-oidc-proxy-{{ .Release.Name }}
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: kube-oidc-proxy
+    app.kubernetes.io/part-of: openunison
   name: kube-oidc-proxy-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
 spec:
