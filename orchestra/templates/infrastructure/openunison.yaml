@@ -256,6 +256,26 @@ spec:
     secure_external_port: 443
     secure_key_alias: unison-tls
     secure_port: 8443
+    {{ if .Values.openunison.enable_provisioning}}
+    queue_configuration:
+      use_internal_queue: false
+      max_producers: {{ .Values.openunison.queue.max_producers }}
+      connection_factory: {{ .Values.openunison.queue.connection_factory }}
+      max_consumers: {{ .Values.openunison.queue.max_consumers }}
+      max_sessions_per_connection: {{ .Values.openunison.queue.max_sessions_per_connection }}
+      task_queue_name: {{ .Values.openunison.queue.task_queue_name }}
+      smtp_queue_name: {{ .Values.openunison.queue.smtp_queue_name }}
+      encryption_key_name: {{ .Values.openunison.queue.encryption_key_name }}
+      num_queues: {{ .Values.openunison.queue.num_queues }}
+      multi_task_queues: {{ .Values.openunison.queue.multi_task_queues }}
+      keep_alive_millis: {{ .Values.openunison.queue.keep_alive_millis }}
+      params:
+      {{ range $param := .Values.openunison.queue.params }}
+      - name: {{ $param.name | quote }}
+        source_type: {{ $param.source_type | quote }}
+        value: {{ $param.value | quote  }}
+      {{ end }}
+    {{ end }}
   replicas: {{ .Values.openunison.replicas }}
   secret_data:
     - AD_BIND_PASSWORD

@@ -83,13 +83,42 @@ spec:
         terminationMessagePath: "/dev/termination-log"
         terminationMessagePolicy: File
         volumeMounts:
-        - mountPath: "/etc/activemq"
+        - mountPath: "/etc/activemq-secrets"
           name: secret-volume
+          readOnly: true
+        - mountPath: "/etc/activemq"
+          name: config-volume
           readOnly: true
         - name: local-data
           mountPath: "/usr/local/activemq/data"
         - name: jetty-tmp
           mountPath: "/usr/local/activemq/tmp"
+        {{ if .Values.amq.resources }}
+        resources:
+          {{ if .Values.amq.resources.requests }}
+          requests: 
+            {{ if .Values.amq.resources.requests.memory }}
+            memory: {{ .Values.amq.resources.requests.memory | quote }}
+            {{ end }}
+            
+            {{ if .Values.amq.resources.requests.cpu }}
+            cpu: {{ .Values.amq.resources.requests.cpu | quote }}
+            {{ end }}
+          
+          {{ end }}
+
+          {{ if .Values.amq.resources.limits }}
+          limits: 
+            {{ if .Values.amq.resources.limits.memory }}
+            memory: {{ .Values.amq.resources.limits.memory | quote }}
+            {{ end }}
+            
+            {{ if .Values.amq.resources.limits.cpu }}
+            cpu: {{ .Values.amq.resources.limits.cpu | quote }}
+            {{ end }}
+          
+          {{ end }}
+        {{ end }}
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
@@ -102,4 +131,20 @@ spec:
         emptyDir: {}
       - name: jetty-tmp
         emptyDir: {}
+      - name: config-volume
+        configMap:
+          name: activemq-config-{{ .Release.Name }}
+      {{ $length := len .Values.services.node_selectors }}
+      {{ if eq $length 0  }}
+      nodeSelector: {}
+      {{ else }}
+      nodeSelector: {{ range $key,$value := .Values.services.node_selectors }}
+        {{ $key }}: {{ quote $value }}
+      {{ end }}
+      {{ end }}
+
+      {{ if .Values.services.pullSecret }}
+      imagePullSecrets:
+      - name: {{ .Values.services.pullSecret }}
+      {{ end }}
 {{ end }}

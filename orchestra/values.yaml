@@ -115,3 +115,25 @@ openunison:
   enable_activemq: true
   precheck:
     image: docker.io/tremolosecurity/python3
+  queue:
+    max_producers: 2
+    connection_factory: com.tremolosecurity.provisioning.amq.AmqSingleKeyProvider
+    max_consumers: 1
+    max_sessions_per_connection: 10
+    task_queue_name: "openunisuron-tasks-{x}"
+    smtp_queue_name: "openunison-smtp"
+    encryption_key_name: "session-unison"
+    num_queues: 6
+    multi_task_queues: true
+    keep_alive_millis: 60000
+    params:
+      - name: brokerURL
+        source_type: static
+        value: "failover:(ssl://amq.openunison.svc:61616)?initialReconnectDelay=10000"
+      - name: keyAlias
+        source_type: static
+        value: "amq-client"
+      - name: trustAlias
+        source_type: static
+        value: "amq-server"
+      
