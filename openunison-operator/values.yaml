@@ -7,4 +7,6 @@ crd:
 services:
   node_selectors: []
   pullSecret: ""
+
+image: docker.io/tremolosecurity/betas:operator-v1024
   

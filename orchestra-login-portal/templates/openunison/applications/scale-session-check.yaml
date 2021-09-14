@@ -35,6 +35,19 @@ spec:
     azRules:
     - scope: dn
       constraint: "o=Tremolo"
+  {{ if .Values.openunison.enable_provisioning }}
+  - hosts:
+    - "*"
+    filterChain:
+    - className: com.tremolosecurity.proxy.filters.CheckSession
+      params:
+        applicationName: scale-ops
+    uri: "/ops/sessioncheck"
+    authChain: anon
+    azRules:
+    - scope: dn
+      constraint: "o=Tremolo"
+  {{ end }}
   cookieConfig:
     sessionCookieName: checksession
     domain: "*"

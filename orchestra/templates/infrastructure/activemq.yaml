@@ -93,6 +93,7 @@ spec:
           mountPath: "/usr/local/activemq/data"
         - name: jetty-tmp
           mountPath: "/usr/local/activemq/tmp"
+        {{ if .Values.amq }}
         {{ if .Values.amq.resources }}
         resources:
           {{ if .Values.amq.resources.requests }}
@@ -118,6 +119,7 @@ spec:
             {{ end }}
           
           {{ end }}
+        {{ end }}
         {{ end }}
       dnsPolicy: ClusterFirst
       restartPolicy: Always

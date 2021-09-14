@@ -69,7 +69,12 @@ spec:
             key_size: 2048
             server_name: openunison-{{ .Release.Name }}.{{ .Release.Namespace }}.svc
             sign_by_k8s_ca: {{ .Values.certs.use_k8s_cm }}
+            {{ if eq .Values.enable_impersonation true }}
+            subject_alternative_names:
+            - {{ .Values.network.api_server_host }}
+            {{ else }}
             subject_alternative_names: []
+            {{ end }}
           import_into_ks: keypair
           name: unison-tls
         

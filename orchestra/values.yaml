@@ -6,15 +6,21 @@ network:
   k8s_url: https://k8s-installer-master.tremolo.lan:6443
   createIngressCertificate: true
   ingress_type: nginx
+  ingress_certificate: ou-tls-certificate
   ingress_annotations:
     kubernetes.io/ingress.class: nginx
+  istio:
+    selectors:
+      istio: ingressgateway
   
 
 cert_template:
   ou: "Kubernetes"
   o: "MyOrg"
   l: "My Cluster"
-  st: "State of Cluster"
+  st: "State of 
+  
+  Cluster"
   c: "MyCountry"
 
 image: "docker.io/tremolosecurity/openunison-k8s:latest"

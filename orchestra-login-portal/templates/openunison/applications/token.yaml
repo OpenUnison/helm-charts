@@ -57,7 +57,11 @@ spec:
         tokenClassName: "com.tremolosecurity.scalejs.KubectlTokenLoader"
         kubectlUsage: "Run the kubectl command to set your user-context and server connection"
         {{ if .Values.enable_impersonation  }}
+        {{ if eq .Values.network.ingress_type "istio"}}
+        k8sCaCertName: unison-tls
+        {{ else }}
         k8sCaCertName: "#[K8S_API_SERVER_CERT:unison-ca]"
+        {{ end }}
         {{ else }}
         k8sCaCertName: "#[K8S_API_SERVER_CERT:k8s-master]"
         {{ end }}

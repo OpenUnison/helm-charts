@@ -1,4 +1,4 @@
-{{ if not .Values.openunison.enable_provisioning }}
+{{ if .Values.openunison.enable_provisioning }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Workflow
@@ -20,16 +20,17 @@ spec:
     className: ""
     params: []
   tasks: |-
-           {{ if .Values.github }}
+           
            - taskType: customTask
-             className: com.tremolosecurity.unison.proxy.auth.github.MergeGithubGroups
-             params: {}
-           {{ else }}
-           - taskType: customTask
-             className: com.tremolosecurity.provisioning.customTasks.Attribute2Groups
+             className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
              params:
-               attributeName: memberOf
-           {{ end }}
+               message: enter-workflow
+
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.LoadGroups
+             params:
+               nameAttr: uid
+           
            - taskType: mapping
              strict: true
              map:
@@ -39,19 +40,22 @@ spec:
              - targetAttributeName: sub
                sourceType: user
                targetAttributeSource: uid
-             - targetAttributeName: email
-               sourceType: custom
-               targetAttributeSource: com.tremolosecurity.mapping.DefaultEmail
-             - targetAttributeName: first_name
+             - targetAttributeName: mail
+               sourceType: user
+               targetAttributeSource: mail
+             - targetAttributeName: firstName
                sourceType: user
                targetAttributeSource: givenName
-             - targetAttributeName: last_name
+             - targetAttributeName: lastName
                sourceType: user
                targetAttributeSource: sn
-             - targetAttributeName: uid
-               sourceType: user
-               targetAttributeSource: uid
              onSuccess:
+               - taskType: customTask
+                 className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
+                 params:
+                   message: in-mapping
+               - taskType: addGroup
+                 name: users
                - taskType: provision
                  sync: true
                  target: jitdb
@@ -59,10 +63,9 @@ spec:
                  onlyPassedInAttributes: true
                  attributes:
                  - sub
-                 - email
-                 - first_name
-                 - last_name
-                 - uid
+                 - mail
+                 - firstName
+                 - lastName
                - taskType: resync
                  keepExternalAttrs: false
                  changeRoot: true

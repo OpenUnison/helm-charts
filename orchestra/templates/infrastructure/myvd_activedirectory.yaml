@@ -1,4 +1,5 @@
 {{ if .Values.active_directory }}
+{{ if eq .Values.openunison.enable_provisioning false }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -77,4 +78,5 @@ data:
     server.activedirectory.ldap.config.heartbeatIntervalMillis=60000
     server.activedirectory.ldap.config.type={{ .Values.active_directory.con_type }}
     server.activedirectory.ldap.config.sslSocketFactory=com.tremolosecurity.proxy.ssl.TremoloSSLSocketFactory
+{{ end }}
 {{ end }}

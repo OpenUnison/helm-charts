@@ -1,4 +1,4 @@
-{{ if not .Values.enable_provisioning }}
+{{ if not .Values.openunison.enable_provisioning }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: PortalUrl
