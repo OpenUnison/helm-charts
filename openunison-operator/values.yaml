@@ -3,3 +3,6 @@ crd:
   deploy: true
   betas: false
   webhooks: true
+
+services:
+  pullSecret: ""
