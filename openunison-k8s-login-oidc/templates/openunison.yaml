@@ -30,6 +30,30 @@ subjects:
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
+  namespace: {{ .Release.Namespace }}
+  name: oidc-user-sessions
+rules:
+- apiGroups: ["openunison.tremolo.io"]
+  resources: ["oidc-sessions","users"]
+  verbs: ["*"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: oidc-user-sessions
+  namespace: {{ .Release.Namespace }}
+subjects:
+- kind: ServiceAccount
+  name: openunison-orchestra
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: oidc-user-sessions
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
   namespace: {{ .Values.dashboard.namespace }}
   name: orchestra-dashboard
 rules:
@@ -79,6 +103,30 @@ subjects:
 roleRef:
   kind: ClusterRole
   name: orchestra-certs
+  apiGroup: rbac.authorization.k8s.io
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: orchestra-webhooks
+rules:
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources: ["validatingwebhookconfigurations"]
+    verbs: ["*"]
+    resourceNames: ["openunison-workflow-validation"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: orchestra-webhooks
+subjects:
+- kind: ServiceAccount
+  name: openunison-operator
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: orchestra-webhooks
   apiGroup: rbac.authorization.k8s.io
 
 ---
