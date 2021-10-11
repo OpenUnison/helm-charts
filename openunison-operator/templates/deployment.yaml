@@ -77,3 +77,8 @@ spec:
       volumes:
         - name: extra-maps
           emptyDir: {}
+
+      {{ if .Values.services.pullSecret }}
+      imagePullSecrets:
+      - name: {{ .Values.services.pullSecret }}
+      {{ end }}
