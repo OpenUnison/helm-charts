@@ -4,8 +4,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: amq-{{ .Release.Name  }}
-    operated-by: openunison-operator
+    app: openunison-{{ .Release.Name }}
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: amq
+    app.kubernetes.io/part-of: openunison
   name: amq-{{ .Release.Name  }}
   namespace: {{ .Release.Namespace  }}
 spec:
@@ -149,4 +152,33 @@ spec:
       imagePullSecrets:
       - name: {{ .Values.services.pullSecret }}
       {{ end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: openunison-{{ .Release.Name }}
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: amq
+    app.kubernetes.io/part-of: openunison
+  name: amq
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - name: amq-openwire
+    port: 61616
+    protocol: TCP
+    targetPort: 61616
+  - name: amq-admin
+    port: 8162
+    protocol: TCP
+    targetPort: 8162
+  selector:
+    app: amq-{{ .Release.Name }}
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+  type: ClusterIP
 {{ end }}

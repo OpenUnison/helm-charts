@@ -1,0 +1,433 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: jitdb
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-workflows
+    app.kubernetes.io/part-of: openunison
+spec:
+  description: JIT
+  inList: false
+  label: JIT
+  orgId: 687da09f-8ec1-48ac-b035-f2f182b9bd1e
+  dynamicConfiguration:
+    dynamic: false
+    className: ""
+    params: []
+  tasks: |-
+           
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
+             params:
+               message: enter-workflow
+
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.JavaScriptTask
+             params:
+               javaScript: |-
+                 // Maps external groups to local groups
+                 System = Java.type("java.lang.System");
+                 DN = Java.type("com.novell.ldap.util.DN");
+                 Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+                 SetupGroupMetadataWatch = Java.type("com.tremolosecurity.proxy.filters.SetupGroupMetadataWatch");
+                 HashMap = Java.type("java.util.HashMap");
+
+                 function init(task,params) {
+                   // nothing to do
+                 }
+ 
+                 function reInit(task) {
+                   // do nothing
+                 }
+ 
+                 function doTask(user,request) {
+                   jitDb = task.getConfigManager().getProvisioningEngine().getTarget("jitdb").getProvider();
+                   memberOf = user.getAttribs().get("memberOf");
+                   
+                   request.put("WORKFLOW",task.getWorkflow());
+                   if (memberOf != null) {
+                    for (var i=0;i<memberOf.getValues().size();i++) {
+                      k8sGroup = SetupGroupMetadataWatch.getK8s(memberOf.getValues().get(i));
+                      
+                      
+                      if (k8sGroup != null) {
+                      
+                        for (var j=0;j<k8sGroup.size();j++) {
+                          var k8sGroupName = k8sGroup.get(j);
+                          if (! jitDb.isGroupExists(k8sGroupName,user,request)) {
+                            additionalAttribs = new HashMap();
+                            additionalAttribs.put("unison.group.create.sql","INSERT INTO localGroups (name,description) VALUES (?,?)");
+                            additionalAttribs.put("unison.group.create.param.2","External Group");
+
+
+                            jitDb.addGroup(k8sGroupName,additionalAttribs,user,request);
+                          }
+
+                          user.getGroups().add(k8sGroupName);
+                        }
+                      }
+                    }
+                  }
+ 
+                   return true;
+                 }
+
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
+             params:
+               message: mapped-groups   
+           
+           - taskType: mapping
+             strict: true
+             map:
+             - targetAttributeName: TREMOLO_USER_ID
+               sourceType: user
+               targetAttributeSource: uid
+             - targetAttributeName: sub
+               sourceType: user
+               targetAttributeSource: uid
+             - targetAttributeName: mail
+               sourceType: user
+               targetAttributeSource: mail
+             - targetAttributeName: firstName
+               sourceType: user
+               targetAttributeSource: givenName
+             - targetAttributeName: lastName
+               sourceType: user
+               targetAttributeSource: sn
+             onSuccess:
+               - taskType: customTask
+                 className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
+                 params:
+                   message: in-mapping
+               - taskType: addGroup
+                 name: users
+
+               - taskType: provision
+                 sync: true
+                 target: jitdb
+                 setPassword: false
+                 onlyPassedInAttributes: true
+                 attributes:
+                 - sub
+                 - mail
+                 - firstName
+                 - lastName
+               - taskType: resync
+                 keepExternalAttrs: false
+                 changeRoot: true
+                 newRoot: o=Tremolo
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: new-k8s-namespace
+  namespace: {{ .Release.Namespace }}
+spec:
+  description: Create New Namespace
+  inList: false
+  label: Create New Namespace
+  orgId: 04901973-5f4c-46d9-9e22-55e88e168776
+  tasks: |-
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.CopyFromUserToRequest
+             params:
+               attribute:
+               - nameSpace
+               - cluster
+               - adminGroup
+               - viewerGroup
+               keepInUser: "false"
+
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.LoadAttributes
+             params:
+               nameAttr: uid
+               name: 
+               - givenname
+               - sn
+               - mail
+
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.tasks.CheckForGit
+             params: {}
+
+
+           - taskType: approval
+             emailTemplate: A new namespace has been requested
+             mailAttr: mail
+             failureEmailSubject: Namespace not approved
+             failureEmailMsg: |-
+               Because:
+               ${reason}
+             label: Create New Namespace - $cluster$ - $nameSpace$
+             approvers:
+             - scope: group
+               constraint: cn=administrators,ou=groups,ou=shadow,o=Tremolo
+             onSuccess:
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
+               params:
+                 target: jitdb
+                 name: k8s-namespace-administrators-$cluster$-$nameSpace$
+                 attributes:
+                 - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
+                 - unison.group.create.param.2=Manage kubernetes namespace $cluster$ $nameSpace$
+
+             # create group mapping
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
+               params:
+                 targetName: k8s
+                 template: |-
+                    kind: GroupMetaData
+                    apiVersion: openunison.tremolo.io/v1
+                    metadata:
+                      name: k8s-namespace-administrators-$cluster$-$nameSpace$
+                      namespace: {{ .Release.Namespace }}
+                      labels:
+                        name: k8s-namespace-administrators-$cluster$-$nameSpace$
+                        app.kubernetes.io/name: openunison
+                        app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+                        app.kubernetes.io/component: openunison-groupmetadata
+                        app.kubernetes.io/part-of: openunison
+                      annotations:
+                        tremolo.io/managedByGit: "$useGit$"
+                    spec:
+                      groupName: k8s-namespace-administrators-$cluster$-$nameSpace$
+                      externalName: $adminGroup$
+                 kind: GroupMetaData
+                 url: /apis/openunison.tremolo.io/v1/namespaces/{{ .Release.Namespace }}/groupmetadatas
+                 srcType: yaml
+                 writeToRequest: "$useGit$"
+                 requestAttribute: git-secret-cluster-k8s-$nameSpace$
+                 path: /yaml/ns/$nameSpace$/groupmetadatas/$adminGroup$.yaml
+
+             
+             
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
+               params:
+                 target: jitdb
+                 name: k8s-namespace-viewer-$cluster$-$nameSpace$
+                 attributes:
+                 - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
+                 - unison.group.create.param.2=View kubernetes namespace $cluster$ $nameSpace$
+                 
+             # create group mapping
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
+               params:
+                 targetName: k8s
+                 template: |-
+                    kind: GroupMetaData
+                    apiVersion: openunison.tremolo.io/v1
+                    metadata:
+                      name: k8s-namespace-viewer-$cluster$-$nameSpace$
+                      namespace: {{ .Release.Namespace }}
+                      labels:
+                        name: k8s-namespace-viewer-$cluster$-$nameSpace$
+                        app.kubernetes.io/name: openunison
+                        app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+                        app.kubernetes.io/component: openunison-groupmetadata
+                        app.kubernetes.io/part-of: openunison
+                      annotations:
+                        tremolo.io/managedByGit: "$useGit$"
+                    spec:
+                      groupName: k8s-namespace-viewer-$cluster$-$nameSpace$
+                      externalName: $viewerGroup$
+                 kind: GroupMetaData
+                 url: /apis/openunison.tremolo.io/v1/namespaces/{{ .Release.Namespace }}/groupmetadatas
+                 srcType: yaml
+                 writeToRequest: "$useGit$"
+                 requestAttribute: git-secret-cluster-k8s-$nameSpace$
+                 path: /yaml/ns/$nameSpace$/groupmetadatas/$viewerGroup$.yaml
+
+             # GitOps - Create SSH Key for Namespace
+             - taskType: ifAttrHasValue
+               name: useGit
+               value: "true"
+               onSuccess:
+               - taskType: customTask
+                 className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
+                 params:
+                   targetName: k8s
+                   template: |-
+                     kind: Secret
+                     apiVersion: v1
+                     metadata:
+                       name: sshkey-namespace-$cluster$-$nameSpace$
+                       labels:
+                         cluster: $cluster$
+                         namespace: $nameSpace$
+                     data:
+                       id_rsa: $b64sshkey$
+                     type: Opaque
+                   kind: Secret
+                   url: /api/v1/namespaces/openunison/secrets
+                   srcType: yaml
+                   writeToRequest: "false"
+
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
+               params:
+                 targetName: $cluster$
+                 template: |-
+                    kind: Namespace
+                    apiVersion: v1
+                    metadata:
+                      name: "$nameSpace$"
+                      labels:
+                        name: "$nameSpace$"
+                      annotations:
+                        tremolo.io/managedByGit: "$useGit$"
+                        $gitUrlAnnotation$
+                 kind: Namespace
+                 url: /api/v1/namespaces
+                 srcType: yaml
+                 writeToRequest: "$useGit$"
+                 requestAttribute: git-secret-cluster-$cluster$-$nameSpace$
+                 path: /yaml/ns/$nameSpace$/$nameSpace$.yaml
+
+             
+
+
+             # For GitOps, create a service account and a rolebinding that allow the gitops
+             # controller to allow the controller 
+             - taskType: ifAttrHasValue
+               name: useGit
+               value: "true"
+               onSuccess:
+               - taskType: customTask
+                 className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
+                 params:
+                   targetName: $cluster$
+                   template: |-
+                       kind: ServiceAccount
+                       apiVersion: v1
+                       metadata:
+                         name: "gitops"
+                         namespace: $nameSpace$
+                   kind: ServiceAccount
+                   url: /api/v1/serviceaccounts
+                   srcType: yaml
+                   writeToRequest: "true"
+                   requestAttribute: git-secret-cluster-$cluster$-$nameSpace$
+                   path: /yaml/ns/$nameSpace$/serviceaccounts/gitops.yaml
+
+               - taskType: customTask
+                 className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
+                 params:
+                   targetName: $cluster$
+                   template: |-
+                      kind: RoleBinding
+                      apiVersion: rbac.authorization.k8s.io/v1
+                      metadata:
+                        name: gitops-controller-sa-binding
+                        namespace: "$nameSpace$"
+                      subjects:
+                      - kind: ServiceAccount
+                        name: gitops
+                        namespace: $nameSpace$
+                      roleRef:
+                        kind: ClusterRole
+                        name: admin
+                        apiGroup: rbac.authorization.k8s.io
+                   kind: RoleBinding
+                   url: /apis/rbac.authorization.k8s.io/v1/namespaces/$nameSpace$/rolebindings
+                   srcType: yaml
+                   writeToRequest: "true"
+                   requestAttribute: git-secret-cluster-$cluster$-$nameSpace$
+                   path: /yaml/ns/$nameSpace$/rolebindings/gitops-controller-sa-binding.yaml
+
+
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
+               params:
+                 targetName: $cluster$
+                 template: |-
+                    kind: RoleBinding
+                    apiVersion: rbac.authorization.k8s.io/v1
+                    metadata:
+                      name: admins-binding
+                      namespace: "$nameSpace$"
+                    subjects:
+                    - kind: Group
+                      name: k8s-namespace-administrators-$cluster$-$nameSpace$
+                      apiGroup: rbac.authorization.k8s.io
+                    roleRef:
+                      kind: ClusterRole
+                      name: admin
+                      apiGroup: rbac.authorization.k8s.io
+                 kind: RoleBinding
+                 url: /apis/rbac.authorization.k8s.io/v1/namespaces/$nameSpace$/rolebindings
+                 srcType: yaml
+                 writeToRequest: "$useGit$"
+                 requestAttribute: git-secret-namespace-$cluster$-$nameSpace$
+                 path: /yaml/ns/$nameSpace$/rolebindings/admins-binding.yaml
+
+
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
+               params:
+                 targetName: $cluster$
+                 template: |-
+                   kind: RoleBinding
+                   apiVersion: rbac.authorization.k8s.io/v1
+                   metadata:
+                     name: viewers-binding
+                     namespace: "$nameSpace$"
+                   subjects:
+                   - kind: Group
+                     name: k8s-namespace-viewer-$cluster$-$nameSpace$
+                     apiGroup: rbac.authorization.k8s.io
+                   roleRef:
+                     kind: ClusterRole
+                     name: view
+                     apiGroup: rbac.authorization.k8s.io
+                 kind:  RoleBinding
+                 url: /apis/rbac.authorization.k8s.io/v1/namespaces/$nameSpace$/rolebindings
+                 srcType: yaml
+                 writeToRequest: "$useGit$"
+                 requestAttribute: git-secret-namespace-$cluster$-$nameSpace$
+                 path: /yaml/ns/$nameSpace$/rolebindings/viewers-binding.yaml
+
+
+             - taskType: ifAttrHasValue
+               name: useGit
+               value: "true"
+               onSuccess:
+               # GitOps - Run Job to push to cluster repo
+               - taskType: customTask
+                 className: com.tremolosecurity.provisioning.tasks.PushToGit
+                 params:
+                   secretName: sshkey-cluster-$cluster$
+                   nameSpace: openunison
+                   target: k8s
+                   keyName: id_rsa
+                   gitRepo: $clusterGitUrl$
+                   requestObject: git-secret-cluster-$cluster$-$nameSpace$
+                   commitMsg: For workflow $WORKFLOW.id$
+
+               # GitOps - Run Job to push to namespace repo
+               - taskType: customTask
+                 className: com.tremolosecurity.provisioning.tasks.PushToGit
+                 params:
+                   secretName: sshkey-namespace-$cluster$-$nameSpace$
+                   nameSpace: openunison
+                   target: k8s
+                   keyName: id_rsa
+                   gitRepo: $namespaceGitUrl$
+                   requestObject: git-secret-namespace-$cluster$-$nameSpace$
+                   commitMsg: For workflow $WORKFLOW.id$
+
+               
+
+             - taskType: notifyUser
+               subject: Namespace created
+               mailAttrib: mail
+               msg: Your namespace has been created

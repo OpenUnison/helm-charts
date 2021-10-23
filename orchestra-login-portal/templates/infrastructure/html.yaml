@@ -86,6 +86,37 @@ spec:
           
           {{ end }}
         {{ end }}
+        
+        {{ if .Values.openunison.html.logosConfigMap }}
+        volumeMounts:
+        - mountPath: /var/www/html/scale/logos
+          name: custom-logos-scale
+          readOnly: true
+        - mountPath: /var/www/html/ops/logos
+          name: custom-logos-ops
+          readOnly: true
+        - mountPath: /var/www/html/token/logos
+          name: custom-logos-token
+          readOnly: true
+        - mountPath: /var/www/html/register/logos
+          name: custom-logos-register
+          readOnly: true
+        {{ end }}
+      {{ if .Values.openunison.html.logosConfigMap }}
+      volumes:
+      - name: custom-logos-scale
+        configMap:
+          name: {{ .Values.openunison.html.logosConfigMap | quote }}
+      - name: custom-logos-ops
+        configMap:
+          name: {{ .Values.openunison.html.logosConfigMap | quote }}
+      - name: custom-logos-token
+        configMap:
+          name: {{ .Values.openunison.html.logosConfigMap | quote }}
+      - name: custom-logos-register
+        configMap:
+          name: {{ .Values.openunison.html.logosConfigMap | quote }}
+      {{ end }}
       dnsPolicy: ClusterFirst
       serviceAccountName: ouhtml-{{ .Release.Name }}
       automountServiceAccountToken: false

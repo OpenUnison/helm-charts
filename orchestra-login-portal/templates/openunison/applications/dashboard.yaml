@@ -43,6 +43,7 @@ spec:
     {{ end }}
     {{ end }}
     
+    
     results:
     {{ if not .Values.enable_impersonation }}
       azSuccess: oauth2bearer

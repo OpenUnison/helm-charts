@@ -1,0 +1,11 @@
+primaryCluster:
+  name: Control Plane Cluster
+  description: Central control plane cluster used to manage other clusters
+
+openunison:
+  orchestra_release_name: orchestra
+  orchestra_login_portal_name: orchestra-login-portal
+  azGroups:
+  - k8s-cluster-k8s-administrators
+  - k8s-namespace-administrators-k8s-*
+  - k8s-namespace-viewer-k8s-*

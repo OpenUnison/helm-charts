@@ -16,7 +16,16 @@ spec:
   - hosts:
     - "#[OU_HOST]"
     - "127.0.0.1"
-    filterChain: []
+    filterChain:
+    - className: com.tremolosecurity.proxy.filters.SetupGroupMetadataWatch
+      params:
+        {{ if .Values.active_directory }}
+        extIsDN: "true"
+        {{ else }}
+        extIsDN: "false"
+        {{ end }}
+        target: "k8s"
+        namespace: "#[K8S_OPENUNISON_NS:openunison]"
     uri: "/auth/idp/k8sIdp"
     azRules:
     {{ $length := len .Values.openunison.az_groups }}

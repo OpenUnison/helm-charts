@@ -104,7 +104,7 @@ data:
     server.activedirectory.objectguid2text.className=com.tremolosecurity.proxy.myvd.inserts.util.UUIDtoText
     server.activedirectory.objectguid2text.config.attributeName=objectGUID
     server.activedirectory.dnmapper.className=net.sourceforge.myvd.inserts.mapping.DNAttributeMapper
-    server.activedirectory.dnmapper.config.dnAttribs=member,owner,member,distinguishedName,manager
+    server.activedirectory.dnmapper.config.dnAttribs=member,owner,member,manager
     server.activedirectory.dnmapper.config.localBase=ou=activedirectory,o=Data
     server.activedirectory.dnmapper.config.urlAttribs=
     server.activedirectory.objmap.className=net.sourceforge.myvd.inserts.mapping.AttributeValueMapper

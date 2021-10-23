@@ -1392,7 +1392,7 @@ spec:
                   additionalProperties: true
     - name: v5
       served: true
-      storage: true
+      storage: false
       subresources:
         status: {}
       schema:
@@ -1772,6 +1772,390 @@ spec:
                 idpCertificateFingerprints:
                   type: object
                   additionalProperties: true
+    - name: v6
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      schema:
+      # openAPIV3Schema is the schema for validating custom objects.
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                image:
+                  type: string
+                replicas:
+                  type: integer
+                enable_activemq:
+                  type: boolean
+                activemq_image:
+                  type: string
+                dest_secret:
+                  type: string
+                source_secret:
+                  type: string
+                secret_data:
+                  type: array
+                  items:
+                    type: string
+                myvd_configmap:
+                  type: string
+                openshift:
+                  type: object
+                  properties:
+                    git:
+                      type: object
+                      properties:
+                        repo:
+                          type: string
+                        branch: 
+                          type: string
+                        dir:
+                          type: string
+                    builder_image:
+                      type: string
+                hosts:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      names:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                            service_name:
+                              type: string
+                            env_var:
+                              type: string
+                      ingress_name: 
+                        type: string
+                      ingress_type:
+                        type: string
+                      secret_name:
+                        type: string
+                      annotations:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name: 
+                              type: string
+                            value:
+                              type: string
+                deployment_data:
+                  type: object
+                  properties:
+                    tokenrequest_api:
+                      type: object
+                      properties:
+                        enabled:
+                          type: boolean
+                        audience:
+                          type: string
+                        expirationSeconds:
+                          type: integer
+                    readiness_probe_command:
+                      type: array
+                      items:
+                        type: string
+                    liveness_probe_command:
+                      type: array
+                      items:
+                        type: string
+                    node_selectors:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                    pull_secret:
+                      type: string
+                    resources:
+                      type: object
+                      properties:
+                        requests:
+                          type: object
+                          properties:
+                            memory:
+                              type: string
+                            cpu:
+                              type: string
+                        limits:
+                          type: object
+                          properties:
+                            memory:
+                              type: string
+                            cpu:
+                              type: string
+
+                    
+                non_secret_data:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      value:
+                        type: string
+                openunison_network_configuration:
+                  type: object
+                  properties:
+                    force_to_lower_case:
+                      type: boolean
+                    open_port:
+                      type: integer
+                    open_external_port:
+                      type: integer
+                    secure_port:
+                      type: integer
+                    secure_external_port:
+                      type: integer
+                    ldap_port:
+                      type: integer
+                    ldaps_port:
+                      type: integer
+                    ldaps_key_name:
+                      type: string
+                    force_to_secure:
+                      type: boolean
+                    activemq_dir:
+                      type: string
+                    client_auth:
+                      type: string
+                    allowed_client_names:
+                      type: array
+                      items:
+                        type: string
+                    ciphers:
+                      type: array
+                      items:
+                        type: string
+                    path_to_deployment:
+                      type: string
+                    path_to_env_file:
+                      type: string
+                    secure_key_alias:
+                      type: string
+                    allowed_tls_protocols:
+                      type: array
+                      items:
+                        type: string
+                    quartz_dir:
+                      type: string
+                    context_root:
+                      type: string
+                    disable_http2:
+                      type: boolean
+                    allow_un_escaped_chars:
+                      type: string
+                    welecome_pages:
+                      type: array
+                      items:
+                        type: string
+                    error_pages:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          code:
+                            type: integer
+                          location:
+                            type: string
+                    redirect_to_context_root:
+                      type: boolean
+                    queue_configuration:
+                      type: object
+                      properties:
+                        use_internal_queue:
+                          type: boolean
+                        max_producers:
+                          type: integer
+                        connection_factory:
+                          type: string
+                        max_consumers:
+                          type: integer
+                        max_sessions_per_connection:
+                          type: integer
+                        task_queue_name:
+                          type: string
+                        smtp_queue_name:
+                          type: string
+                        encryption_key_name:
+                          type: string
+                        num_queues:
+                          type: integer
+                        multi_task_queues:
+                          type: boolean
+                        keep_alive_millis:
+                          type: integer
+                        params:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                              source_type:
+                                type: string
+                                enum:
+                                - static
+                                - environment
+                              value:
+                                type: string
+                saml_remote_idp:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      source:
+                        type: object
+                        properties:
+                          url:
+                            type: string
+                          xml:
+                            type: string
+                      mapping:
+                        type: object
+                        properties:
+                          entity_id:
+                            type: string
+                          post_url:
+                            type: string
+                          redirect_url:
+                            type: string
+                          logout_url:
+                            type: string
+                          signing_cert_alias:
+                            type: string
+                          encryption_cert_alias:
+                            type: string
+                run_sql:
+                  type: string
+                sql_check_query:
+                  type: string
+                key_store:
+                  type: object
+                  properties:
+                    update_controller:
+                      type: object
+                      properties:
+                        image:
+                          type: string
+                        schedule:
+                          type: string
+                        days_to_expire:
+                          type: integer
+                    static_keys:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                          version:
+                            type: integer
+                    trusted_certificates:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                          pem_data:
+                            type: string
+                    key_pairs:
+                      type: object
+                      properties:
+                        create_keypair_template:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                        keys:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                              tls_secret_name:
+                                type: string
+                              import_into_ks:
+                                type: string
+                                enum:
+                                - keypair
+                                - certificate
+                                - none
+                              replace_if_exists:
+                                type: boolean
+                              create_data:
+                                type: object
+                                properties:
+                                  target_namespace:
+                                    type: string
+                                  sign_by_k8s_ca:
+                                    type: boolean
+                                  server_name:
+                                    type: string
+                                  subject_alternative_names:
+                                    type: array
+                                    items:
+                                      type: string
+                                  key_size:
+                                    type: integer
+                                  ca_cert:
+                                    type: boolean
+                                  delete_pods_labels:
+                                    type: array
+                                    items:
+                                      type: string
+                                  patch_info:
+                                    type: object
+                                    properties:
+                                      url:
+                                        type: string
+                                      annotation_name:
+                                        type: string
+                                  secret_info:
+                                    type: object
+                                    properties:
+                                      type_of_secret:
+                                        type: string
+                                      cert_name:
+                                        type: string
+                                      key_name:
+                                        type: string
+            status:
+              type: object
+              properties:
+                conditions:
+                  properties:
+                    lastTransitionTime:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  type: object
+                digest:
+                  type: string
+                idpCertificateFingerprints:
+                  type: object
+                  additionalProperties: true    
   scope: Namespaced
   names:
     plural: openunisons
@@ -2653,4 +3037,38 @@ spec:
     kind: Application
     shortNames:
     - app
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: groupmetadatas.openunison.tremolo.io
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: crd
+    app.kubernetes.io/part-of: openunison
+spec:
+  group: openunison.tremolo.io
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                groupName:
+                  type: string
+                externalName:
+                  type: string
+  scope: Namespaced
+  names:
+    plural: groupmetadatas
+    singular: groupmetadata
+    kind: GroupMetaData
+    shortNames:
+    - gmd
 {{ end }}

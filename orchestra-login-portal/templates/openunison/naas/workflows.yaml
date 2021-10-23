@@ -1,4 +1,4 @@
-{{ if .Values.openunison.enable_provisioning }}
+{{ if and .Values.openunison.enable_provisioning .Values.openunison.use_standard_jit_workflow }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Workflow
@@ -56,6 +56,37 @@ spec:
                    message: in-mapping
                - taskType: addGroup
                  name: users
+               - taskType: customTask
+                 className: com.tremolosecurity.provisioning.customTasks.JavaScriptTask
+                 params:
+                   javaScript: |-
+                     // This task adds the administrators group to the first user
+                     // to login
+                     
+                     function init(task,params) {
+                       // nothing to do
+                     }
+
+                     function reInit(task) {
+                       // do nothing
+                     }
+
+                     function doTask(user,request) {
+                       sql = task.getConfigManager().getProvisioningEngine().getTarget("jitdb").getProvider().getDS().getConnection();
+                       try {
+                         rs = sql.createStatement().executeQuery("SELECT COUNT(*) AS num FROM localUsers");
+                         rs.next();
+                         if (rs.getInt("num") == 1) {
+                           // first user, add the admin group
+                           user.getGroups().add("administrators");
+                         }
+                       } finally {
+                         sql.close();
+                       }
+
+                       return true;
+                     }
+
                - taskType: provision
                  sync: true
                  target: jitdb

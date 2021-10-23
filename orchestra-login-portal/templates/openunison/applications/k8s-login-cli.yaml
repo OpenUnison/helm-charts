@@ -37,6 +37,8 @@ spec:
       params:
         jwtSigningKey: "unison-saml2-rp-sig"
         sessionStoreClassName: "com.tremolosecurity.idp.providers.oidc.none.NoneBackend"
+        sessionIdIdpName: k8sidp
+        sessionIdTrustName: kubernetes
       mappings:
         strict: true
         map:

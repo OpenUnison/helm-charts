@@ -1,4 +1,5 @@
 {{ if not .Values.openunison.enable_provisioning }}
+{{ if .Values.openunison.use_standard_jit_workflow }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Workflow
@@ -67,4 +68,5 @@ spec:
                  keepExternalAttrs: false
                  changeRoot: true
                  newRoot: o=Tremolo
+{{ end }}
 {{ end }}

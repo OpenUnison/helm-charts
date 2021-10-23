@@ -1,0 +1,19 @@
+apiVersion: openunison.tremolo.io/v1
+kind: OUJob
+metadata:
+  name: clear-sessions
+  namespace: {{ .Release.Namespace }}
+spec:
+  cronSchedule:
+    seconds: "0"
+    minutes: "*"
+    hours: "*"
+    dayOfMonth: "*"
+    month: "*"
+    dayOfWeek: "?"
+    year: "*"
+  className: com.tremolosecurity.idp.providers.oidc.model.jobs.ClearSessions
+  group: admin
+  params:
+    - name: idpName
+      value: k8sidp

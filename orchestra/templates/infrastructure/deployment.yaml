@@ -128,6 +128,11 @@ spec:
         - mountPath: /var/run/secrets/tokens
           name: ou-token
         {{ end }}
+        {{ if .Values.openunison.html.logosConfigMap }}
+        - mountPath: /usr/local/openunison/work/webapp/auth/forms/logos
+          name: custom-logos
+          readOnly: true
+        {{ end }}
       automountServiceAccountToken: {{ not (.Values.services.enable_tokenrequest | default false) }}
       dnsPolicy: ClusterFirst
       restartPolicy: Always
@@ -157,6 +162,11 @@ spec:
               - key: "ca.crt"
                 path: "ca.crt"
               name: "kube-cacert"
+      {{ end }}
+      {{ if .Values.openunison.html.logosConfigMap }}
+      - name: custom-logos
+        configMap:
+          name: {{ .Values.openunison.html.logosConfigMap | quote }}
       {{ end }}
       {{ $length := len .Values.services.node_selectors }}
       {{ if eq $length 0  }}
