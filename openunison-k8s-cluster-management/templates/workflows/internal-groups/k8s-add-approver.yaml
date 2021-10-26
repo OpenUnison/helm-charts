@@ -1,0 +1,86 @@
+{{ if .Values.openunison.naas.groups.internal.enabled }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: k8s-add-approver
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    oldorg: "04901973-5f4c-46d9-9e22-55e88e168776"
+spec:
+  description: k8s-add-approver
+  inList: false
+  label: add approver
+  orgId: 97137c31-a417-4498-907d-e61f8686eb97
+  tasks: |-
+        - taskType: customTask
+          className: com.tremolosecurity.provisioning.customTasks.LoadAttributes
+          params:
+            nameAttr: uid
+            name:
+            - givenname
+            - sn
+            - mail
+          
+        - taskType: approval
+          label: Approve access to $groupName$
+          mailAttr: mail
+          emailTemplate: New open request
+          failureEmailSubject: Request denied
+          failureEmailMsg: |-
+            for reason:
+            ${reason}
+          approvers:
+          - scope: group
+            constraint: cn=$groupName$,ou=groups,ou=shadow,o=Tremolo
+          onSuccess:
+          - taskType: mapping
+            strict: true
+            map:
+              - targetAttributeName: sub
+                sourceType: user
+                targetAttributeSource: uid
+              - targetAttributeName: mail
+                sourceType: user
+                targetAttributeSource: mail
+            onSuccess:
+            - taskType: addGroup
+              name: $groupName$
+              remove: false
+            - taskType: provision
+              sync: false
+              target: jitdb
+              setPassword: false
+              onlyPassedInAttributes: false
+              attributes: ['sub']
+            - taskType: notifyUser
+              subject: Approval access to $groupName$ approved
+              mailAttrib: mail
+              msg: Your access has been approved, please login
+          onFailure:
+          - taskType: mapping
+            strict: true
+            map:
+              - targetAttributeName: sub
+                sourceType: user
+                targetAttributeSource: uid
+              - targetAttributeName: mail
+                sourceType: user
+                targetAttributeSource: mail
+            onSuccess:
+            - taskType: customTask
+              className: com.tremolosecurity.provisioning.customTasks.LoadGroupsFromTarget
+              params:
+                target: jitdb
+                nameAttr: sub
+              
+            - taskType: addGroup
+              name: $groupName$
+              remove: true
+            - taskType: provision
+              sync: true
+              target: jitdb
+              setPassword: false
+              onlyPassedInAttributes: false
+              attributes: ['sub']
+{{ end }}

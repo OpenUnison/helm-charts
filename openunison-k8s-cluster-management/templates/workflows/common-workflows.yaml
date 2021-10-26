@@ -1,0 +1,27 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: remove-user-from-group
+  namespace: {{ .Release.Namespace }}
+spec:
+  description: Remove user from group
+  inList: false
+  label: Remove user from group
+  orgId: 04901973-5f4c-46d9-9e22-55e88e168776
+  tasks: |-
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.LoadGroups
+             params:
+               nameAttr: uid
+               inverse: "false"
+           - taskType: addGroup
+             name: $openunison_grouptoremove$
+             remove: true
+           - taskType: provision
+             sync: true
+             target: jitdb
+             setPassword: false
+             onlyPassedInAttributes: false
+             attributes:
+             - uid

@@ -18,6 +18,8 @@ spec:
   azRules:
     - scope: group
       constraint: "cn=administrators,ou=groups,ou=shadow,o=Tremolo"
+    - scope: group
+      constraint: "cn=administrators-internal,ou=groups,ou=shadow,o=Tremolo"
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: PortalUrl
@@ -37,4 +39,6 @@ spec:
   azRules:
     - scope: group
       constraint: "cn=administrators,ou=groups,ou=shadow,o=Tremolo"
+    - scope: group
+      constraint: "cn=administrators-internal,ou=groups,ou=shadow,o=Tremolo"
 {{ end }}

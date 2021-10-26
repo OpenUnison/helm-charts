@@ -1,3 +1,4 @@
+{{ if .Values.openunison.naas.groups.internal.enabled }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: OUJob
@@ -33,7 +34,7 @@ spec:
     month: "*"
     dayOfWeek: "?"
     year: "*"
-  className: com.tremolosecurity.provisioning.scheduler.jobs.UpdateApprovalAz
+  className: com.tremolosecurity.provisioning.scheduler.jobs.RemindApprovers
   group: management
   params:
   - name: message
@@ -42,3 +43,4 @@ spec:
     value: "7"
   - name: mailAttributeName
     value: mail
+{{ end }}

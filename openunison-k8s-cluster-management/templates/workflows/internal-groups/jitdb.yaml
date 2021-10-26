@@ -1,4 +1,4 @@
-{{ if and .Values.openunison.enable_provisioning .Values.openunison.use_standard_jit_workflow }}
+{{ if .Values.openunison.naas.groups.internal.enabled }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Workflow
@@ -78,7 +78,8 @@ spec:
                          rs.next();
                          if (rs.getInt("num") == 1) {
                            // first user, add the admin group
-                           user.getGroups().add("administrators");
+                           user.getGroups().add("administrators-internal");
+                           user.getGroups().add("k8s-cluster-k8s-administrators-internal");
                          }
                        } finally {
                          sql.close();

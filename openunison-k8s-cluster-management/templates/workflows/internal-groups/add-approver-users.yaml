@@ -1,0 +1,26 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: add-approver-user
+  namespace: {{ .Release.Namespace }}
+spec:
+  description: Add new approval users
+  inList: false
+  label: Add approver users
+  orgId: 63ada052-881e-4685-834d-dd48a3aa4bb4
+  tasks: |-
+      - taskType: mapping
+        strict: true
+        map:
+        - targetAttributeName: sub
+          sourceType: user
+          targetAttributeSource: uid
+        onSuccess:
+          - taskType: provision
+            sync: false
+            target: jitdb
+            setPassword: false
+            onlyPassedInAttributes: false
+            attributes:
+            - sub

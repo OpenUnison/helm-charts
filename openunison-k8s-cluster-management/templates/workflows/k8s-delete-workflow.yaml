@@ -1,0 +1,189 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: k8s-delete-workflow
+  namespace: {{ .Release.Namespace }}
+spec:
+  description: Delete Namespace
+  inList: false
+  label: Delete Namespace
+  orgId: 04901973-5f4c-46d9-9e22-55e88e168776
+  tasks: |-
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.CopyFromUserToRequest
+             params:
+               attribute:
+               - nameSpace
+               - cluster
+               keepInUser: "false"
+
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.LoadAttributes
+             params:
+               nameAttr: uid
+               name: 
+               - givenname
+               - sn
+               - mail
+
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.tasks.CheckForGit
+             params:
+               namespace: $nameSpace$
+
+
+           - taskType: approval
+             emailTemplate: A namespace owner has requested deletion
+             mailAttr: mail
+             failureEmailSubject: Namespace deletion not approved
+             failureEmailMsg: |-
+               Because:
+               ${reason}
+             label: Request Delete Namespace - $cluster$ - $nameSpace$
+             approvers:
+             - scope: group
+               constraint: cn=administrators,ou=groups,ou=shadow,o=Tremolo
+             - scope: group
+               constraint: cn=administrators-internal,ou=groups,ou=shadow,o=Tremolo
+             onSuccess:
+             {{ if .Values.openunison.naas.groups.internal.enabled }}
+             # Remove all members from the groups
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.customTasks.DeleteGroupMembers
+               params:
+                 uidAttributeName: uid
+                 removeWorkflow: remove-user-from-group
+                 groupToDelete: cn=approvers-k8s-$cluster$-$nameSpace$,ou=groups,ou=shadow,o=Tremolo
+                 groupNameAttribute: cn
+                 requestor: system
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.customTasks.DeleteGroupMembers
+               params:
+                 uidAttributeName: uid
+                 removeWorkflow: remove-user-from-group
+                 groupToDelete: cn=k8s-namespace-administrators-$cluster$-$nameSpace$-internal,ou=groups,ou=shadow,o=Tremolo
+                 groupNameAttribute: cn
+                 requestor: system
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.customTasks.DeleteGroupMembers
+               params:
+                 uidAttributeName: uid
+                 removeWorkflow: remove-user-from-group
+                 groupToDelete: cn=k8s-namespace-viewer-$cluster$-$nameSpace$-internal,ou=groups,ou=shadow,o=Tremolo
+                 groupNameAttribute: cn
+                 requestor: system
+             # Remove the groups
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.customTasks.RemoveGroupFromStore
+               params:
+                 name: 
+                 - approvers-k8s-$cluster$-$nameSpace$
+                 - k8s-namespace-administrators-$cluster$-$nameSpace$-internal
+                 - k8s-namespace-viewer-$cluster$-$nameSpace$-internal
+                 target: jitdb
+             
+
+             # Delete known namespace objects
+
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.tasks.DeleteK8sObject
+               params:
+                 targetName: $cluster$
+                 kind:  RoleBinding
+                 url: /apis/rbac.authorization.k8s.io/v1/namespaces/$nameSpace$/rolebindings/viewers-binding-internal
+                 writeToRequest: "$useGit$"
+                 requestAttribute: git-secret-namespace-$cluster$-$nameSpace$
+                 path: /yaml/ns/$nameSpace$/rolebindings/viewers-binding.yaml
+
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.tasks.DeleteK8sObject
+               params:
+                 targetName: $cluster$
+                 kind: RoleBinding
+                 url: /apis/rbac.authorization.k8s.io/v1/namespaces/$nameSpace$/rolebindings/admins-binding-internal
+                 writeToRequest: "$useGit$"
+                 requestAttribute: git-secret-namespace-$cluster$-$nameSpace$
+                 path: /yaml/ns/$nameSpace$/rolebindings/admins-binding.yaml
+             {{ end }}
+             
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.tasks.DeleteK8sObject
+               params:
+                 targetName: $cluster$
+                 kind: Namespace
+                 url: /api/v1/namespaces/$nameSpace$
+                 writeToRequest: "$useGit$"
+                 requestAttribute: git-secret-cluster-$cluster$-$nameSpace$
+                 path: /yaml/ns/$nameSpace$/$nameSpace$.yaml
+
+
+             # For GitOps, delete the service account and a rolebinding that allow the gitops
+             # controller to allow the controller 
+             - taskType: ifAttrHasValue
+               name: useGit
+               value: "true"
+               onSuccess:
+               - taskType: customTask
+                 className: com.tremolosecurity.provisioning.tasks.DeleteK8sObject
+                 params:
+                   targetName: $cluster$
+                   kind: ServiceAccount
+                   url: /api/v1/serviceaccounts/gitops
+                   writeToRequest: "true"
+                   requestAttribute: git-secret-cluster-$cluster$-$nameSpace$
+                   path: /yaml/ns/$nameSpace$/serviceaccounts/gitops.yaml
+
+               - taskType: customTask
+                 className: com.tremolosecurity.provisioning.tasks.DeleteK8sObject
+                 params:
+                   targetName: $cluster$
+                   kind: RoleBinding
+                   url: /apis/rbac.authorization.k8s.io/v1/namespaces/$nameSpace$/rolebindings/gitops
+                   writeToRequest: "true"
+                   requestAttribute: git-secret-cluster-$cluster$-$nameSpace$
+                   path: /yaml/ns/$nameSpace$/rolebindings/gitops-controller-sa-binding.yaml
+
+             - taskType: ifAttrHasValue
+               name: useGit
+               value: "true"
+               onSuccess:
+               # GitOps - Run Job to push to cluster repo
+               - taskType: customTask
+                 className: com.tremolosecurity.provisioning.tasks.PushToGit
+                 params:
+                   secretName: sshkey-cluster-$cluster$
+                   nameSpace: openunison
+                   target: k8s
+                   keyName: id_rsa
+                   gitRepo: $clusterGitUrl$
+                   requestObject: git-secret-cluster-$cluster$-$nameSpace$
+                   commitMsg: For workflow $WORKFLOW.id$
+
+               # GitOps - Run Job to push to namespace repo
+               - taskType: customTask
+                 className: com.tremolosecurity.provisioning.tasks.PushToGit
+                 params:
+                   secretName: sshkey-namespace-$cluster$-$nameSpace$
+                   nameSpace: openunison
+                   target: k8s
+                   keyName: id_rsa
+                   gitRepo: $namespaceGitUrl$
+                   requestObject: git-secret-namespace-$cluster$-$nameSpace$
+                   commitMsg: For workflow $WORKFLOW.id$
+
+               # GitOps - Delete the secret used to talk to the git repo
+               - taskType: customTask
+                 className: com.tremolosecurity.provisioning.tasks.DeleteK8sObject
+                 params:
+                   targetName: k8s
+                   kind: Secret
+                   url: /api/v1/namespaces/openunison/secrets/sshkey-namespace-$cluster$-$nameSpace$
+                   writeToRequest: "false"
+
+               
+
+             - taskType: notifyUser
+               subject: Namespace delete
+               mailAttrib: mail
+               msg: The namespace $nameSpace$ has been deleted

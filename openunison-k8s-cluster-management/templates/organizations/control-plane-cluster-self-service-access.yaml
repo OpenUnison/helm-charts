@@ -1,0 +1,53 @@
+{{ if .Values.openunison.naas.groups.internal.enabled }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: control-plane-namespace-admins
+  namespace: {{ .Release.Namespace }}
+spec:
+  label: Administrators
+  azRules:
+  - constraint: o=Tremolo
+    scope: dn
+  description: Namespace Administrators
+  parent: org-cluster-control-plane
+  showInPortal: false
+  showInReports: false
+  showInRequestAccess: true
+  uuid: org-cluster-control-plane-admins
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: control-plane-namespace-viewers
+  namespace: {{ .Release.Namespace }}
+spec:
+  label: Viewers
+  azRules:
+  - constraint: o=Tremolo
+    scope: dn
+  description: Namespace Viewer
+  parent: org-cluster-control-plane
+  showInPortal: false
+  showInReports: false
+  showInRequestAccess: true
+  uuid: org-cluster-control-plane-viewers
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: control-plane-approvers
+  namespace: {{ .Release.Namespace }}
+spec:
+  label: Approvers
+  azRules:
+  - constraint: o=Tremolo
+    scope: dn
+  description: Approvers
+  parent: org-cluster-control-plane
+  showInPortal: false
+  showInReports: false
+  showInRequestAccess: true
+  uuid: org-cluster-control-plane-approvers
+{{ end }}

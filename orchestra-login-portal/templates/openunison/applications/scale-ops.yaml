@@ -30,6 +30,8 @@ spec:
     azRules:
     - scope: filter
       constraint: "(groups=administrators)"
+    - scope: filter
+      constraint: "(groups=administrators-internal)"
     results: 
       azFail: default-login-failure
       auFail: default-login-failure
@@ -57,6 +59,8 @@ spec:
     azRules:
     - scope: filter
       constraint: (groups=administrators)
+    - scope: filter
+      constraint: "(groups=administrators-internal)"
     authChain: login-service
     results:
       azFail: default-login-failure

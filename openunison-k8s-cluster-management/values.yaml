@@ -5,3 +5,11 @@ primaryCluster:
 openunison:
   orchestra_release_name: orchestra
   orchestra_login_portal_name: orchestra-login-portal
+  naas:
+    groups:
+      interal:
+        enabled: true
+      external:
+        enabled: false
+        admin_group: "CN=openunison-admins,CN=Users,DC=ent2k12,DC=domain,DC=com"
+        cluster_admin_group: "CN=k8s_login_ckuster_admins,CN=Users,DC=ent2k12,DC=domain,DC=com"
