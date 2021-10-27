@@ -62,6 +62,10 @@ spec:
         attributeNames:
         - cluster
         - nameSpace
+        {{ if .Values.openunison.naas.groups.external.enabled }}
+        - adminGroup
+        - viewerGroup
+        {{ end }}
         - gitUrl
         - gitSshKey
 
@@ -87,6 +91,65 @@ spec:
         nameSpace.maxChars: "63"
         nameSpace.unique: "false"
         nameSpace.type: "text"
+
+        {{ if .Values.openunison.naas.groups.external.enabled }}
+        adminGroup.displayName: "Administrator Group"
+        adminGroup.realOnly: "false"
+        adminGroup.required: "true"
+        adminGroup.regEx: ".*"
+        adminGroup.redExFailedMsg: "Invalid administrator group"
+        adminGroup.minChars: "0"
+        adminGroup.maxChars: "255"
+        adminGroup.unique: "false"
+        {{ if .Values.active_directory }}
+        adminGroup.type: "text-list"
+        adminGroup.dynamicValueSource.className: "com.tremolosecurity.scalejs.register.dynamicSource.LoadFromLDAP"
+        adminGroup.dynamicValueSource.config: 
+        - "nameField=distinguishedName"
+        - "valueField=distinguishedName"
+        - "searchField=cn"
+        - "maxEntries=10"
+        {{ if .Values.active_directory.group_search_base }}
+        - "searchBase={{ .Values.active_directory.group_search_base }},ou=activedirectory,o=Data"
+        {{ else }}
+        - "searchBase=ou=activedirectory,o=Data"
+        {{ end }}
+        - "errorMessage=Invalid group name"
+        - "objectClass=groupofnames"
+        - "sort=true"
+        {{ else }}
+        adminGroup.type: "text"
+        {{ end }}
+
+        viewerGroup.displayName: "Viewer Group"
+        viewerGroup.realOnly: "false"
+        viewerGroup.required: "true"
+        viewerGroup.regEx: ".*"
+        viewerGroup.redExFailedMsg: "Invalid viewer group"
+        viewerGroup.minChars: "0"
+        viewerGroup.maxChars: "255"
+        viewerGroup.unique: "false"
+        {{ if .Values.active_directory }}
+        viewerGroup.type: "text-list"
+        viewerGroup.dynamicValueSource.className: "com.tremolosecurity.scalejs.register.dynamicSource.LoadFromLDAP"
+        viewerGroup.dynamicValueSource.config: 
+        - "nameField=distinguishedName"
+        - "valueField=distinguishedName"
+        - "searchField=cn"
+        - "maxEntries=10"
+        {{ if .Values.active_directory.group_search_base }}
+        - "searchBase={{ .Values.active_directory.group_search_base }},ou=activedirectory,o=Data"
+        {{ else }}
+        - "searchBase=ou=activedirectory,o=Data"
+        {{ end }}
+        - "errorMessage=Invalid group name"
+        - "objectClass=groupofnames"
+        - "sort=true"
+        {{ else }}
+        viewerGroup.type: "text"
+        {{ end }}
+        {{ end }}
+
 
         gitUrl.displayName: "Git URL"
         gitUrl.readOnly: "false"

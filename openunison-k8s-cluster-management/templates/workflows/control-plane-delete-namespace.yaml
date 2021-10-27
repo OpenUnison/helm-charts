@@ -1,8 +1,9 @@
+{{ if .Values.openunison.naas.groups.internal.enabled }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Workflow
 metadata:
-  name: controlplane-delete-namespace
+  name: controlplane-delete-namespace-internal
   namespace: {{ .Release.Namespace }}
 spec:
   description: Request namespace deletion
@@ -29,3 +30,37 @@ spec:
              addToRequest: true
            - taskType: callWorkflow
              name: k8s-delete-workflow
+{{ end }}
+{{ if .Values.openunison.naas.groups.external.enabled }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: controlplane-delete-namespace-external
+  namespace: {{ .Release.Namespace }}
+spec:
+  description: Request namespace deletion
+  inList: true
+  label: $namespaceName$
+  orgId: org-cluster-control-plane-delete
+  dynamicConfiguration:
+    dynamic: true
+    className: com.tremolosecurity.scalejs.ListClusterApproverGroups
+    params:
+    - name: cluster
+      value: k8s
+    - name: groupsAttribute
+      value: groups
+    - name: groupsAreDN
+      value: "false"
+    - name: groupPrefix
+      value: k8s-namespace-administrators-
+  tasks: |-
+           - taskType: addAttribute
+             name: cluster
+             value: k8s
+             remove: false
+             addToRequest: true
+           - taskType: callWorkflow
+             name: k8s-delete-workflow
+{{ end }}
