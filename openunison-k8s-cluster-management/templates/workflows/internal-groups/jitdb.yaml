@@ -1,4 +1,5 @@
 {{ if .Values.openunison.naas.groups.internal.enabled }}
+{{ if not .Values.openunison.naas.groups.external.enabled }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Workflow
@@ -102,4 +103,5 @@ spec:
                  keepExternalAttrs: false
                  changeRoot: true
                  newRoot: o=Tremolo
+{{ end }}
 {{ end }}

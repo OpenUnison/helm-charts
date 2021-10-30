@@ -9,6 +9,7 @@ openunison:
     groups:
       interal:
         enabled: true
+        suffix: "-internal"
       external:
         enabled: false
         admin_group: "CN=openunison-admins,CN=Users,DC=ent2k12,DC=domain,DC=com"

@@ -1,0 +1,29 @@
+{{ if .Values.openunison.naas.groups.external.enabled }}
+{{ if .Values.oidc }}
+{{ if eq .Values.oidc.type "okta" }}
+apiVersion: openunison.tremolo.io/v1
+kind: Target
+metadata:
+  name: okta
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-targets
+    app.kubernetes.io/part-of: openunison
+spec:
+  className: com.tremolosecurity.unison.okta.provisioning.OktaTarget
+  params:
+  - name: domain
+    value: "{{ .Values.oidc.issuer }}"
+  secretParams:
+  - name: token
+    secretName: orchestra-secrets-source
+    secretKey: OKTA_TOKEN
+  targetAttributes:
+  - name: sub
+    source: sub
+    sourceType: user
+{{ end }}
+{{ end }}
+{{ end }}

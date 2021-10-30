@@ -117,6 +117,15 @@ spec:
         - "errorMessage=Invalid group name"
         - "objectClass=groupofnames"
         - "sort=true"
+        {{ else if .Values.oidc}}
+        {{ if eq .Values.oidc.type "okta" }}
+        adminGroup.type: "text-list"
+        adminGroup.dynamicValueSource.className: "com.tremolosecurity.scalejs.register.dynamicSource.LoadGroupsFromOkta"
+        adminGroup.dynamicValueSource.config: 
+        - "targetName=okta"
+        - "maxEntries=10"
+        - "errorMessage=Invalid group name"
+        {{ end }}
         {{ else }}
         adminGroup.type: "text"
         {{ end }}
@@ -142,9 +151,19 @@ spec:
         {{ else }}
         - "searchBase=ou=activedirectory,o=Data"
         {{ end }}
+
         - "errorMessage=Invalid group name"
         - "objectClass=groupofnames"
         - "sort=true"
+        {{ else if .Values.oidc}}
+        {{ if eq .Values.oidc.type "okta" }}
+        viewerGroup.type: "text-list"
+        viewerGroup.dynamicValueSource.className: "com.tremolosecurity.scalejs.register.dynamicSource.LoadGroupsFromOkta"
+        viewerGroup.dynamicValueSource.config: 
+        - "targetName=okta"
+        - "maxEntries=10"
+        - "errorMessage=Invalid group name"
+        {{ end }}
         {{ else }}
         viewerGroup.type: "text"
         {{ end }}

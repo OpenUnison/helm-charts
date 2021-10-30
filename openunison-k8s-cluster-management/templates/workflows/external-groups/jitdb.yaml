@@ -20,6 +20,14 @@ spec:
     className: ""
     params: []
   tasks: |-
+           {{ if .Values.openunison.naas.groups.internal.enabled }}
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.LoadGroups
+             params:
+               nameAttr: uid
+               inverse: "false"
+           {{ end }}
+
            - taskType: customTask
              className: com.tremolosecurity.provisioning.customTasks.JavaScriptTask
              params:
@@ -28,6 +36,7 @@ spec:
                  System = Java.type("java.lang.System");
                  DN = Java.type("com.novell.ldap.util.DN");
                  Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+                 ArrayList = Java.type("java.util.ArrayList");
                  SetupGroupMetadataWatch = Java.type("com.tremolosecurity.proxy.filters.SetupGroupMetadataWatch");
                  HashMap = Java.type("java.util.HashMap");
 
@@ -40,6 +49,31 @@ spec:
                  }
  
                  function doTask(user,request) {
+                   {{ if .Values.openunison.naas.groups.internal.enabled }}
+                   var hasInternal = true;
+                   {{ else }}
+                   var hasInternal = false;
+                   {{ end }}
+                   
+                   var internalGroups = new ArrayList();
+
+                   if (hasInternal) {
+                     for (var i=0;i<user.getGroups().size();i++) {
+                       var groupName = user.getGroups().get(i);
+                       if (groupName.endsWith("-internal") || groupName.startsWith("approvers-")) {
+                         internalGroups.add(groupName);
+                       }
+                     }
+                   }
+
+
+                   System.out.println(user.getGroups());
+                   user.getGroups().clear();
+                   System.out.println(user.getGroups());
+                   user.getGroups().addAll(internalGroups);
+                   System.out.println(user.getGroups());
+
+
                    jitDb = task.getConfigManager().getProvisioningEngine().getTarget("jitdb").getProvider();
                    memberOf = user.getAttribs().get("memberOf");
                    
@@ -67,7 +101,7 @@ spec:
                       }
                     }
                   }
- 
+                   System.out.println(user.getGroups());
                    return true;
                  }  
            
