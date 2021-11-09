@@ -3,3 +3,10 @@ crd:
   deploy: true
   betas: false
   webhooks: true
+
+services:
+  node_selectors: []
+  pullSecret: ""
+
+image: docker.io/tremolosecurity/openunison-k8s-operator:latest
+  

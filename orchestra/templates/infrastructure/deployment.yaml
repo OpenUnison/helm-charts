@@ -1,0 +1,182 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: openunison-{{ .Release.Name }}
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: application
+    app.kubernetes.io/part-of: openunison
+  name: openunison-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  progressDeadlineSeconds: 600
+  replicas: {{ .Values.openunison.replicas }}
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      application: openunison-{{ .Release.Name }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        application: openunison-{{ .Release.Name }}
+        app: openunison-{{ .Release.Name }}
+        app.kubernetes.io/name: openunison
+        app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+        app.kubernetes.io/component: application
+        app.kubernetes.io/part-of: openunison
+    spec:
+      containers:
+      - env:
+        - name: JAVA_OPTS
+          value: "-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom
+            -DunisonEnvironmentFile=/etc/openunison/ou.env -Djavax.net.ssl.trustStore=/etc/openunison/cacerts.jks"
+        - name: fortriggerupdates
+          value: changeme
+        image: {{ .Values.image }}
+        imagePullPolicy: Always
+        livenessProbe:
+          exec:
+            command:
+            {{ if .Values.services.liveness_probe }}
+            {{ range $line := .Values.services.liveness_probe }}
+            - {{ $line }}
+            {{ end }}
+            {{ else }}
+            - /usr/local/openunison/bin/check_alive.sh
+            - "https://127.0.0.1:8443/auth/idp/k8sIdp/.well-known/openid-configuration"
+            - "issuer"
+            - "https://127.0.0.1:8443/check_alive"
+            - "alive"
+            {{ end }}
+          failureThreshold: 10
+          initialDelaySeconds: 120
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 10
+        name: openunison-{{ .Release.Name }}
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        - containerPort: 8443
+          name: https
+          protocol: TCP
+        readinessProbe:
+          exec:
+            command:
+            {{ if .Values.services.readiness_probe }}
+            {{ range $line := .Values.services.readiness_probe }}
+            - {{ $line }}
+            {{ end }}
+            {{ else }}
+            - /usr/local/openunison/bin/check_alive.sh
+            - "https://127.0.0.1:8443/auth/idp/k8sIdp/.well-known/openid-configuration"
+            - "issuer"
+            - "https://127.0.0.1:8443/check_alive"
+            - "alive"
+            {{ end }}
+          failureThreshold: 3
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 10
+        {{ if .Values.services.resources }}
+        resources:
+          {{ if .Values.services.resources.requests }}
+          requests: 
+            {{ if .Values.services.resources.requests.memory }}
+            memory: {{ .Values.services.resources.requests.memory | quote }}
+            {{ end }}
+            
+            {{ if .Values.services.resources.requests.cpu }}
+            cpu: {{ .Values.services.resources.requests.cpu | quote }}
+            {{ end }}
+          
+          {{ end }}
+
+          {{ if .Values.services.resources.limits }}
+          limits: 
+            {{ if .Values.services.resources.limits.memory }}
+            memory: {{ .Values.services.resources.limits.memory | quote }}
+            {{ end }}
+            
+            {{ if .Values.services.resources.limits.cpu }}
+            cpu: {{ .Values.services.resources.limits.cpu | quote }}
+            {{ end }}
+          
+          {{ end }}
+        {{ end }}
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: "/etc/openunison"
+          name: secret-volume
+          readOnly: true
+        {{ if .Values.myvd_configmap }}
+        - mountPath: "/etc/myvd"
+          name: "myvd-volume"
+          readOnly: true
+        {{ end }}
+        {{ if .Values.services.enable_tokenrequest | default false }}
+        - mountPath: /var/run/secrets/tokens
+          name: ou-token
+        {{ end }}
+        {{ if .Values.openunison.html.logosConfigMap }}
+        - mountPath: /usr/local/openunison/work/webapp/auth/forms/logos
+          name: custom-logos
+          readOnly: true
+        {{ end }}
+      automountServiceAccountToken: {{ not (.Values.services.enable_tokenrequest | default false) }}
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      serviceAccount: openunison-{{ .Release.Name }}
+      volumes:
+      - name: secret-volume
+        secret:
+          defaultMode: 420
+          secretName: {{ .Release.Name }}
+      {{ if .Values.myvd_configmap }}
+      - name: myvd-volume
+        configMap:
+          name: {{ .Values.myvd_configmap | quote }}
+      {{ end }}
+      {{ if .Values.services.enable_tokenrequest | default false }}
+      - name: ou-token
+        projected:
+          defaultMode: 420
+          sources:
+          - serviceAccountToken:
+              audience: {{ .Values.services.token_request_audience | default "https://kubernetes.default.svc.cluster.local" }}
+              expirationSeconds: {{ .Values.services.token_request_expiration_seconds | default 60000 }}
+              path: "ou-token"
+          - configMap:
+              items:
+              - key: "ca.crt"
+                path: "ca.crt"
+              name: "kube-cacrt"
+      {{ end }}
+      {{ if .Values.openunison.html.logosConfigMap }}
+      - name: custom-logos
+        configMap:
+          name: {{ .Values.openunison.html.logosConfigMap | quote }}
+      {{ end }}
+      {{ $length := len .Values.services.node_selectors }}
+      {{ if eq $length 0  }}
+      nodeSelector: {}
+      {{ else }}
+      nodeSelector: {{ range $key,$value := .Values.services.node_selectors }}
+        {{ $key }}: {{ $value | quote }}
+      {{ end }}
+      {{ end }}
+      {{ if .Values.services.pullSecret }}
+      imagePullSecrets:
+      - name: {{  .Values.services.pullSecret | quote }}
+      {{ end }}

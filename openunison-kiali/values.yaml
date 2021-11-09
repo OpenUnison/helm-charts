@@ -1,0 +1,5 @@
+enabled_impersonation: false
+az_groups: []
+kiali:
+  host: kiali.istio-system.svc
+  port: 20001

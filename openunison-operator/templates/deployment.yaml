@@ -10,6 +10,11 @@ kind: Deployment
 metadata:
   labels:
     app: openunison-operator
+    app.kubernetes.io/name: openunison-operator
+    app.kubernetes.io/instance: openunison-operator-{{ .Release.Name }}
+    app.kubernetes.io/version: "{{ .Release.Version }}"
+    app.kubernetes.io/component: operator
+    app.kubernetes.io/part-of: openunison
   name: openunison-operator
   namespace: {{ .Release.Namespace }}
 spec:
@@ -29,6 +34,11 @@ spec:
       creationTimestamp: null
       labels:
         app: openunison-operator
+        app.kubernetes.io/name: openunison-operator
+        app.kubernetes.io/instance: openunison-operator-{{ .Release.Name }}
+        app.kubernetes.io/version: "{{ .Release.Version }}"
+        app.kubernetes.io/component: operator
+        app.kubernetes.io/part-of: openunison
     spec:
       containers:
       - env:
@@ -54,7 +64,7 @@ spec:
         - -namespace
         - NAMESPACE
         - -apiGroup
-        - openunison.tremolo.io/v5,openunison.tremolo.io/v4,openunison.tremolo.io/v3,openunison.tremolo.io/v2,openunison.tremolo.io/v1
+        - openunison.tremolo.io/v6,openunison.tremolo.io/v5,openunison.tremolo.io/v4,openunison.tremolo.io/v3,openunison.tremolo.io/v2,openunison.tremolo.io/v1
         - -objectType
         - openunisons
         - -jsPath
@@ -70,6 +80,32 @@ spec:
         - mountPath: /etc/extraMaps
           name: extra-maps
           readOnly: true
+        {{ if and .Values.services .Values.services.resources }}
+        resources:
+          {{ if .Values.services.resources.requests }}
+          requests: 
+            {{ if .Values.services.resources.requests.memory }}
+            memory: {{ .Values.services.resources.requests.memory | quote }}
+            {{ end }}
+            
+            {{ if .Values.services.resources.requests.cpu }}
+            cpu: {{ .Values.services.resources.requests.cpu | quote }}
+            {{ end }}
+          
+          {{ end }}
+
+          {{ if .Values.services.resources.limits }}
+          limits: 
+            {{ if .Values.services.resources.limits.memory }}
+            memory: {{ .Values.services.resources.limits.memory | quote }}
+            {{ end }}
+            
+            {{ if .Values.services.resources.limits.cpu }}
+            cpu: {{ .Values.services.resources.limits.cpu | quote }}
+            {{ end }}
+          
+          {{ end }}
+        {{ end }}
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
@@ -77,3 +113,15 @@ spec:
       volumes:
         - name: extra-maps
           emptyDir: {}
+      {{ $length := len .Values.services.node_selectors }}
+      {{ if eq $length 0  }}
+      nodeSelector: {}
+      {{ else }}
+      nodeSelector: {{ range $key,$value := .Values.services.node_selectors }}
+        {{ $key }}: {{ $value | quote }}
+      {{ end }}
+      {{ end }}
+      {{ if .Values.services.pullSecret }}
+      imagePullSecrets:
+      - name: {{  .Values.services.pullSecret | quote }}
+      {{ end }}

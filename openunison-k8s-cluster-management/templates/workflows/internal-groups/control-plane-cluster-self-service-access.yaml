@@ -1,0 +1,82 @@
+{{ if .Values.openunison.naas.groups.internal.enabled }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: control-plane-namespace-admins
+  namespace: {{ .Release.Namespace }}
+spec:
+  description: ClusterRole admin for the $name$ namespace
+  inList: true
+  label: $name$ Administrator
+  orgId: org-cluster-control-plane-admins
+  dynamicConfiguration:
+    dynamic: true
+    className: com.tremolosecurity.unison.openshiftv3.wf.OpenShiftWorkflows
+    params:
+    - name: target
+      value: k8s
+    - name: kind
+      value: /api/v1/namespaces?labelSelector=tremolo.io/request-access%3Denabled
+  tasks: |-
+           - taskType: addAttribute
+             name: cluster
+             value: k8s
+             remove: false
+             addToRequest: true
+           - taskType: callWorkflow
+             name: k8s-namespace-admin
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: controlplane-cluster-viewer
+  namespace: {{ .Release.Namespace }}
+spec:
+  description: ClusterRole view for the $name$ namespace
+  inList: true
+  label: $name$ Viewer
+  orgId: org-cluster-control-plane-viewers
+  dynamicConfiguration:
+    dynamic: true
+    className: com.tremolosecurity.unison.openshiftv3.wf.OpenShiftWorkflows
+    params:
+    - name: target
+      value: k8s
+    - name: kind
+      value: /api/v1/namespaces?labelSelector=tremolo.io/request-access%3Denabled
+  tasks: |-
+           - taskType: addAttribute
+             name: cluster
+             value: k8s
+             remove: false
+             addToRequest: true
+           - taskType: callWorkflow
+             name: k8s-namespace-viewer
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: controlplane-approvers
+  namespace: {{ .Release.Namespace }}
+spec:
+  description: Add new approvers
+  inList: true
+  label: $namespaceName$ Approver
+  orgId: org-cluster-control-plane-approvers
+  dynamicConfiguration:
+    dynamic: true
+    className: com.tremolosecurity.scalejs.ListClusterApproverGroups
+    params:
+    - name: cluster
+      value: k8s
+    - name: groupsAttribute
+      value: groups
+    - name: groupsAreDN
+      value: "false"
+    - name: groupPrefix
+      value: approvers-k8s-
+  tasks: |-
+           - taskType: callWorkflow
+             name: k8s-add-approver
+{{ end }}

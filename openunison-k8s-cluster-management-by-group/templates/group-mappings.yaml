@@ -1,0 +1,28 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: GroupMetaData
+metadata:
+  name: administrators
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-groupmetadata
+    app.kubernetes.io/part-of: openunison
+spec:
+  groupName: administrators
+  externalName: {{ .Values.openunison.adminGroup }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: GroupMetaData
+metadata:
+  name: k8s-cluster-k8s-administrators
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-groupmetadata
+    app.kubernetes.io/part-of: openunison
+spec:
+  groupName: k8s-cluster-k8s-administrators
+  externalName: {{ .Values.openunison.clusterAdminGroup }}

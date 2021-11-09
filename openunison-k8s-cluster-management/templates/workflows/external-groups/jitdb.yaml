@@ -1,0 +1,148 @@
+{{ if .Values.openunison.naas.groups.external.enabled }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: jitdb
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-workflows
+    app.kubernetes.io/part-of: openunison
+spec:
+  description: JIT
+  inList: false
+  label: JIT
+  orgId: 687da09f-8ec1-48ac-b035-f2f182b9bd1e
+  dynamicConfiguration:
+    dynamic: false
+    className: ""
+    params: []
+  tasks: |-
+           {{ if .Values.openunison.naas.groups.internal.enabled }}
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.LoadGroups
+             params:
+               nameAttr: uid
+               inverse: "false"
+           {{ end }}
+
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.JavaScriptTask
+             params:
+               javaScript: |-
+                 // Maps external groups to local groups
+                 System = Java.type("java.lang.System");
+                 DN = Java.type("com.novell.ldap.util.DN");
+                 Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+                 ArrayList = Java.type("java.util.ArrayList");
+                 SetupGroupMetadataWatch = Java.type("com.tremolosecurity.proxy.filters.SetupGroupMetadataWatch");
+                 HashMap = Java.type("java.util.HashMap");
+
+                 function init(task,params) {
+                   // nothing to do
+                 }
+ 
+                 function reInit(task) {
+                   // do nothing
+                 }
+ 
+                 function doTask(user,request) {
+                   {{ if .Values.openunison.naas.groups.internal.enabled }}
+                   var hasInternal = true;
+                   {{ else }}
+                   var hasInternal = false;
+                   {{ end }}
+                   
+                   var internalGroups = new ArrayList();
+
+                   if (hasInternal) {
+                     for (var i=0;i<user.getGroups().size();i++) {
+                       var groupName = user.getGroups().get(i);
+                       if (groupName.endsWith("{{ .Values.openunison.naas.groups.internal.suffix }}") || groupName.startsWith("approvers-")) {
+                         internalGroups.add(groupName);
+                       }
+                     }
+                   }
+
+
+                   System.out.println(user.getGroups());
+                   user.getGroups().clear();
+                   System.out.println(user.getGroups());
+                   user.getGroups().addAll(internalGroups);
+                   System.out.println(user.getGroups());
+
+
+                   jitDb = task.getConfigManager().getProvisioningEngine().getTarget("jitdb").getProvider();
+                   memberOf = user.getAttribs().get("memberOf");
+                   
+                   request.put("WORKFLOW",task.getWorkflow());
+                   if (memberOf != null) {
+                    for (var i=0;i<memberOf.getValues().size();i++) {
+                      k8sGroup = SetupGroupMetadataWatch.getK8s(memberOf.getValues().get(i));
+                      
+                      
+                      if (k8sGroup != null) {
+                      
+                        for (var j=0;j<k8sGroup.size();j++) {
+                          var k8sGroupName = k8sGroup.get(j);
+                          if (! jitDb.isGroupExists(k8sGroupName,user,request)) {
+                            additionalAttribs = new HashMap();
+                            additionalAttribs.put("unison.group.create.sql","INSERT INTO localGroups (name,description) VALUES (?,?)");
+                            additionalAttribs.put("unison.group.create.param.2","External Group");
+
+
+                            jitDb.addGroup(k8sGroupName,additionalAttribs,user,request);
+                          }
+
+                          user.getGroups().add(k8sGroupName);
+                        }
+                      }
+                    }
+                  }
+                   System.out.println(user.getGroups());
+                   return true;
+                 }  
+           
+           - taskType: mapping
+             strict: true
+             map:
+             - targetAttributeName: TREMOLO_USER_ID
+               sourceType: user
+               targetAttributeSource: uid
+             - targetAttributeName: sub
+               sourceType: user
+               targetAttributeSource: uid
+             - targetAttributeName: mail
+               sourceType: user
+               targetAttributeSource: mail
+             - targetAttributeName: firstName
+               sourceType: user
+               targetAttributeSource: givenName
+             - targetAttributeName: lastName
+               sourceType: user
+               targetAttributeSource: sn
+             onSuccess:
+               - taskType: customTask
+                 className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
+                 params:
+                   message: in-mapping
+               - taskType: addGroup
+                 name: users
+
+               - taskType: provision
+                 sync: true
+                 target: jitdb
+                 setPassword: false
+                 onlyPassedInAttributes: true
+                 attributes:
+                 - sub
+                 - mail
+                 - firstName
+                 - lastName
+               - taskType: resync
+                 keepExternalAttrs: false
+                 changeRoot: true
+                 newRoot: o=Tremolo
+{{ end }}

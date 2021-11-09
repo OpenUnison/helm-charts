@@ -1,0 +1,47 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Application
+metadata:
+  name: kiali
+  namespace: openunison
+spec:
+  azTimeoutMillis: 3000
+  isApp: true
+  urls:
+  - hosts:
+    - "#[OU_HOST]"
+    filterChain:
+    - className: com.tremolosecurity.proxy.filters.SetNoCacheHeaders
+    {{ if .Values.enable_impersonation }}
+    - className: com.tremolosecurity.proxy.filters.K8sInjectImpersonation
+      params:
+        targetName: k8s
+        userNameAttribute: sub
+        useLdapGroups: "false"
+        groupAttribute: groups
+    {{ end }}
+    uri: "/kiali"
+    proxyTo: http://{{ .Values.kiali.host }}:{{ .Values.kiali.port }}${fullURI}
+    authChain: login-service
+    azRules:
+    {{ $length := len .Values.az_groups }}
+    {{ if eq $length 0 }}
+    - scope: dn
+      constraint: o=Tremolo
+    {{ else }}
+    {{ range $az_group := .Values.az_groups }}
+    - scope: filter
+      constraint: (groups={{ $az_group }})
+    {{ end }}
+    {{ end }}
+    {{ if not .Values.enable_impersonation }}
+    results:
+      azSuccess: oauth2bearer
+    {{ end }}
+  cookieConfig:
+    sessionCookieName: tremolosession
+    domain: "#[OU_HOST]"
+    secure: true
+    httpOnly: true
+    logoutURI: "/logout"
+    keyAlias: session-unison

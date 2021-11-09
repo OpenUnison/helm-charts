@@ -1,0 +1,15 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: ResultGroup
+metadata:
+  name: oauth2bearer
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-resultgroups
+    app.kubernetes.io/part-of: openunison
+spec:
+- resultType: header
+  source: custom
+  value: Authorization=com.tremolosecurity.proxy.results.InjectIdToken

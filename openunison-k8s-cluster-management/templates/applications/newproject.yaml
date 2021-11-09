@@ -1,0 +1,220 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Application
+metadata:
+  name: scale-newproject
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-applications
+    app.kubernetes.io/part-of: openunison
+spec:
+  azTimeoutMillis: 3000
+  isApp: true
+  urls:
+  - hosts:
+    - "#[OU_HOST]"
+    filterChain: 
+    - className: com.tremolosecurity.proxy.filters.XForward
+      params:
+        createHeaders: "false"
+    - className: com.tremolosecurity.proxy.filters.SetNoCacheHeaders
+      params: {}
+    - className: com.tremolosecurity.proxy.filters.MapUriRoot
+      params:
+        newRoot: /register
+        paramName: registerURI
+    uri: "/newproject"
+    proxyTo: http://ouhtml-{{ .Values.openunison.orchestra_login_portal_name }}.{{ .Release.Namespace }}.svc:8080${registerURI}
+    authChain: login-service
+    overrideHost: true
+    overrideReferer: true
+    azRules:
+    - scope: dn
+      constraint: "o=Tremolo"
+    results: 
+      azFail: default-login-failure
+      auFail: default-login-failure
+  - hosts:
+    - "#[OU_HOST]"
+    filterChain:
+    - className: com.tremolosecurity.scalejs.register.ws.ScaleRegister
+      params:
+        displayNameAttribute: "sub"
+        frontPage.title: "Create New Namespace"
+        frontPage.text: "Use this page to request the creation of a new namespace.  Once the namespace is approved you will be the first approver and administrator.  You will be notified when the namespace is ready."
+        uidAttributeName: uid
+        workflowName: ""
+        logoutURL: "/logout"
+        homeURL: "/"
+        preSetPassword: "false"
+        requireReason: "true"
+        requireReCaptcha: "false"
+        rcSiteKey: ""
+        rcSecret: ""
+        requireTermsAndConditions: "false"
+        termsAndCondisionsText: ""
+        useCallWorkflowClass: "true"
+        callWorkflowClassName: "com.tremolosecurity.scalejs.K8sProjectCheck"
+        submitLoggedInUser: "true"
+
+        attributeNames:
+        - cluster
+        - nameSpace
+        {{ if .Values.openunison.naas.groups.external.enabled }}
+        - adminGroup
+        - viewerGroup
+        {{ end }}
+        - gitUrl
+        - gitSshKey
+
+        
+        cluster.displayName: "Cluster"
+        cluster.readOnly: "false"
+        cluster.required: "true"
+        cluster.regEx: ".*"
+        cluster.regExFailedMsg: "Invalid cluster"
+        cluster.minChars: "0"
+        cluster.maxChars: "63"
+        cluster.unique: "false"
+        cluster.type: "list"
+        cluster.editJavaScriptFunction: "update_new_project(this,attr_cfg)"
+        cluster.dynamicValueSource.className: "com.tremolosecurity.scalejs.ListClusters"
+        
+        nameSpace.displayName: "Namespace Name"
+        nameSpace.readOnly: "false"
+        nameSpace.required: "true"
+        nameSpace.regEx: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+        nameSpace.regExFailedMsg: "Invalid namespace name, must be a valid DNS host name"
+        nameSpace.minChars: "0"
+        nameSpace.maxChars: "63"
+        nameSpace.unique: "false"
+        nameSpace.type: "text"
+
+        {{ if .Values.openunison.naas.groups.external.enabled }}
+        adminGroup.displayName: "Administrator Group"
+        adminGroup.realOnly: "false"
+        adminGroup.required: "true"
+        adminGroup.regEx: ".*"
+        adminGroup.redExFailedMsg: "Invalid administrator group"
+        adminGroup.minChars: "0"
+        adminGroup.maxChars: "255"
+        adminGroup.unique: "false"
+        {{ if .Values.active_directory }}
+        adminGroup.type: "text-list"
+        adminGroup.dynamicValueSource.className: "com.tremolosecurity.scalejs.register.dynamicSource.LoadFromLDAP"
+        adminGroup.dynamicValueSource.config: 
+        - "nameField=distinguishedName"
+        - "valueField=distinguishedName"
+        - "searchField=cn"
+        - "maxEntries=10"
+        {{ if .Values.active_directory.group_search_base }}
+        - "searchBase={{ .Values.active_directory.group_search_base }},ou=activedirectory,o=Data"
+        {{ else }}
+        - "searchBase=ou=activedirectory,o=Data"
+        {{ end }}
+        - "errorMessage=Invalid group name"
+        - "objectClass=groupofnames"
+        - "sort=true"
+        {{ else if .Values.oidc}}
+        {{ if eq .Values.oidc.type "okta" }}
+        adminGroup.type: "text-list"
+        adminGroup.dynamicValueSource.className: "com.tremolosecurity.scalejs.register.dynamicSource.LoadGroupsFromOkta"
+        adminGroup.dynamicValueSource.config: 
+        - "targetName=okta"
+        - "maxEntries=10"
+        - "errorMessage=Invalid group name"
+        {{ end }}
+        {{ else }}
+        adminGroup.type: "text"
+        {{ end }}
+
+        viewerGroup.displayName: "Viewer Group"
+        viewerGroup.realOnly: "false"
+        viewerGroup.required: "true"
+        viewerGroup.regEx: ".*"
+        viewerGroup.redExFailedMsg: "Invalid viewer group"
+        viewerGroup.minChars: "0"
+        viewerGroup.maxChars: "255"
+        viewerGroup.unique: "false"
+        {{ if .Values.active_directory }}
+        viewerGroup.type: "text-list"
+        viewerGroup.dynamicValueSource.className: "com.tremolosecurity.scalejs.register.dynamicSource.LoadFromLDAP"
+        viewerGroup.dynamicValueSource.config: 
+        - "nameField=distinguishedName"
+        - "valueField=distinguishedName"
+        - "searchField=cn"
+        - "maxEntries=10"
+        {{ if .Values.active_directory.group_search_base }}
+        - "searchBase={{ .Values.active_directory.group_search_base }},ou=activedirectory,o=Data"
+        {{ else }}
+        - "searchBase=ou=activedirectory,o=Data"
+        {{ end }}
+
+        - "errorMessage=Invalid group name"
+        - "objectClass=groupofnames"
+        - "sort=true"
+        {{ else if .Values.oidc}}
+        {{ if eq .Values.oidc.type "okta" }}
+        viewerGroup.type: "text-list"
+        viewerGroup.dynamicValueSource.className: "com.tremolosecurity.scalejs.register.dynamicSource.LoadGroupsFromOkta"
+        viewerGroup.dynamicValueSource.config: 
+        - "targetName=okta"
+        - "maxEntries=10"
+        - "errorMessage=Invalid group name"
+        {{ end }}
+        {{ else }}
+        viewerGroup.type: "text"
+        {{ end }}
+        {{ end }}
+
+
+        gitUrl.displayName: "Git URL"
+        gitUrl.readOnly: "false"
+        gitUrl.required: "false"
+        gitUrl.regEx: "^.*$"
+        gitUrl.regExFailedMsg: "Invalid git url"
+        gitUrl.minChars: "0"
+        gitUrl.maxChars: "0"
+        gitUrl.unique: "false"
+        gitUrl.type: "text"
+        gitUrl.show: "false"
+
+        gitSshKey.displayName: "Git SSH Private Key"
+        gitSshKey.readOnly: "false"
+        gitSshKey.required: "false"
+        gitSshKey.regEx: ""
+        gitSshKey.regExFailedMsg: "Invalid ssh key"
+        gitSshKey.minChars: "0"
+        gitSshKey.maxChars: "10000"
+        gitSshKey.unique: "false"
+        gitSshKey.type: "textarea"
+        gitSshKey.show: "false"
+
+        callWorkflowInit:
+        - workflowName=new-k8s-namespace
+        - targetName=k8s
+        - projectAttributeName=nameSpace
+
+
+
+    uri: /newproject/register
+    azRules:
+    - scope: dn
+      constraint: o=Tremolo
+    authChain: login-service
+    results:
+      azFail: default-login-failure
+      auFail: default-login-failure
+  cookieConfig:
+    sessionCookieName: tremolosession
+    domain: "#[OU_HOST]"
+    secure: true
+    httpOnly: true
+    logoutURI: "/logout"
+    keyAlias: session-unison
+    timeout: {{ .Values.network.session_inactivity_timeout_seconds }}
+    scope: -1
+    cookiesEnabled: true
+    

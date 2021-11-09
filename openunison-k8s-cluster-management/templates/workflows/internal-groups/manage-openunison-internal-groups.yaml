@@ -1,0 +1,92 @@
+{{ if .Values.openunison.naas.groups.internal.enabled }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: manage-openunison{{ .Values.openunison.naas.groups.internal.suffix }}-groups
+  namespace: {{ .Release.Namespace }}
+spec:
+  description: $description$
+  inList: true
+  label: $name$ Membership
+  orgId: a4fb9011-edd2-4ada-a3dd-140f886f678c
+  dynamicConfiguration:
+    dynamic: true
+    className: com.tremolosecurity.provisioning.dynamicwf.DBTargetDynamicWF
+    params:
+    - name: target
+      value: jitdb
+    - name: sql
+      value: SELECT name,description FROM localGroups where name like '%{{ .Values.openunison.naas.groups.internal.suffix }}'
+  tasks: |-
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.LoadAttributes
+             params:
+               nameAttr: uid
+               name: 
+               - givenName
+               - sn
+               - mail
+
+           - taskType: approval
+             label: Approve access for internal group $name$
+             emailTemplate: There is an open request for the internal group $name$
+             mailAttr: mail
+             failureEmailSubject: Access Denied
+             failureEmailMsg: |-
+                                For this reason:
+                                ${reason}
+             approvers:
+             - scope: group
+               constraint: cn=administrators{{ .Values.openunison.naas.groups.external.suffix }},ou=groups,ou=shadow,o=Tremolo
+             - scope: group
+               constraint: cn=administrators{{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
+             onSuccess:
+             - taskType: mapping
+               strict: true
+               map:
+               - targetAttributeName: sub
+                 sourceType: user
+                 targetAttributeSource: uid
+               - targetAttributeName: mail
+                 sourceType: user
+                 targetAttributeSource: mail
+               onSuccess:
+               - taskType: addGroup
+                 name: $name$
+                 remove: false
+               - taskType: provision
+                 sync: false
+                 target: jitdb
+                 setPassword: false
+                 onlyPassedInAttributes: false
+                 attributes:
+                 - sub
+               
+             onFailure:
+             - taskType: mapping
+               strict: true
+               map:
+               - targetAttributeName: sub
+                 sourceType: user
+                 targetAttributeSource: uid
+               - targetAttributeName: mail
+                 sourceType: user
+                 targetAttributeSource: mail
+               onSuccess:
+               - taskType: customTask
+                 className: com.tremolosecurity.provisioning.customTasks.LoadGroupsFromTarget
+                 params:
+                   nameAttr: sub
+                   target: jitdb
+               - taskType: addGroup
+                 name: $name$
+                 remove: true
+               - taskType: provision
+                 sync: true
+                 target: jitdb
+                 setPassword: false
+                 onlyPassedInAttributes: false
+                 attributes:
+                 - sub 
+{{ end }}

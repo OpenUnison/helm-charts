@@ -1,0 +1,60 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Application
+metadata:
+  name: scale-session-check
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-applications
+    app.kubernetes.io/part-of: openunison
+spec:
+  azTimeoutMillis: 3000
+  isApp: true
+  urls:
+  - hosts:
+    - "*"
+    filterChain:
+    - className: com.tremolosecurity.proxy.filters.CheckSession
+      params:
+        applicationName: scale
+    uri: "/scale/sessioncheck"
+    authChain: anon
+    azRules:
+    - scope: dn
+      constraint: "o=Tremolo"
+  - hosts:
+    - "*"
+    filterChain:
+    - className: com.tremolosecurity.proxy.filters.CheckSession
+      params:
+        applicationName: scale
+    uri: "/k8stoken/sessioncheck"
+    authChain: anon
+    azRules:
+    - scope: dn
+      constraint: "o=Tremolo"
+  {{ if .Values.openunison.enable_provisioning }}
+  - hosts:
+    - "*"
+    filterChain:
+    - className: com.tremolosecurity.proxy.filters.CheckSession
+      params:
+        applicationName: scale-ops
+    uri: "/ops/sessioncheck"
+    authChain: anon
+    azRules:
+    - scope: dn
+      constraint: "o=Tremolo"
+  {{ end }}
+  cookieConfig:
+    sessionCookieName: checksession
+    domain: "*"
+    secure: true
+    httpOnly: true
+    logoutURI: "/logout"
+    keyAlias: session-unison
+    timeout: 1
+    scope: -1
+    cookiesEnabled: false

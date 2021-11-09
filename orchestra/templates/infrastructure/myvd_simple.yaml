@@ -1,0 +1,47 @@
+{{ if or .Values.oidc .Values.github .Values.saml }}
+{{ if eq .Values.openunison.enable_provisioning false }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: myvd
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: myvd
+    app.kubernetes.io/part-of: openunison
+data:
+  myvd.conf: |-
+    #Global AuthMechConfig
+    server.globalChain=accesslog
+
+    server.globalChain.accesslog.className=com.tremolosecurity.proxy.myvd.log.AccessLog
+
+    server.nameSpaces=rootdse,myvdroot,shadowUsers
+    server.rootdse.chain=dse
+    server.rootdse.nameSpace=
+    server.rootdse.weight=0
+    server.rootdse.dse.className=net.sourceforge.myvd.inserts.RootDSE
+    server.rootdse.dse.config.namingContexts=o=Tremolo
+    server.myvdroot.chain=root
+    server.myvdroot.nameSpace=o=Tremolo
+    server.myvdroot.weight=0
+    server.myvdroot.root.className=net.sourceforge.myvd.inserts.RootObject
+
+    server.shadowUsers.chain=mapping,api
+    server.shadowUsers.nameSpace=ou=shadow,o=Tremolo
+    server.shadowUsers.weight=0
+    server.shadowUsers.enabled=true
+    server.shadowUsers.debug.className=net.sourceforge.myvd.inserts.DumpTransaction
+    server.shadowUsers.debug.config.logLevel=info
+    server.shadowUsers.debug.config.label=k8s
+    server.shadowUsers.mapping.className=net.sourceforge.myvd.inserts.mapping.AttributeMapper
+    server.shadowUsers.mapping.config.mapping=mail=email,givenName=first_name,sn=last_name
+    server.shadowUsers.api.className=com.tremolosecurity.myvd.K8sCrdInsert
+    server.shadowUsers.api.config.alwaysMapUIDInFilter=true
+    server.shadowUsers.api.config.nameSpace={{ .Release.Namespace }}
+    server.shadowUsers.api.config.k8sTargetName=k8s
+    server.shadowUsers.api.config.alwaysMapUIDInFilter=true
+{{ end }}
+{{ end }}

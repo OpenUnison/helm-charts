@@ -1,0 +1,79 @@
+{{ if .Values.openunison.enable_provisioning }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Application
+metadata:
+  name: scale-ops
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-applications
+    app.kubernetes.io/part-of: openunison
+spec:
+  azTimeoutMillis: 3000
+  isApp: true
+  urls:
+  - hosts:
+    - "#[OU_HOST]"
+    filterChain: 
+    - className: com.tremolosecurity.proxy.filters.XForward
+      params:
+        createHeaders: "false"
+    - className: com.tremolosecurity.proxy.filters.SetNoCacheHeaders
+      params: {}
+    uri: "/ops"
+    proxyTo: http://ouhtml-{{ .Release.Name }}.{{ .Release.Namespace }}.svc:8080${fullURI}
+    authChain: login-service
+    overrideHost: true
+    overrideReferer: true
+    azRules:
+    - scope: filter
+      constraint: "(groups=administrators)"
+    - scope: filter
+      constraint: "(groups=administrators{{ .Values.openunison.naas.groups.internal.suffix }})"
+    results: 
+      azFail: default-login-failure
+      auFail: default-login-failure
+  - hosts:
+    - "#[OU_HOST]"
+    filterChain:
+    - className: com.tremolosecurity.scalejs.ws.ScaleJSOperator
+      params:
+        searchableAttributes:
+          - givenName=First Name
+          - sn=Last Name
+          - mail=Email Address
+          - uid=Login ID
+        resultAttributes:
+          - givenName=First Name
+          - sn=Last Name
+          - mail=Email Address
+          - uid=Login ID
+        scaleMainAppName: scale
+        scaleMainURI: /scale/main
+        homeUrl: /scale/
+        bases:
+        - OopenUnison=o=Tremolo
+    uri: /ops/ops
+    azRules:
+    - scope: filter
+      constraint: (groups=administrators)
+    - scope: filter
+      constraint: "(groups=administrators{{ .Values.openunison.naas.groups.internal.suffix }})"
+    authChain: login-service
+    results:
+      azFail: default-login-failure
+      auFail: default-login-failure
+  cookieConfig:
+    sessionCookieName: tremolosession
+    domain: "#[OU_HOST]"
+    secure: true
+    httpOnly: true
+    logoutURI: "/logout"
+    keyAlias: session-unison
+    timeout: {{ .Values.network.session_inactivity_timeout_seconds }}
+    scope: -1
+    cookiesEnabled: true
+{{ end }}
+    

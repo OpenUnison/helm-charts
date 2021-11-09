@@ -1,0 +1,45 @@
+{{ if and .Values.openunison.enable_provisioning .Values.openunison.enable_activemq }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Application
+metadata:
+  name: activemq
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-applications
+    app.kubernetes.io/part-of: openunison
+spec:
+  azTimeoutMillis: 3000
+  isApp: true
+  urls:
+  - hosts:
+    - "#[OU_HOST]"
+    filterChain: 
+    - className: com.tremolosecurity.proxy.filters.HideCookie
+      params: {}
+    uri: "/admin"
+    proxyTo: https://amq.{{ .Release.Namespace }}.svc:8162${fullURI}
+    authChain: login-service
+    overrideHost: true
+    overrideReferer: true
+    azRules:
+    - scope: filter
+      constraint: "(groups=administrators)"
+    - scope: filter
+      constraint: "(groups=administrators{{ .Values.openunison.naas.groups.internal.suffix }})"
+    results: 
+      azFail: default-login-failure
+      auFail: default-login-failure
+  cookieConfig:
+    sessionCookieName: tremolosession
+    domain: "#[OU_HOST]"
+    secure: true
+    httpOnly: true
+    logoutURI: "/logout"
+    keyAlias: session-unison
+    timeout: {{ .Values.network.session_inactivity_timeout_seconds }}
+    scope: -1
+    cookiesEnabled: true
+{{ end }}

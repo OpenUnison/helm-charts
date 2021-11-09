@@ -1,0 +1,168 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ouhtml-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: openunison
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ouhtml-{{ .Release.Name }}
+  name: ouhtml-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: html
+    app.kubernetes.io/part-of: openunison
+spec:
+  progressDeadlineSeconds: 600
+  replicas: {{ .Values.openunison.replicas }}
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: ouhtml-{{ .Release.Name }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: ouhtml-{{ .Release.Name }}
+    spec:
+      containers:
+      - image: {{ .Values.openunison.html.image }}
+        imagePullPolicy: Always
+        name: ouhtml
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        livenessProbe:
+          httpGet:
+            path: /nginx-health
+            port: 8080
+            httpHeaders: []
+          initialDelaySeconds: 3
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /nginx-health
+            port: 8080
+            httpHeaders: []
+          initialDelaySeconds: 3
+          periodSeconds: 30
+        {{ if .Values.services.resources }}
+        resources:
+          {{ if .Values.services.resources.requests }}
+          requests: 
+            {{ if .Values.services.resources.requests.memory }}
+            memory: {{ .Values.services.resources.requests.memory | quote }}
+            {{ end }}
+            
+            {{ if .Values.services.resources.requests.cpu }}
+            cpu: {{ .Values.services.resources.requests.cpu | quote }}
+            {{ end }}
+          
+          {{ end }}
+
+          {{ if .Values.services.resources.limits }}
+          limits: 
+            {{ if .Values.services.resources.limits.memory }}
+            memory: {{ .Values.services.resources.limits.memory | quote }}
+            {{ end }}
+            
+            {{ if .Values.services.resources.limits.cpu }}
+            cpu: {{ .Values.services.resources.limits.cpu | quote }}
+            {{ end }}
+          
+          {{ end }}
+        {{ end }}
+        
+        volumeMounts: {{ if not ( or .Values.openunison.html.logosConfigMap .Values.openunison.html.registerFunctionsConfigMap)  }}[]{{ end }}
+        {{ if .Values.openunison.html.logosConfigMap }}
+        - mountPath: /var/www/html/scale/logos
+          name: custom-logos-scale
+          readOnly: true
+        - mountPath: /var/www/html/ops/logos
+          name: custom-logos-ops
+          readOnly: true
+        - mountPath: /var/www/html/token/logos
+          name: custom-logos-token
+          readOnly: true
+        - mountPath: /var/www/html/register/logos
+          name: custom-logos-register
+          readOnly: true
+        {{ end }}
+        {{ if .Values.openunison.html.registerFunctionsConfigMap }}
+        - mountPath: /var/www/html/register/js-ext
+          name: register-functions
+          readOnly: true
+        {{ end }}  
+      volumes: {{ if not ( or  .Values.openunison.html.logosConfigMap .Values.openunison.html.registerFunctionsConfigMap) }}[]{{ end }}
+      {{ if .Values.openunison.html.logosConfigMap }}
+      - name: custom-logos-scale
+        configMap:
+          name: {{ .Values.openunison.html.logosConfigMap | quote }}
+      - name: custom-logos-ops
+        configMap:
+          name: {{ .Values.openunison.html.logosConfigMap | quote }}
+      - name: custom-logos-token
+        configMap:
+          name: {{ .Values.openunison.html.logosConfigMap | quote }}
+      - name: custom-logos-register
+        configMap:
+          name: {{ .Values.openunison.html.logosConfigMap | quote }}
+      {{ end }}
+      {{ if .Values.openunison.html.registerFunctionsConfigMap }}
+      - name: register-functions
+        configMap:
+          name: {{ .Values.openunison.html.registerFunctionsConfigMap | quote }}
+      {{ end }}
+
+
+      dnsPolicy: ClusterFirst
+      serviceAccountName: ouhtml-{{ .Release.Name }}
+      automountServiceAccountToken: false
+      restartPolicy: Always
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      {{ $length := len .Values.services.node_selectors }}
+      {{ if eq $length 0  }}
+      nodeSelector: {}
+      {{ else }}
+      nodeSelector: {{ range $key,$value := .Values.services.node_selectors }}
+        {{ $key }}: {{ $value | quote }}
+      {{ end }}
+      {{ end }}
+      {{ if .Values.services.pullSecret }}
+      imagePullSecrets:
+      - name: {{  .Values.services.pullSecret | quote }}
+      {{ end }}
+      
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ouhtml-{{ .Release.Name }}
+  name: ouhtml-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+    name: http
+  selector:
+    app: ouhtml-{{ .Release.Name }}
+  sessionAffinity: None
+  type: ClusterIP

@@ -54,7 +54,16 @@ spec:
     - env_var: K8S_API_HOST
       name: {{ .Values.services.api_server_host }}
     secret_name: ou-tls-certificate
-    annotations: []
+    {{ $ingress_annotations := .Values.services.ingress_annotations }}
+    {{ $length := len $ingress_annotations }}
+    {{ if eq $length 0  }}
+    annoations: []
+    {{ else }}
+    annotations: {{ range $key,$value := $ingress_annotations }}
+    - name: {{ $key }}
+      value: {{ quote $value }}
+      {{ end }}
+    {{ end }}
   key_store:
     update_controller:
       image: {{ .Values.cert_update_image | default "docker.io/tremolosecurity/kubernetes-artifact-deployment:1.1.0" }}

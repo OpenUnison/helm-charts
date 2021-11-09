@@ -1,0 +1,70 @@
+{{ if .Values.openunison.enable_provisioning }}
+apiVersion: openunison.tremolo.io/v1
+kind: Target
+metadata:
+  name: jitdb
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-targets
+    app.kubernetes.io/part-of: openunison
+spec:
+  className: com.tremolosecurity.provisioning.core.providers.BasicDB
+  params:
+  - name: driver
+    value: "{{ .Values.database.driver }}"
+  - name: url
+    value: "{{ .Values.database.url }}"
+  - name: user
+    value: "{{ .Values.database.user }}"
+  - name: maxCons
+    value: "10"
+  - name: maxIdleCons
+    value: "10"
+  - name: validationQuery
+    value: "{{ .Values.database.validation }}"
+  - name: userTable
+    value: localUsers
+  - name: userPrimaryKey
+    value: userId
+  - name: userName
+    value: sub
+  - name: groupMode
+    value: ManyToMany
+  - name: groupTable
+    value: localGroups
+  - name: groupName
+    value: name
+  - name: groupUserKey
+    value: userId
+  - name: groupLinkTableName
+    value: userGroups
+  - name: groupGroupKey
+    value: groupId
+  - name: groupPrimaryKey
+    value: groupId
+  - name: userSQL
+    value: ""
+  - name: groupSQL
+    value: ""
+  - name: customProvider
+    value: ""
+  secretParams:
+  - name: password
+    secretName: orchestra-secrets-source
+    secretKey: OU_JDBC_PASSWORD
+  targetAttributes:
+  - name: sub
+    source: sub
+    sourceType: user
+  - name: mail
+    source: mail
+    sourceType: user
+  - name: firstName
+    source: firstName
+    sourceType: user
+  - name: lastName
+    source: lastName
+    sourceType: user
+{{ end }}

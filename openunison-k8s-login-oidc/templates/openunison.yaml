@@ -3,7 +3,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: impersonator
+  name: impersonator-{{ .Release.Namespace }}-{{ .Release.Name }}
 rules:
 - apiGroups:
   - ""
@@ -16,14 +16,14 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: orchestra-impersonator
+  name: impersonator-{{ .Release.Namespace }}-{{ .Release.Name }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: impersonator
+  name: impersonator-{{ .Release.Namespace }}-{{ .Release.Name }}
 subjects:
 - kind: ServiceAccount
-  name: openunison-orchestra
+  name: openunison-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
 {{ end }}
 ---
@@ -31,7 +31,7 @@ kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   namespace: {{ .Values.dashboard.namespace }}
-  name: orchestra-dashboard
+  name: orchestra-dashboard-{{ .Release.Name }}
 rules:
 - apiGroups:
   - ''
@@ -44,7 +44,7 @@ rules:
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: orchestra-dashboard
+  name: orchestra-dashboard-{{ .Release.Name }}
   namespace: {{ .Values.dashboard.namespace }}
 subjects:
 - kind: ServiceAccount
@@ -52,13 +52,13 @@ subjects:
   namespace: {{ .Release.Namespace }}
 roleRef:
   kind: Role
-  name: orchestra-dashboard
+  name: orchestra-dashboard-{{ .Release.Name }}
   apiGroup: rbac.authorization.k8s.io
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: orchestra-certs
+  name: orchestra-certs-{{ .Release.Name }}
 rules:
 - apiGroups:
   - certificates.k8s.io
@@ -71,7 +71,7 @@ rules:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: orchestra-certs
+  name: orchestra-certs-{{ .Release.Name }}
 subjects:
 - kind: ServiceAccount
   name: openunison-operator
@@ -85,7 +85,7 @@ roleRef:
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
-  name: "openunison-workflow-validation"
+  name: "openunison-workflow-validation-{{ .Release.Name }}"
 webhooks:
 - name: "workflows-openunison.tremolo.io"
   rules:
@@ -94,6 +94,12 @@ webhooks:
     operations:  ["CREATE","UPDATE"]
     resources:   ["workflows"]
     scope:       "Namespaced"
+  namespaceSelector:
+    matchExpressions:
+    - key: kubernetes.io/metadata.name
+      operator: In
+      values: ["{{ .Release.Namespace }}"]
+    
   clientConfig:
     service:
       namespace: {{ .Release.Namespace }}
@@ -110,6 +116,11 @@ webhooks:
     operations:  ["CREATE","UPDATE"]
     resources:   ["customazs"]
     scope:       "Namespaced"
+  namespaceSelector:
+    matchExpressions:
+    - key: kubernetes.io/metadata.name
+      operator: In
+      values: ["{{ .Release.Namespace }}"]
   clientConfig:
     service:
       namespace: {{ .Release.Namespace }}
@@ -126,6 +137,11 @@ webhooks:
     operations:  ["CREATE","UPDATE"]
     resources:   ["authmechs"]
     scope:       "Namespaced"
+  namespaceSelector:
+    matchExpressions:
+    - key: kubernetes.io/metadata.name
+      operator: In
+      values: ["{{ .Release.Namespace }}"]
   clientConfig:
     service:
       namespace: {{ .Release.Namespace }}
@@ -142,6 +158,11 @@ webhooks:
     operations:  ["CREATE","UPDATE"]
     resources:   ["authchains"]
     scope:       "Namespaced"
+  namespaceSelector:
+    matchExpressions:
+    - key: kubernetes.io/metadata.name
+      operator: In
+      values: ["{{ .Release.Namespace }}"]
   clientConfig:
     service:
       namespace: {{ .Release.Namespace }}
@@ -158,6 +179,11 @@ webhooks:
     operations:  ["CREATE","UPDATE"]
     resources:   ["applications"]
     scope:       "Namespaced"
+  namespaceSelector:
+    matchExpressions:
+    - key: kubernetes.io/metadata.name
+      operator: In
+      values: ["{{ .Release.Namespace }}"]
   clientConfig:
     service:
       namespace: {{ .Release.Namespace }}
@@ -171,10 +197,10 @@ webhooks:
 apiVersion: openunison.tremolo.io/v5
 kind: OpenUnison
 metadata:
-  name: orchestra
+  name: {{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
 spec:
-  dest_secret: orchestra
+  dest_secret: {{ .Release.Name }}
   enable_activemq: false
   hosts:
   - ingress_name: openunison
@@ -223,7 +249,7 @@ spec:
         - create_data:
             ca_cert: true
             key_size: 2048
-            server_name: openunison-{{ .Release.Name }}.openunison.svc
+            server_name: openunison-{{ .Release.Name }}.{{ .Release.Namespace }}.svc
             sign_by_k8s_ca: {{ .Values.certs.use_k8s_cm }}
             {{ if eq .Values.enable_impersonation true }}
             subject_alternative_names:
@@ -439,7 +465,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: api-server-config
-  namespace: openunison
+  namespace: {{ .Release.Namespace }}
 data:
   oidc-api-server-flags: |-
                            --oidc-issuer-url=https://{{ .Values.network.openunison_host }}/auth/idp/k8sIdp
@@ -455,8 +481,8 @@ metadata:
     audit2rbac.liggitt.net/version: v0.7.0
   labels:
     audit2rbac.liggitt.net/generated: "true"
-    audit2rbac.liggitt.net/user: system-serviceaccount-openunison-openunison-orchestra
-  name: audit2rbac:system:serviceaccount:openunison:openunison-orchestra
+    audit2rbac.liggitt.net/user: system-serviceaccount-openunison-openunison-{{ .Release.Name }}
+  name: audit2rbac:system:serviceaccount:openunison:openunison-{{ .Release.Name }}
 rules:
 - apiGroups:
   - authentication.k8s.io
@@ -472,44 +498,16 @@ metadata:
     audit2rbac.liggitt.net/version: v0.7.0
   labels:
     audit2rbac.liggitt.net/generated: "true"
-    audit2rbac.liggitt.net/user: system-serviceaccount-openunison-openunison-orchestra
-  name: audit2rbac:system:serviceaccount:openunison:openunison-orchestra
+    audit2rbac.liggitt.net/user: system-serviceaccount-openunison-openunison-{{ .Release.Name }}
+  name: audit2rbac:system:serviceaccount:openunison:openunison-{{ .Release.Name }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: audit2rbac:system:serviceaccount:openunison:openunison-orchestra
+  name: audit2rbac:system:serviceaccount:openunison:openunison-{{ .Release.Name }}
 subjects:
 - kind: ServiceAccount
-  name: openunison-orchestra
+  name: openunison-{{ .Release.Name }}
   namespace: openunison
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: openunison-cr-update
-  namespace: {{ .Release.Namespace }}
-rules:
-- apiGroups:
-  - openunison.tremolo.io
-  resources:
-  - openunisons
-  - users
-  verbs:
-  - '*'
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: openunison-cr-update
-  namespace: {{ .Release.Namespace }}
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: openunison-cr-update
-subjects:
-- kind: ServiceAccount
-  name: openunison-orchestra
-  namespace: {{ .Release.Namespace }}
 ---
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
@@ -531,7 +529,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 subjects:
 - kind: ServiceAccount
-  name: openunison-orchestra
+  name: openunison-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
 roleRef:
   kind: Role
@@ -545,7 +543,7 @@ metadata:
   name: openunison-trusts-get
 rules:
 - apiGroups: ["openunison.tremolo.io"]
-  resources: ["trusts","portalurls","orgs","authmechs","authchains","resultgroups","applications"]
+  resources: ["trusts","portalurls","orgs","authmechs","authchains","resultgroups","applications","customazs","targets","workflows","oujobs"]
   verbs:
   - get
   - list
@@ -558,9 +556,56 @@ metadata:
   namespace: {{ .Release.Namespace }}
 subjects:
 - kind: ServiceAccount
-  name: openunison-orchestra
+  name: openunison-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
 roleRef:
   kind: Role
   name: openunison-trusts-get
   apiGroup: rbac.authorization.k8s.io
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: oidc-user-sessions-{{ .Release.Name }}
+rules:
+- apiGroups: ["openunison.tremolo.io"]
+  resources: ["oidc-sessions","users"]
+  verbs: ["*"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: oidc-user-sessions-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+subjects:
+- kind: ServiceAccount
+  name: openunison-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: oidc-user-sessions-{{ .Release.Name }}
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: openunison-operator-{{ .Release.Name }}-webhooks
+rules:
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources: ["validatingwebhookconfigurations"]
+    verbs: ["*"] 
+    resourceNames: ["openunison-workflow-validation-{{ .Release.Name }}"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: openunison-operator-{{ .Release.Name }}-webhooks
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole 
+  name: openunison-operator-{{ .Release.Name }}-webhooks
+subjects:
+- kind: ServiceAccount
+  name: openunison-operator
+  namespace: {{ .Release.Namespace }}

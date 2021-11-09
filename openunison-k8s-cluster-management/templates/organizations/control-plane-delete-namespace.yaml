@@ -1,0 +1,17 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: control-plan-delete
+  namespace: {{ .Release.Namespace }}
+spec:
+  label: Delete Namespace
+  azRules:
+  - constraint: o=Tremolo
+    scope: dn
+  description: Namespaces you are authorized to request deletion for
+  parent: org-cluster-control-plane
+  showInPortal: false
+  showInReports: false
+  showInRequestAccess: true
+  uuid: org-cluster-control-plane-delete

@@ -1,3 +1,4 @@
+{{ if .Values.openunison.naas.groups.internal.enabled }}
 ---
 kind: MessageListener
 apiVersion: openunison.tremolo.io/v1
@@ -7,3 +8,4 @@ metadata:
 spec:
   className: com.tremolosecurity.provisioning.listeners.UpdateApprovalAZListener
   params: []
+{{ end }}

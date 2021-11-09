@@ -1,0 +1,184 @@
+{{ if and .Values.openunison.enable_provisioning .Values.openunison.enable_activemq }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: openunison-{{ .Release.Name }}
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: amq
+    app.kubernetes.io/part-of: openunison
+  name: amq-{{ .Release.Name  }}
+  namespace: {{ .Release.Namespace  }}
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: amq-{{ .Release.Name  }}
+  template:
+    metadata:
+      creationTimestamp:
+      labels:
+        app: amq-{{ .Release.Name  }}
+        operated-by: openunison-operator
+    spec:
+      containers:
+      - env:
+        - name: ACTIVEMQ_DEBUG_OPTS
+          value: "-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom"
+        - name: JDBC_DRIVER
+          valueFrom:
+            secretKeyRef:
+              name: amq-env-secrets-{{ .Release.Name  }}
+              key: JDBC_DRIVER
+        - name: JDBC_URL
+          valueFrom:
+            secretKeyRef:
+              name: amq-env-secrets-{{ .Release.Name  }}
+              key: JDBC_URL
+        - name: JDBC_USER
+          valueFrom:
+            secretKeyRef:
+              name: amq-env-secrets-{{ .Release.Name  }}
+              key: JDBC_USER
+        - name: JDBC_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: amq-env-secrets-{{ .Release.Name  }}
+              key: JDBC_PASSWORD
+        - name: TLS_KS_PWD
+          valueFrom:
+            secretKeyRef:
+              name: amq-env-secrets-{{ .Release.Name  }}
+              key: TLS_KS_PWD
+        image: {{ .Values.amq_image }}
+        imagePullPolicy: Always
+        livenessProbe:
+          exec:
+            command:
+            - "/usr/bin/health_check.sh"
+          failureThreshold: 10
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 10
+        name: amq-{{ .Release.Name  }}
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        - containerPort: 8443
+          name: https
+          protocol: TCP
+        readinessProbe:
+          exec:
+            command:
+            - "/usr/bin/health_check.sh"
+          failureThreshold: 3
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 10
+        resources: {}
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: "/etc/activemq-secrets"
+          name: secret-volume
+          readOnly: true
+        - mountPath: "/etc/activemq"
+          name: config-volume
+          readOnly: true
+        - name: local-data
+          mountPath: "/usr/local/activemq/data"
+        - name: jetty-tmp
+          mountPath: "/usr/local/activemq/tmp"
+        {{ if .Values.amq }}
+        {{ if .Values.amq.resources }}
+        resources:
+          {{ if .Values.amq.resources.requests }}
+          requests: 
+            {{ if .Values.amq.resources.requests.memory }}
+            memory: {{ .Values.amq.resources.requests.memory | quote }}
+            {{ end }}
+            
+            {{ if .Values.amq.resources.requests.cpu }}
+            cpu: {{ .Values.amq.resources.requests.cpu | quote }}
+            {{ end }}
+          
+          {{ end }}
+
+          {{ if .Values.amq.resources.limits }}
+          limits: 
+            {{ if .Values.amq.resources.limits.memory }}
+            memory: {{ .Values.amq.resources.limits.memory | quote }}
+            {{ end }}
+            
+            {{ if .Values.amq.resources.limits.cpu }}
+            cpu: {{ .Values.amq.resources.limits.cpu | quote }}
+            {{ end }}
+          
+          {{ end }}
+        {{ end }}
+        {{ end }}
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: secret-volume
+        secret:
+          defaultMode: 420
+          secretName: amq-secrets-{{ .Release.Name  }}
+      - name: local-data
+        emptyDir: {}
+      - name: jetty-tmp
+        emptyDir: {}
+      - name: config-volume
+        configMap:
+          name: activemq-config-{{ .Release.Name }}
+      {{ $length := len .Values.services.node_selectors }}
+      {{ if eq $length 0  }}
+      nodeSelector: {}
+      {{ else }}
+      nodeSelector: {{ range $key,$value := .Values.services.node_selectors }}
+        {{ $key }}: {{ quote $value }}
+      {{ end }}
+      {{ end }}
+
+      {{ if .Values.services.pullSecret }}
+      imagePullSecrets:
+      - name: {{ .Values.services.pullSecret }}
+      {{ end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: openunison-{{ .Release.Name }}
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: amq
+    app.kubernetes.io/part-of: openunison
+  name: amq
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - name: amq-openwire
+    port: 61616
+    protocol: TCP
+    targetPort: 61616
+  - name: amq-admin
+    port: 8162
+    protocol: TCP
+    targetPort: 8162
+  selector:
+    app: amq-{{ .Release.Name }}
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+  type: ClusterIP
+{{ end }}

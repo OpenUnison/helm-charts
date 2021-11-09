@@ -1,0 +1,23 @@
+{{ if .Values.cluster.sso.enabled | default false }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sso-config-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+data:
+  oidc-config: |-
+    oidc:
+      client_id: cluster-idp-{{ .Release.Name }}
+      issuer: https://CONTROLPLANE_HOST/auth/idp/cluster-idp-{{ .Release.Name }}
+      user_in_idtoken: true
+      domain: ""
+      scopes: openid email profile groups
+      claims:
+        sub: sub
+        email: email
+        given_name: given_name
+        family_name: family_name
+        display_name: name
+        groups: groups
+{{ end }}

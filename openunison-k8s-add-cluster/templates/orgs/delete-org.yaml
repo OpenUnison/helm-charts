@@ -1,0 +1,19 @@
+{{ if .Values.cluster.management.enabled  }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: {{ .Values.cluster.name }}-delete
+  namespace: {{ .Release.Namespace }}
+spec:
+  label: Delete Namespace
+  azRules:
+  - constraint: {{ .Values.cluster.management.approvers.az.constraint }}
+    scope: {{ .Values.cluster.management.approvers.az.scope }}
+  description: Namespaces you are authorized to request deletion for
+  parent: org-cluster-{{ .Values.cluster.name }}
+  showInPortal: false
+  showInReports: false
+  showInRequestAccess: true
+  uuid: org-cluster-{{ .Values.cluster.name }}-delete
+{{ end }}

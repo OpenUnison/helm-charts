@@ -1,0 +1,108 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Application
+metadata:
+  name: scale
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-applications
+    app.kubernetes.io/part-of: openunison
+spec:
+  azTimeoutMillis: 3000
+  isApp: true
+  urls:
+  - hosts:
+    - "#[OU_HOST]"
+    filterChain: 
+    - className: com.tremolosecurity.proxy.filters.XForward
+      params:
+        createHeaders: "false"
+    - className: com.tremolosecurity.proxy.filters.SetNoCacheHeaders
+      params: {}
+    uri: "/scale"
+    proxyTo: http://ouhtml-{{ .Release.Name }}.{{ .Release.Namespace }}.svc:8080${fullURI}
+    authChain: login-service
+    overrideHost: true
+    overrideReferer: true
+    azRules:
+    - scope: dn
+      constraint: "o=Tremolo"
+    results: 
+      azFail: default-login-failure
+      auFail: default-login-failure
+  - hosts:
+    - "#[OU_HOST]"
+    filterChain:
+    - className: com.tremolosecurity.scalejs.ws.ScaleMain
+      params:
+        displayNameAttribute: "sub"
+        frontPage.title: "Kubernetes Access Portal"
+        frontPage.text: "Use this portal to create and access namespaces in Kubernetes"
+        canEditUser: "false"
+        workflowName: ""
+        warnMinutesLeft: "5"
+        sub.displayName: "Login ID"
+        sub.readOnly: "true"
+        {{ if .Values.openunison.enable_provisioning }}
+        attributeNames: 
+        - givenName
+        - sub
+        - sn
+        - mail
+
+        
+        givenName.displayName: "First Name"
+        givenName.readOnly: "true"
+
+        
+        sn.displayName: "Last Name"
+        sn.readOnly: "true"
+
+        
+        mail.displayName: "Email Address"
+        mail.readOnly: "true"
+
+        
+
+        approvalAttributeNames: 
+        - uid
+        - mail
+
+        approvals.uid: Login ID
+        approvals.mail: Email Address
+        
+        canDelegate: "yes"
+        canPreApprove: "yes"
+        {{ else }}
+        attributeNames: "sub"
+        canDelegate: "NO"
+        canPreApprove: "NO"
+        {{ end }}
+        uidAttributeName: uid
+        roleAttribute: groups
+        
+        showPortalOrgs: "#[SHOW_PORTAL_ORGS:false]"
+        logoutURL: "/logout"
+        
+        enableApprovals: {{ .Values.openunison.enable_provisioning | quote }}
+    uri: /scale/main
+    azRules:
+    - scope: dn
+      constraint: o=Tremolo
+    authChain: login-service
+    results:
+      azFail: default-login-failure
+      auFail: default-login-failure
+  cookieConfig:
+    sessionCookieName: tremolosession
+    domain: "#[OU_HOST]"
+    secure: true
+    httpOnly: true
+    logoutURI: "/logout"
+    keyAlias: session-unison
+    timeout: {{ .Values.network.session_inactivity_timeout_seconds }}
+    scope: -1
+    cookiesEnabled: true
+    

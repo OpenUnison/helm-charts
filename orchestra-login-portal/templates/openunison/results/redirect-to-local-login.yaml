@@ -1,0 +1,15 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: ResultGroup
+metadata:
+  name: redirect-to-local-login
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-resultgroups
+    app.kubernetes.io/part-of: openunison
+spec:
+- resultType: redirect
+  source: static
+  value: "http://127.0.0.1:8400"

@@ -1,0 +1,67 @@
+{{ if .Values.openunison.enable_provisioning }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: openunison-management
+  namespace: {{ .Release.Namespace }}
+spec:
+  label: OpenUnison Management
+  azRules:
+  - constraint: cn=administrators{{ .Values.openunison.naas.groups.external.suffix }},ou=groups,ou=shadow,o=Tremolo
+    scope: group
+  - scope: group
+    constraint: cn=administrators{{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
+  description: Control Plane Cluster
+  parent: B158BD40-0C1B-11E3-8FFD-0800200C9A66
+  showInPortal: true
+  showInReports: false
+  showInRequestAccess: false
+  uuid: openunison-management
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: audit-reports
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-orgs
+    app.kubernetes.io/part-of: openunison
+spec:
+  label: "Audit Reports"
+  azRules:
+  - scope: group
+    constraint: cn=administrators{{ .Values.openunison.naas.groups.external.suffix }},ou=groups,ou=shadow,o=Tremolo
+  - scope: group
+    constraint: cn=administrators{{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
+  description: "List of reports for auditors and admins"
+  parent: B158BD40-0C1B-11E3-8FFD-0800200C9A66
+  showInPortal: false
+  showInReports: true
+  showInRequestAccess: false
+  uuid: d2f56bce-b0d4-44fa-8c5d-bd600b0bc589
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: openunison-system-workflows
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-orgs
+    app.kubernetes.io/part-of: openunison
+spec:
+  label: "System Workflows"
+  azRules:
+  - scope: filter
+    constraint: "(!(objectClass=*))"
+  description: "System Workflows"
+  parent: B158BD40-0C1B-11E3-8FFD-0800200C9A66
+  showInPortal: false
+  showInReports: false
+  showInRequestAccess: false
+  uuid: 63ada052-881e-4685-834d-dd48a3aa4bb4
+{{ end }}

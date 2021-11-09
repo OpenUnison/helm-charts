@@ -1,0 +1,121 @@
+{{ if .Values.openunison.naas.groups.internal.enabled }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: k8s-cluster-admin
+  namespace: {{ .Release.Namespace }}
+spec:
+  description: Request this role to become a cluster administrator
+  inList: true
+  label: $clusterlabel$ Cluster Administrator
+  orgId: 441a2bf1-3e47-4d40-a994-99faa15f997a
+  dynamicConfiguration:
+    dynamic: true
+    className: com.tremolosecurity.scalejs.WorkflowListClusters
+    params: []
+  tasks: |-
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
+             params:
+               target: jitdb
+               name: k8s-cluster-$cluster$-administrators{{ .Values.openunison.naas.groups.internal.suffix }}
+               attributes:
+               - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
+               - unison.group.create.param.2=Administer $clusterlabel$
+
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
+             params:
+               targetName: $cluster$
+               template: |-
+                  kind: ClusterRoleBinding
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  metadata:
+                    name: cluster-admins-binding{{ .Values.openunison.naas.groups.internal.suffix }}
+                  subjects:
+                  - kind: Group
+                    name: k8s-cluster-$cluster$-administrators{{ .Values.openunison.naas.groups.internal.suffix }}
+                    apiGroup: rbac.authorization.k8s.io
+                  roleRef:
+                    kind: ClusterRole
+                    name: cluster-admin
+                    apiGroup: rbac.authorization.k8s.io
+               kind: ClusterRoleBinding
+               url: /apis/rbac.authorization.k8s.io/v1/clusterrolebindings
+               srcType: yaml
+             
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.LoadAttributes
+             params:
+               nameAttr: uid
+               name:
+               - givenname
+               - sn
+               - mail
+
+           - taskType: approval
+             label: Approve access for Kubernetes $clusterlabel$ Cluster Administrator
+             emailTemplate: There is an open request for cluster administration
+             mailAttr: mail
+             failureEmailSubject: Access Denied
+             failureEmailMsg: |-
+                                For this reason:
+                                ${reason}
+             approvers:
+             - scope: group
+               constraint: cn=administrators{{ .Values.openunison.naas.groups.external.suffix }},ou=groups,ou=shadow,o=Tremolo
+             - scope: group
+               constraint: cn=administrators{{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
+             onSuccess:
+             - taskType: mapping
+               strict: true
+               map:
+               - targetAttributeName: sub
+                 sourceType: user
+                 targetAttributeSource: uid
+               - targetAttributeName: mail
+                 sourceType: user
+                 targetAttributeSource: mail
+               onSuccess:
+               - taskType: addGroup
+                 name: k8s-cluster-$cluster$-administrators{{ .Values.openunison.naas.groups.internal.suffix }}
+                 remove: false
+               - taskType: provision
+                 sync: false
+                 target: jitdb
+                 setPassword: false
+                 onlyPassedInAttributes: false
+                 attributes:
+                 - sub
+               - taskType: notifyUser
+                 subject: Access to Cluster Admin Approved
+                 mailAttrib: mail
+                 msg: Your access has been approved
+             onFailure:
+             - taskType: mapping
+               strict: true
+               map:
+               - targetAttributeName: sub
+                 sourceType: user
+                 targetAttributeSource: uid
+               - targetAttributeName: mail
+                 sourceType: user
+                 targetAttributeSource: mail
+               onSuccess:
+               - taskType: customTask
+                 className: com.tremolosecurity.provisioning.customTasks.LoadGroupsFromTarget
+                 params:
+                   nameAttr: sub
+                   target: jitdb
+               - taskType: addGroup
+                 name: k8s-cluster-$cluster$-administrators{{ .Values.openunison.naas.groups.internal.suffix }}
+                 remove: true
+               - taskType: provision
+                 sync: true
+                 target: jitdb
+                 setPassword: false
+                 onlyPassedInAttributes: false
+                 attributes:
+                 - sub 
+{{ end }}

@@ -1,0 +1,48 @@
+{{ if .Values.openunison.naas.groups.internal.enabled }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: openunison-all{{ .Values.openunison.naas.groups.internal.suffix }}-groups
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-orgs
+    app.kubernetes.io/part-of: openunison
+spec:
+  label: "OpenUnison Internal Groups"
+  azRules:
+  - scope: group
+    constraint: cn=administrators{{ .Values.openunison.naas.groups.external.suffix }},ou=groups,ou=shadow,o=Tremolo
+  - scope: group  
+    constraint: cn=administrators{{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
+  description: "Manage membership for internal OpenUnison groups"
+  parent: B158BD40-0C1B-11E3-8FFD-0800200C9A66
+  showInPortal: false
+  showInReports: false
+  showInRequestAccess: true
+  uuid: a4fb9011-edd2-4ada-a3dd-140f886f678c
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: openunison-cluster-administrators
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-orgs
+    app.kubernetes.io/part-of: openunison
+spec:
+  label: "Kubernetes Administration"
+  azRules:
+  - scope: dn
+    constraint: o=Tremolo
+  description: "Request access for managing Kubernetes clusters"
+  parent: B158BD40-0C1B-11E3-8FFD-0800200C9A66
+  showInPortal: false
+  showInReports: false
+  showInRequestAccess: true
+  uuid: 441a2bf1-3e47-4d40-a994-99faa15f997a
+{{ end }}

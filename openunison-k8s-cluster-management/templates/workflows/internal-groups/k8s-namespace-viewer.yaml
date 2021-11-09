@@ -1,0 +1,157 @@
+{{ if .Values.openunison.naas.groups.internal.enabled }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: k8s-namespace-viewer
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    oldorg: "04901973-5f4c-46d9-9e22-55e88e168776"
+spec:
+  description: k8s-namespace-viewer
+  inList: false
+  label: namespace viewer
+  orgId: 97137c31-a417-4498-907d-e61f8686eb97
+  tasks: |-
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.tasks.DoesGroupExist
+             params:
+               target: jitdb
+               groupName: approvers-k8s-$cluster$-$name$
+               attributeName: tremolo.approval.group.exists
+             
+           - taskType: ifAttrHasValue
+             name: tremolo.approval.group.exists
+             value: "false"
+             onSuccess:
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
+               params:
+                 target: jitdb
+                 name: approvers-k8s-$cluster$-$name$
+                 attributes: 
+                 - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
+                 - unison.group.create.param.2=Approve access to $cluster$ $name$
+                 
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.tasks.CopyGroupMembers
+               params:
+                 copyWorkflow: add-approver-user
+                 copyTo: approvers-k8s-$cluster$-$name$
+                 copyFrom: cn=k8s-cluster-$cluster$-administrators,ou=groups,ou=shadow,o=Tremolo
+                 uidAttributeName: uid
+                 requestor: system
+
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.tasks.CopyGroupMembers
+               params:
+                 copyWorkflow: add-approver-user
+                 copyTo: approvers-k8s-$cluster$-$name$
+                 copyFrom: cn=k8s-cluster-$cluster$-administrators{{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
+                 uidAttributeName: uid
+                 requestor: system
+               
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.LoadAttributes
+             params:
+               nameAttr: uid
+               name:
+               - givenName
+               - sn
+               - mail
+          
+           
+
+           - taskType: approval
+             emailTemplate: Approve viewer access to $cluster$ $name$
+             mailAttr: mail
+             failureEmailSubject: Request denied
+             failureEmailMsg: |-
+               Because:
+               ${reason}
+             label: Approve viewer access for $cluster$ - $name$
+             approvers:
+             - scope: group
+               constraint: cn=approvers-k8s-$cluster$-$name$,ou=groups,ou=shadow,o=Tremolo
+             onSuccess:
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
+               params:
+                 target: jitdb
+                 name: k8s-namespace-viewer-$cluster$-$name${{ .Values.openunison.naas.groups.internal.suffix }}
+                 attributes: 
+                 - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
+                 - unison.group.create.param.2=View kubernetes namespace $cluster$ $name$
+             
+             - taskType: mapping
+               strict: true
+               map:
+                 - targetAttributeName: uid
+                   targetAttributeSource: uid
+                   sourceType: user
+                 - targetAttributeName: mail
+                   targetAttributeSource: mail
+                   sourceType: user
+               onSuccess:
+               - taskType: addGroup
+                 name: k8s-namespace-viewer-$cluster$-$name${{ .Values.openunison.naas.groups.internal.suffix }}
+                 remove: false
+               - taskType: provision
+                 sync: false
+                 target: jitdb
+                 setPassword: false
+                 onlyPassedInAttributes: false
+                 attributes: ["uid"]
+               - taskType: customTask
+                 className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
+                 params:
+                   targetName: $cluster$
+                   template: |-
+                    kind: RoleBinding
+                    apiVersion: rbac.authorization.k8s.io/v1
+                    metadata:
+                      name: viewers-binding{{ .Values.openunison.naas.groups.internal.suffix }}
+                      namespace: "$name$"
+                    subjects:
+                    - kind: Group
+                      name: k8s-namespace-viewer-$cluster$-$name${{ .Values.openunison.naas.groups.internal.suffix }}
+                      apiGroup: rbac.authorization.k8s.io
+                    roleRef:
+                      kind: ClusterRole
+                      name: view
+                      apiGroup: rbac.authorization.k8s.io
+                   kind: RoleBinding
+                   url: /apis/rbac.authorization.k8s.io/v1/namespaces/$name$/rolebindings
+                   srcType: yaml
+                 
+               - taskType: notifyUser
+                 subject: View access to $cluster$ $name$ approved
+                 mailAttrib: mail
+                 msg: Your access has been approved
+             onFailure:
+             - taskType: mapping
+               strict: true
+               map:
+                 - targetAttributeName: sub
+                   targetAttributeSource: uid
+                   sourceType: user
+                 - targetAttributeName: mail
+                   targetAttributeSource: mail
+                   sourceType: user
+               onSuccess:
+                - taskType: customTask
+                  className: com.tremolosecurity.provisioning.customTasks.LoadGroupsFromTarget
+                  params:
+                    target: jitdb
+                    nameAttr: sub
+                   
+                - taskType: addGroup
+                  name: k8s-namespace-viewer-$cluster$-$name${{ .Values.openunison.naas.groups.internal.suffix }}
+                  remove: true
+                - taskType: provision
+                  sync: true
+                  target: jitdb
+                  setPassword: false
+                  onlyPassedInAttributes: false
+                  attributes: ["uid"]
+{{ end }}

@@ -1,0 +1,167 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: AuthenticationChain
+metadata:
+  name: enterprise-idp-cli
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-authchains
+    app.kubernetes.io/part-of: openunison
+spec:
+  level: 20
+  root: o=Data
+  authMechs:
+{{ if .Values.active_directory }}
+  - name: login-form
+    required: required
+    params:
+      FORMLOGIN_JSP: "/auth/forms/defaultForm.jsp"
+    secretParams: []
+  - name: map
+    required: required
+    params:
+      map: 
+      - "uid|composite|${uid}"
+      - "mail|composite|${mail}"
+      - "givenName|composite|${givenName}"
+      - "sn|composite|${sn}"
+      - "displayName|composite|${displayName}"
+      - "memberOf|user|memberOf"
+{{ end }}
+{{ if .Values.oidc }}
+  - name: oidc
+    required: required
+    params:
+      bearerTokenName: oidcBearerToken
+      clientid: {{ .Values.oidc.client_id | quote }}
+      {{ if .Values.oidc.issuer }}
+      issuer: {{ .Values.oidc.issuer | quote }}
+      {{ else }}
+      idpURL: {{ .Values.oidc.auth_url | default "" | quote }}
+      loadTokenURL: {{ .Values.oidc.token_url | default "" | quote }}
+      restURL: {{ .Values.oidc.userinfo_url | default "" | quote }}
+      {{ end }}
+      responseType: code
+      
+      
+      scope: {{ .Values.oidc.scopes | quote }}
+      linkToDirectory: "false"
+      noMatchOU: "oidc"
+      lookupFilter: "(uid=${sub})"
+      defaultObjectClass: inetOrgPerson
+      uidAttr: sub
+      hd: {{ .Values.oidc.domain | quote }}
+      {{ if .Values.oidc.user_in_idtoken }}
+      userLookupClassName: "com.tremolosecurity.unison.proxy.auth.openidconnect.loadUser.LoadJWTFromAccessToken"
+      jwtTokenAttributeName: "id_token"
+      {{ else }}
+      userLookupClassName: "com.tremolosecurity.unison.proxy.auth.openidconnect.loadUser.LoadAttributesFromWS"
+      {{ end }}
+    secretParams:
+    - name: secretid
+      secretName: orchestra-secrets-source
+      secretKey: OIDC_CLIENT_SECRET
+  - name: map
+    required: required
+    params:
+      map: 
+      - "uid|composite|{{ print "${" .Values.oidc.claims.sub "}" }}"
+      - "mail|composite|{{ print "${" .Values.oidc.claims.email "}" }}"
+      - "givenName|composite|{{ print "${"  .Values.oidc.claims.given_name "}" }}"
+      - "sn|composite|{{ print "${"  .Values.oidc.claims.family_name "}" }}"
+      - "displayName|composite|{{ print "${"  .Values.oidc.claims.display_name "}" }}"
+      - "memberOf|user|{{ .Values.oidc.claims.groups }}"
+{{ end }}
+{{ if .Values.github }}
+  - name: github
+    required: required
+    params:
+      bearerTokenName: githubToken
+      clientid: {{ .Values.github.client_id }}
+      scope: "user:read user:email read:org"
+      linkToDirectory: "false"
+      noMatchOU: github
+      lookupFilter: "(uid=${login})"
+      uidAttr: login
+      defaultObjectClass: inetOrgPerson
+    secretParams:
+    - name: secretid
+      secretName: orchestra-secrets-source
+      secretKey: GITHUB_SECRET_ID
+  - name: az
+    required: required
+    params:
+      rules: custom;github!{{ .Values.github.teams }}
+  - name: map
+    required: required
+    params:
+      map: 
+      - "uid|user|login"
+      - "mail|static|na"
+      - "givenName|static|na"
+      - "sn|static|na"
+      - "displayName|static|na"
+      - "memberOf|user|groups"
+{{ end }}
+{{ if .Values.saml }}
+  - name: saml2
+    required: required
+    params:
+      idpURL: "#[IDP_POST]"
+      idpRedirURL: "#[IDP_REDIR]"
+      idpSigKeyName: 
+      - idp-saml2-sig
+      - idp-saml2-sig-1
+      ldapAttribute: uid
+      dnOU: saml
+      defaultOC: inetOrgPerson
+      authCtxRef: ""
+      spSigKey: unison-saml2-rp-sig
+      sigAlg: "RSA-SHA256"
+      signAuthnReq: "true"
+      assertionsSigned: "#[SAML2_ASSERTION_SIGNED:true]"
+      responsesSigned: "#[SAML2_RESPONSE_SIGNED:false]"
+      assertionEncrypted: "false"
+      spEncKey: ""
+      forceToSSL: "false"
+      dontLinkToLDAP: "true"
+      logoutURL: "https://#[K8S_DASHBOARD_HOST]/logout"
+      entityID: "#[IDP_ENTITY_ID]"
+      idpRedirLogoutURL: "#[IDP_LOGOUT]"
+    secretParams: []
+  - name: map
+    required: required
+    params:
+      map: 
+      - "uid|composite|${uid}"
+      - "mail|composite|${mail}"
+      - "givenName|composite|${givenName}"
+      - "sn|composite|${sn}"
+      - "displayName|composite|${displayName}"
+      - "memberOf|user|memberOf"
+{{ end }}
+  - name: jit
+    required: required
+    params: 
+      nameAttr: uid
+      workflowName: jitdb
+---
+apiVersion: openunison.tremolo.io/v1
+kind: AuthenticationChain
+metadata:
+  name: login-service-cli
+  namespace: {{ .Release.Namespace }}
+spec:
+  level: 20
+  root: o=Tremolo
+  authMechs:
+  - name: login-service
+    required: required
+    params:
+      chains: "Login=/login/auth-cli"
+      serviceUrl: "/auth/forms/chooseLogin.jsp"
+      cookieName: "tremoloLoginChoice"
+      cookieDays: "30"
+    secretParams: []

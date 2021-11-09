@@ -1,0 +1,25 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: {{ .Values.cluster.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  label: {{ .Values.cluster.label }}
+  azRules:
+  {{ $length := len .Values.cluster.az_groups }}
+  {{ if eq $length 0 }}
+  - scope: dn
+    constraint: o=Tremolo
+  {{ else }}
+  {{ range $az_group := .Values.cluster.az_groups }}
+  - scope: filter
+    constraint: (groups={{ $az_group }})
+  {{ end }}
+  {{ end }}
+  description: {{ .Values.cluster.description }}
+  parent: {{ .Values.cluster.parent }}
+  showInPortal: true
+  showInReports: false
+  showInRequestAccess: true
+  uuid: org-cluster-{{ .Values.cluster.name }}

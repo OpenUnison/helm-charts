@@ -1,0 +1,34 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Application
+metadata:
+  name: anonfiles
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-applications
+    app.kubernetes.io/part-of: openunison
+spec:
+  azTimeoutMillis: 3000
+  isApp: true
+  urls:
+  - hosts:
+    - "*"
+    filterChain: []
+    uri: "/favicon.ico"
+    authChain: anon
+    azRules:
+    - scope: dn
+      constraint: "o=Tremolo"
+  cookieConfig:
+    sessionCookieName: anon
+    domain: "*"
+    secure: true
+    httpOnly: true
+    logoutURI: "/logout"
+    keyAlias: session-unison
+    timeout: 1
+    scope: -1
+    cookiesEnabled: false
+    keyAlias: session-unison
