@@ -14,7 +14,7 @@ spec:
   {{ if eq $length 0 }}
   - constraint: (groups=k8s-cluster-k8s-administrators)
     scope: filter
-  - constraint: (groups=k8s-cluster-k8s-administrators-internal)
+  - constraint: (groups=k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }})
     scope: filter
   - constraint: (groups=k8s-namespace-administrators-k8s-*)
     scope: filter

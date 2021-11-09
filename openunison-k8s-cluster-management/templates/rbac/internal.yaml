@@ -3,10 +3,10 @@
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: openunison-{{ .Release.Name }}-cluster-administrators-internal
+  name: openunison-{{ .Release.Name }}-cluster-administrators{{ .Values.openunison.naas.groups.internal.suffix }}
 subjects:
 - kind: Group
-  name: k8s-cluster-k8s-administrators-internal
+  name: k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }}
   apiGroup: rbac.authorization.k8s.io
 - kind: ServiceAccount
   name: openunison-{{ .Values.openunison.orchestra_release_name }}

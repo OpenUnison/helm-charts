@@ -19,7 +19,7 @@ spec:
              className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
              params:
                target: jitdb
-               name: k8s-cluster-$cluster$-administrators-internal
+               name: k8s-cluster-$cluster$-administrators{{ .Values.openunison.naas.groups.internal.suffix }}
                attributes:
                - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
                - unison.group.create.param.2=Administer $clusterlabel$
@@ -32,10 +32,10 @@ spec:
                   kind: ClusterRoleBinding
                   apiVersion: rbac.authorization.k8s.io/v1
                   metadata:
-                    name: cluster-admins-binding-internal
+                    name: cluster-admins-binding{{ .Values.openunison.naas.groups.internal.suffix }}
                   subjects:
                   - kind: Group
-                    name: k8s-cluster-$cluster$-administrators-internal
+                    name: k8s-cluster-$cluster$-administrators{{ .Values.openunison.naas.groups.internal.suffix }}
                     apiGroup: rbac.authorization.k8s.io
                   roleRef:
                     kind: ClusterRole
@@ -64,9 +64,9 @@ spec:
                                 ${reason}
              approvers:
              - scope: group
-               constraint: cn=administrators,ou=groups,ou=shadow,o=Tremolo
+               constraint: cn=administrators{{ .Values.openunison.naas.groups.external.suffix }},ou=groups,ou=shadow,o=Tremolo
              - scope: group
-               constraint: cn=administrators-internal,ou=groups,ou=shadow,o=Tremolo
+               constraint: cn=administrators{{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
              onSuccess:
              - taskType: mapping
                strict: true
@@ -79,7 +79,7 @@ spec:
                  targetAttributeSource: mail
                onSuccess:
                - taskType: addGroup
-                 name: k8s-cluster-$cluster$-administrators-internal
+                 name: k8s-cluster-$cluster$-administrators{{ .Values.openunison.naas.groups.internal.suffix }}
                  remove: false
                - taskType: provision
                  sync: false
@@ -109,7 +109,7 @@ spec:
                    nameAttr: sub
                    target: jitdb
                - taskType: addGroup
-                 name: k8s-cluster-$cluster$-administrators-internal
+                 name: k8s-cluster-$cluster$-administrators{{ .Values.openunison.naas.groups.internal.suffix }}
                  remove: true
                - taskType: provision
                  sync: true

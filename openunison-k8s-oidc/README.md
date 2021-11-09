@@ -1,5 +1,11 @@
 # Orchestra For Kubernetes - OpenID Connect
 
+>  :warning:
+>
+>  Please go to https://openunison.github.io/ to deploy the OpenUnison Namespace as a Service.  This repo is no longer supported.  
+>
+>  :warning:
+
 Orchestra is an automation portal for Kubernetes built on OpenUnison.  Orchestra integrates a user's identity into Kubernetes enabling:
 
 1. SSO between the API server and your LDAP infrastructure

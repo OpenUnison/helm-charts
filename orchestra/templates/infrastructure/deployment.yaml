@@ -161,7 +161,7 @@ spec:
               items:
               - key: "ca.crt"
                 path: "ca.crt"
-              name: "kube-cacert"
+              name: "kube-cacrt"
       {{ end }}
       {{ if .Values.openunison.html.logosConfigMap }}
       - name: custom-logos

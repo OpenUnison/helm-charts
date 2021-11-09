@@ -3,7 +3,7 @@
 apiVersion: openunison.tremolo.io/v1
 kind: Workflow
 metadata:
-  name: controlplane-delete-namespace-internal
+  name: controlplane-delete-namespace{{ .Values.openunison.naas.groups.internal.suffix }}
   namespace: {{ .Release.Namespace }}
 spec:
   description: Request namespace deletion

@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/component: openunison-groupmetadata
     app.kubernetes.io/part-of: openunison
 spec:
-  groupName: administrators
+  groupName: administrators{{ .Values.openunison.naas.groups.external.suffix }}
   externalName: {{ .Values.openunison.naas.groups.external.adminGroup }}
 ---
 apiVersion: openunison.tremolo.io/v1
@@ -25,6 +25,6 @@ metadata:
     app.kubernetes.io/component: openunison-groupmetadata
     app.kubernetes.io/part-of: openunison
 spec:
-  groupName: k8s-cluster-k8s-administrators
+  groupName: k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.external.suffix }}
   externalName: {{ .Values.openunison.naas.groups.external.clusterAdminGroup }}
 {{ end }}

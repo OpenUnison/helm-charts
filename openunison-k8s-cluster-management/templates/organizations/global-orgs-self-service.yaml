@@ -3,7 +3,7 @@
 apiVersion: openunison.tremolo.io/v1
 kind: Org
 metadata:
-  name: openunison-all-internal-groups
+  name: openunison-all{{ .Values.openunison.naas.groups.internal.suffix }}-groups
   namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/name: openunison
@@ -14,9 +14,9 @@ spec:
   label: "OpenUnison Internal Groups"
   azRules:
   - scope: group
-    constraint: cn=administrators,ou=groups,ou=shadow,o=Tremolo
+    constraint: cn=administrators{{ .Values.openunison.naas.groups.external.suffix }},ou=groups,ou=shadow,o=Tremolo
   - scope: group  
-    constraint: cn=administrators-internal,ou=groups,ou=shadow,o=Tremolo
+    constraint: cn=administrators{{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
   description: "Manage membership for internal OpenUnison groups"
   parent: B158BD40-0C1B-11E3-8FFD-0800200C9A66
   showInPortal: false

@@ -3,7 +3,7 @@
 apiVersion: openunison.tremolo.io/v1
 kind: Workflow
 metadata:
-  name: manage-openunison-internal-groups
+  name: manage-openunison{{ .Values.openunison.naas.groups.internal.suffix }}-groups
   namespace: {{ .Release.Namespace }}
 spec:
   description: $description$
@@ -17,7 +17,7 @@ spec:
     - name: target
       value: jitdb
     - name: sql
-      value: SELECT name,description FROM localGroups where name like '%-internal'
+      value: SELECT name,description FROM localGroups where name like '%{{ .Values.openunison.naas.groups.internal.suffix }}'
   tasks: |-
            - taskType: customTask
              className: com.tremolosecurity.provisioning.customTasks.LoadAttributes
@@ -38,9 +38,9 @@ spec:
                                 ${reason}
              approvers:
              - scope: group
-               constraint: cn=administrators,ou=groups,ou=shadow,o=Tremolo
+               constraint: cn=administrators{{ .Values.openunison.naas.groups.external.suffix }},ou=groups,ou=shadow,o=Tremolo
              - scope: group
-               constraint: cn=administrators-internal,ou=groups,ou=shadow,o=Tremolo
+               constraint: cn=administrators{{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
              onSuccess:
              - taskType: mapping
                strict: true

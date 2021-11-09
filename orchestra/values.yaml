@@ -18,9 +18,7 @@ cert_template:
   ou: "Kubernetes"
   o: "MyOrg"
   l: "My Cluster"
-  st: "State of 
-  
-  Cluster"
+  st: "State of Cluster"
   c: "MyCountry"
 
 image: "docker.io/tremolosecurity/openunison-k8s:latest"

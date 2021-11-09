@@ -46,9 +46,9 @@ spec:
              label: Create New Namespace - $cluster$ - $nameSpace$
              approvers:
              - scope: group
-               constraint: cn=administrators,ou=groups,ou=shadow,o=Tremolo
+               constraint: cn=administrators{{ .Values.openunison.naas.groups.external.suffix }},ou=groups,ou=shadow,o=Tremolo
              - scope: group
-               constraint: cn=administrators-internal,ou=groups,ou=shadow,o=Tremolo
+               constraint: cn=administrators{{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
              onSuccess:
              
              
@@ -65,7 +65,7 @@ spec:
                className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
                params:
                  target: jitdb
-                 name: k8s-namespace-administrators-$cluster$-$nameSpace$-internal
+                 name: k8s-namespace-administrators-$cluster$-$nameSpace${{ .Values.openunison.naas.groups.internal.suffix }}
                  attributes:
                  - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
                  - unison.group.create.param.2=Manage kubernetes namespace $cluster$ $nameSpace$
@@ -73,7 +73,7 @@ spec:
                className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
                params:
                  target: jitdb
-                 name: k8s-namespace-viewer-$cluster$-$nameSpace$-internal
+                 name: k8s-namespace-viewer-$cluster$-$nameSpace${{ .Values.openunison.naas.groups.internal.suffix }}
                  attributes:
                  - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
                  - unison.group.create.param.2=View kubernetes namespace $cluster$ $nameSpace$
@@ -84,7 +84,7 @@ spec:
                className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
                params:
                  target: jitdb
-                 name: k8s-namespace-administrators-$cluster$-$nameSpace$
+                 name: k8s-namespace-administrators-$cluster$-$nameSpace${{ .Values.openunison.naas.groups.external.suffix }}
                  attributes:
                  - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
                  - unison.group.create.param.2=Manage kubernetes namespace $cluster$ $nameSpace$
@@ -109,7 +109,7 @@ spec:
                       annotations:
                         tremolo.io/managedByGit: "$useGit$"
                     spec:
-                      groupName: k8s-namespace-administrators-$cluster$-$nameSpace$
+                      groupName: k8s-namespace-administrators-$cluster$-$nameSpace${{ .Values.openunison.naas.groups.external.suffix }}
                       externalName: $adminGroup$
                  kind: GroupMetaData
                  url: /apis/openunison.tremolo.io/v1/namespaces/{{ .Release.Namespace }}/groupmetadatas
@@ -122,7 +122,7 @@ spec:
                className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
                params:
                  target: jitdb
-                 name: k8s-namespace-viewer-$cluster$-$nameSpace$
+                 name: k8s-namespace-viewer-$cluster$-$nameSpace${{ .Values.openunison.naas.groups.external.suffix }}
                  attributes:
                  - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
                  - unison.group.create.param.2=View kubernetes namespace $cluster$ $nameSpace$
@@ -147,7 +147,7 @@ spec:
                       annotations:
                         tremolo.io/managedByGit: "$useGit$"
                     spec:
-                      groupName: k8s-namespace-viewer-$cluster$-$nameSpace$
+                      groupName: k8s-namespace-viewer-$cluster$-$nameSpace${{ .Values.openunison.naas.groups.external.suffix }}
                       externalName: $viewerGroup$
                  kind: GroupMetaData
                  url: /apis/openunison.tremolo.io/v1/namespaces/{{ .Release.Namespace }}/groupmetadatas
@@ -171,7 +171,7 @@ spec:
                  name: approvers-k8s-$cluster$-$nameSpace$
                  remove: false
                - taskType: addGroup
-                 name: k8s-namespace-administrators-$cluster$-$nameSpace$-internal
+                 name: k8s-namespace-administrators-$cluster$-$nameSpace${{ .Values.openunison.naas.groups.internal.suffix }}
                  remove: false
                - taskType: provision
                  sync: false
@@ -286,11 +286,11 @@ spec:
                     kind: RoleBinding
                     apiVersion: rbac.authorization.k8s.io/v1
                     metadata:
-                      name: admins-binding-internal
+                      name: admins-binding{{ .Values.openunison.naas.groups.internal.suffix }}
                       namespace: "$nameSpace$"
                     subjects:
                     - kind: Group
-                      name: k8s-namespace-administrators-$cluster$-$nameSpace$-internal
+                      name: k8s-namespace-administrators-$cluster$-$nameSpace${{ .Values.openunison.naas.groups.internal.suffix }}
                       apiGroup: rbac.authorization.k8s.io
                     roleRef:
                       kind: ClusterRole
@@ -301,7 +301,7 @@ spec:
                  srcType: yaml
                  writeToRequest: "$useGit$"
                  requestAttribute: git-secret-namespace-$cluster$-$nameSpace$
-                 path: /yaml/ns/$nameSpace$/rolebindings/admins-binding-internal.yaml
+                 path: /yaml/ns/$nameSpace$/rolebindings/admins-binding{{ .Values.openunison.naas.groups.internal.suffix }}.yaml
 
 
              - taskType: customTask
@@ -312,11 +312,11 @@ spec:
                    kind: RoleBinding
                    apiVersion: rbac.authorization.k8s.io/v1
                    metadata:
-                     name: viewers-binding-internal
+                     name: viewers-binding{{ .Values.openunison.naas.groups.internal.suffix }}
                      namespace: "$nameSpace$"
                    subjects:
                    - kind: Group
-                     name: k8s-namespace-viewer-$cluster$-$nameSpace$-internal
+                     name: k8s-namespace-viewer-$cluster$-$nameSpace${{ .Values.openunison.naas.groups.internal.suffix }}
                      apiGroup: rbac.authorization.k8s.io
                    roleRef:
                      kind: ClusterRole
@@ -327,7 +327,7 @@ spec:
                  srcType: yaml
                  writeToRequest: "$useGit$"
                  requestAttribute: git-secret-namespace-$cluster$-$nameSpace$
-                 path: /yaml/ns/$nameSpace$/rolebindings/viewers-binding-internal.yaml
+                 path: /yaml/ns/$nameSpace$/rolebindings/viewers-binding{{ .Values.openunison.naas.groups.internal.suffix }}.yaml
              {{ end }}
 
              {{ if .Values.openunison.naas.groups.external.enabled }}
@@ -343,7 +343,7 @@ spec:
                       namespace: "$nameSpace$"
                     subjects:
                     - kind: Group
-                      name: k8s-namespace-administrators-$cluster$-$nameSpace$
+                      name: k8s-namespace-administrators-$cluster$-$nameSpace${{ .Values.openunison.naas.groups.external.suffix }}
                       apiGroup: rbac.authorization.k8s.io
                     roleRef:
                       kind: ClusterRole
@@ -369,7 +369,7 @@ spec:
                      namespace: "$nameSpace$"
                    subjects:
                    - kind: Group
-                     name: k8s-namespace-viewer-$cluster$-$nameSpace$
+                     name: k8s-namespace-viewer-$cluster$-$nameSpace${{ .Values.openunison.naas.groups.external.suffix }}
                      apiGroup: rbac.authorization.k8s.io
                    roleRef:
                      kind: ClusterRole

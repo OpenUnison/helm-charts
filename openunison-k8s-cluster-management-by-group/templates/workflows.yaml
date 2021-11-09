@@ -167,7 +167,7 @@ spec:
              label: Create New Namespace - $cluster$ - $nameSpace$
              approvers:
              - scope: group
-               constraint: cn=administrators,ou=groups,ou=shadow,o=Tremolo
+               constraint: cn=administrators{{ .Values.openunison.naas.groups.external.suffix }},ou=groups,ou=shadow,o=Tremolo
              onSuccess:
              - taskType: customTask
                className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore

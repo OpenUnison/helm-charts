@@ -47,7 +47,7 @@ spec:
                params:
                  copyWorkflow: add-approver-user
                  copyTo: approvers-k8s-$cluster$-$name$
-                 copyFrom: cn=k8s-cluster-$cluster$-administrators-internal,ou=groups,ou=shadow,o=Tremolo
+                 copyFrom: cn=k8s-cluster-$cluster$-administrators{{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
                  uidAttributeName: uid
                  requestor: system
                
@@ -78,7 +78,7 @@ spec:
                className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
                params:
                  target: jitdb
-                 name: k8s-namespace-viewer-$cluster$-$name$-internal
+                 name: k8s-namespace-viewer-$cluster$-$name${{ .Values.openunison.naas.groups.internal.suffix }}
                  attributes: 
                  - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
                  - unison.group.create.param.2=View kubernetes namespace $cluster$ $name$
@@ -94,7 +94,7 @@ spec:
                    sourceType: user
                onSuccess:
                - taskType: addGroup
-                 name: k8s-namespace-viewer-$cluster$-$name$-internal
+                 name: k8s-namespace-viewer-$cluster$-$name${{ .Values.openunison.naas.groups.internal.suffix }}
                  remove: false
                - taskType: provision
                  sync: false
@@ -110,11 +110,11 @@ spec:
                     kind: RoleBinding
                     apiVersion: rbac.authorization.k8s.io/v1
                     metadata:
-                      name: viewers-binding-internal
+                      name: viewers-binding{{ .Values.openunison.naas.groups.internal.suffix }}
                       namespace: "$name$"
                     subjects:
                     - kind: Group
-                      name: k8s-namespace-viewer-$cluster$-$name$-internal
+                      name: k8s-namespace-viewer-$cluster$-$name${{ .Values.openunison.naas.groups.internal.suffix }}
                       apiGroup: rbac.authorization.k8s.io
                     roleRef:
                       kind: ClusterRole
@@ -146,7 +146,7 @@ spec:
                     nameAttr: sub
                    
                 - taskType: addGroup
-                  name: k8s-namespace-viewer-$cluster$-$name$-internal
+                  name: k8s-namespace-viewer-$cluster$-$name${{ .Values.openunison.naas.groups.internal.suffix }}
                   remove: true
                 - taskType: provision
                   sync: true

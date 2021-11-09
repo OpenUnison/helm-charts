@@ -31,7 +31,7 @@ spec:
     - scope: filter
       constraint: "(groups=administrators)"
     - scope: filter
-      constraint: "(groups=administrators-internal)"
+      constraint: "(groups=administrators{{ .Values.openunison.naas.groups.internal.suffix }})"
     results: 
       azFail: default-login-failure
       auFail: default-login-failure
@@ -60,7 +60,7 @@ spec:
     - scope: filter
       constraint: (groups=administrators)
     - scope: filter
-      constraint: "(groups=administrators-internal)"
+      constraint: "(groups=administrators{{ .Values.openunison.naas.groups.internal.suffix }})"
     authChain: login-service
     results:
       azFail: default-login-failure

@@ -8,5 +8,5 @@ services:
   node_selectors: []
   pullSecret: ""
 
-image: docker.io/tremolosecurity/betas:operator-v1024
+image: docker.io/tremolosecurity/openunison-k8s-operator:latest
   

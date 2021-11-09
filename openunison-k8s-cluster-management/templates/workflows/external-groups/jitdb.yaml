@@ -60,7 +60,7 @@ spec:
                    if (hasInternal) {
                      for (var i=0;i<user.getGroups().size();i++) {
                        var groupName = user.getGroups().get(i);
-                       if (groupName.endsWith("-internal") || groupName.startsWith("approvers-")) {
+                       if (groupName.endsWith("{{ .Values.openunison.naas.groups.internal.suffix }}") || groupName.startsWith("approvers-")) {
                          internalGroups.add(groupName);
                        }
                      }

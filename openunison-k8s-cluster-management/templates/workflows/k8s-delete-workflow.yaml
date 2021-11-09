@@ -43,9 +43,9 @@ spec:
              label: Request Delete Namespace - $cluster$ - $nameSpace$
              approvers:
              - scope: group
-               constraint: cn=administrators,ou=groups,ou=shadow,o=Tremolo
+               constraint: cn=administrators{{ .Values.openunison.naas.groups.external.suffix }},ou=groups,ou=shadow,o=Tremolo
              - scope: group
-               constraint: cn=administrators-internal,ou=groups,ou=shadow,o=Tremolo
+               constraint: cn=administrators{{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
              onSuccess:
              {{ if .Values.openunison.naas.groups.internal.enabled }}
              # Remove all members from the groups
@@ -62,7 +62,7 @@ spec:
                params:
                  uidAttributeName: uid
                  removeWorkflow: remove-user-from-group
-                 groupToDelete: cn=k8s-namespace-administrators-$cluster$-$nameSpace$-internal,ou=groups,ou=shadow,o=Tremolo
+                 groupToDelete: cn=k8s-namespace-administrators-$cluster$-$nameSpace${{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
                  groupNameAttribute: cn
                  requestor: system
              - taskType: customTask
@@ -70,7 +70,7 @@ spec:
                params:
                  uidAttributeName: uid
                  removeWorkflow: remove-user-from-group
-                 groupToDelete: cn=k8s-namespace-viewer-$cluster$-$nameSpace$-internal,ou=groups,ou=shadow,o=Tremolo
+                 groupToDelete: cn=k8s-namespace-viewer-$cluster$-$nameSpace${{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
                  groupNameAttribute: cn
                  requestor: system
              # Remove the groups
@@ -79,8 +79,8 @@ spec:
                params:
                  name: 
                  - approvers-k8s-$cluster$-$nameSpace$
-                 - k8s-namespace-administrators-$cluster$-$nameSpace$-internal
-                 - k8s-namespace-viewer-$cluster$-$nameSpace$-internal
+                 - k8s-namespace-administrators-$cluster$-$nameSpace${{ .Values.openunison.naas.groups.internal.suffix }}
+                 - k8s-namespace-viewer-$cluster$-$nameSpace${{ .Values.openunison.naas.groups.internal.suffix }}
                  target: jitdb
              
 
@@ -91,20 +91,20 @@ spec:
                params:
                  targetName: $cluster$
                  kind:  RoleBinding
-                 url: /apis/rbac.authorization.k8s.io/v1/namespaces/$nameSpace$/rolebindings/viewers-binding-internal
+                 url: /apis/rbac.authorization.k8s.io/v1/namespaces/$nameSpace$/rolebindings/viewers-binding{{ .Values.openunison.naas.groups.internal.suffix }}
                  writeToRequest: "$useGit$"
                  requestAttribute: git-secret-namespace-$cluster$-$nameSpace$
-                 path: /yaml/ns/$nameSpace$/rolebindings/viewers-binding-internal.yaml
+                 path: /yaml/ns/$nameSpace$/rolebindings/viewers-binding{{ .Values.openunison.naas.groups.internal.suffix }}.yaml
 
              - taskType: customTask
                className: com.tremolosecurity.provisioning.tasks.DeleteK8sObject
                params:
                  targetName: $cluster$
                  kind: RoleBinding
-                 url: /apis/rbac.authorization.k8s.io/v1/namespaces/$nameSpace$/rolebindings/admins-binding-internal
+                 url: /apis/rbac.authorization.k8s.io/v1/namespaces/$nameSpace$/rolebindings/admins-binding{{ .Values.openunison.naas.groups.internal.suffix }}
                  writeToRequest: "$useGit$"
                  requestAttribute: git-secret-namespace-$cluster$-$nameSpace$
-                 path: /yaml/ns/$nameSpace$/rolebindings/admins-binding-internal.yaml
+                 path: /yaml/ns/$nameSpace$/rolebindings/admins-binding{{ .Values.openunison.naas.groups.internal.suffix }}.yaml
              {{ end }}
 
              {{ if .Values.openunison.naas.groups.external.enabled }}

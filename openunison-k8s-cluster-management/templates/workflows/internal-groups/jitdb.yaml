@@ -79,8 +79,8 @@ spec:
                          rs.next();
                          if (rs.getInt("num") == 1) {
                            // first user, add the admin group
-                           user.getGroups().add("administrators-internal");
-                           user.getGroups().add("k8s-cluster-k8s-administrators-internal");
+                           user.getGroups().add("administrators{{ .Values.openunison.naas.groups.internal.suffix }}");
+                           user.getGroups().add("k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }}");
                          }
                        } finally {
                          sql.close();
