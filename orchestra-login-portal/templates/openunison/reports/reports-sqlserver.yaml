@@ -93,7 +93,7 @@ spec:
       
       approvals.id,approvals.label AS Approval ,approvals.createTS AS [Approval Opened],workflows.name AS [Workflow Name],workflows.label AS [Workflow Label],workflows.requestReason AS [Request Reason],
       concat((SELECT value FROM userAttributes WHERE name='givenName' AND userid=users.id),' ',(SELECT value FROM userAttributes WHERE name='sn' AND userid=users.id)) AS [Subject Name], (SELECT value FROM userAttributes WHERE name='mail' AND userid=users.id) AS [Subject Email],
-      (SELECT value FROM approverAttributes WHERE name='givenName' AND approverid=approvers.id) AS [First Name],(SELECT value FROM approverAttributes WHERE name='sn' AND approverid=approvers.id) AS [Last Name],(SELECT value FROM approverAttributes WHERE name='mail' AND approverid=approvers.id) AS [Email]
+      (SELECT value FROM approverAttributes WHERE name='givenName' AND approverid=approvers.id) AS [First Name],(SELECT value FROM approverAttributes WHERE name='sn' AND approverid=approvers.id) AS [Last Name],(SELECT value FROM approverAttributes WHERE name='mail' AND approverid=approvers.id) AS [Email Address]
       
       from approvals inner join workflows on approvals.workflow=workflows.id inner join users on workflows.userid=users.id inner join allowedApprovers on approvals.id=allowedApprovers.approval inner join approvers on approvers.id=allowedApprovers.approver where approvedTS is null
       order by approvals.createTS ASC, approvals.id ASC
@@ -134,7 +134,7 @@ spec:
       workflows.id AS wid, approvals.id AS aid,approvals.label AS Approval ,approvals.createTS [Approval Opened],workflows.name [Workflow Name],workflows.label [Workflow Label],workflows.requestReason [Request Reason],
       concat((SELECT value FROM userAttributes WHERE name='givenName' AND userid=users.id),' ',(SELECT value FROM userAttributes WHERE name='sn' AND userid=users.id)) [Subject Name], (SELECT value FROM userAttributes WHERE name='mail' AND userid=users.id) [Subject Email],
       (SELECT value FROM approverAttributes WHERE name='givenName' AND approverid=approvers.id) [First Name],(SELECT value FROM approverAttributes WHERE name='sn' AND approverid=approvers.id) [Last Name],(SELECT value FROM approverAttributes WHERE name='mail' AND approverid=approvers.id) [Email],(CASE WHEN approvals.approved = 1 THEN 'Approved' ELSE 'Rejected' END) [Approval Result],approvals.approvedTS [Approved Date],approvals.reason AS Reason
-      from approvals inner join approvers on approvals.approver=approvers.id inner join workflows on workflows.id=approvals.workflow inner join users on users.id=workflows.userid WHERE approvals.approvedTS &gt; ? AND approvals.approvedTS &lt; ? order by approvals.id ASC,workflows.id ASC;
+      from approvals inner join approvers on approvals.approver=approvers.id inner join workflows on workflows.id=approvals.workflow inner join users on users.id=workflows.userid WHERE approvals.approvedTS > ? AND approvals.approvedTS < ? order by approvals.id ASC,workflows.id ASC;
   headerFields:
   - Workflow Name
   - Workflow Label
@@ -219,7 +219,7 @@ spec:
       auditLogType.name  [Action],CASE WHEN isEntry = 1 THEN 'Object' ELSE 'Attribute' END [Target Type],auditLogs.attribute [Name],auditLogs.val [Value]
       
       
-      from users inner join auditLogs on users.id=auditLogs.userid inner join auditLogType on auditLogType.id=auditLogs.actionType inner join workflows on workflows.id=auditLogs.workflow where workflows.completeTS &gt;= ? and workflows.completeTS &lt;= ?
+      from users inner join auditLogs on users.id=auditLogs.userid inner join auditLogType on auditLogType.id=auditLogs.actionType inner join workflows on workflows.id=auditLogs.workflow where workflows.completeTS >= ? and workflows.completeTS <= ?
       order by workflows.completeTS ASC ,workflows.id ASC , auditLogs.isEntry DESC
   headerFields:
   - Workflow Name
