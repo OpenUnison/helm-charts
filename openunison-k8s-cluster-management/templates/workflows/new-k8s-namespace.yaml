@@ -1,3 +1,4 @@
+{{ if .Values.openunison.naas.workflows.new_namespace.use_default }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Workflow
@@ -419,3 +420,4 @@ spec:
                subject: Namespace created
                mailAttrib: mail
                msg: Your namespace has been created
+{{ end }}
