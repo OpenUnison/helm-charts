@@ -358,6 +358,761 @@ spec:
 {{ end }}
 {{ end }}
 {{ if .Values.openunison.enable_provisioning }}
+{{ if eq (substr 0 14 .Values.database.url)  "jdbc:sqlserver"}}
+  sql_check_query: "SELECT 1  FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE' AND TABLE_NAME='approvers'"
+  run_sql: |-
+    IF EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[dbo].[FK_QRTZ_TRIGGERS_QRTZ_JOB_DETAILS]') AND OBJECTPROPERTY(id, N'ISFOREIGNKEY') = 1)
+    ALTER TABLE [dbo].[QRTZ_TRIGGERS] DROP CONSTRAINT FK_QRTZ_TRIGGERS_QRTZ_JOB_DETAILS;
+
+    IF EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[dbo].[FK_QRTZ_CRON_TRIGGERS_QRTZ_TRIGGERS]') AND OBJECTPROPERTY(id, N'ISFOREIGNKEY') = 1)
+    ALTER TABLE [dbo].[QRTZ_CRON_TRIGGERS] DROP CONSTRAINT FK_QRTZ_CRON_TRIGGERS_QRTZ_TRIGGERS
+    ;
+
+    IF EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[dbo].[FK_QRTZ_SIMPLE_TRIGGERS_QRTZ_TRIGGERS]') AND OBJECTPROPERTY(id, N'ISFOREIGNKEY') = 1)
+    ALTER TABLE [dbo].[QRTZ_SIMPLE_TRIGGERS] DROP CONSTRAINT FK_QRTZ_SIMPLE_TRIGGERS_QRTZ_TRIGGERS
+    ;
+
+    IF EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[dbo].[FK_QRTZ_SIMPROP_TRIGGERS_QRTZ_TRIGGERS]') AND OBJECTPROPERTY(id, N'ISFOREIGNKEY') = 1)
+    ALTER TABLE [dbo].[QRTZ_SIMPROP_TRIGGERS] DROP CONSTRAINT FK_QRTZ_SIMPROP_TRIGGERS_QRTZ_TRIGGERS
+    ;
+
+    IF EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[dbo].[FK_QRTZ_BLOB_TRIGGERS_QRTZ_TRIGGERS]') AND OBJECTPROPERTY(id, N'ISFOREIGNKEY') = 1)
+    ALTER TABLE [dbo].[QRTZ_BLOB_TRIGGERS] DROP CONSTRAINT FK_QRTZ_BLOB_TRIGGERS_QRTZ_TRIGGERS
+    ;
+
+    IF EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[dbo].[QRTZ_CALENDARS]') AND OBJECTPROPERTY(id, N'ISUSERTABLE') = 1)
+    DROP TABLE [dbo].[QRTZ_CALENDARS]
+    ;
+
+    IF EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[dbo].[QRTZ_CRON_TRIGGERS]') AND OBJECTPROPERTY(id, N'ISUSERTABLE') = 1)
+    DROP TABLE [dbo].[QRTZ_CRON_TRIGGERS]
+    ;
+
+    IF EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[dbo].[QRTZ_BLOB_TRIGGERS]') AND OBJECTPROPERTY(id, N'ISUSERTABLE') = 1)
+    DROP TABLE [dbo].[QRTZ_BLOB_TRIGGERS]
+    ;
+
+    IF EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[dbo].[QRTZ_FIRED_TRIGGERS]') AND OBJECTPROPERTY(id, N'ISUSERTABLE') = 1)
+    DROP TABLE [dbo].[QRTZ_FIRED_TRIGGERS]
+    ;
+
+    IF EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[dbo].[QRTZ_PAUSED_TRIGGER_GRPS]') AND OBJECTPROPERTY(id, N'ISUSERTABLE') = 1)
+    DROP TABLE [dbo].[QRTZ_PAUSED_TRIGGER_GRPS]
+    ;
+
+    IF EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[dbo].[QRTZ_SCHEDULER_STATE]') AND OBJECTPROPERTY(id, N'ISUSERTABLE') = 1)
+    DROP TABLE [dbo].[QRTZ_SCHEDULER_STATE]
+    ;
+
+    IF EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[dbo].[QRTZ_LOCKS]') AND OBJECTPROPERTY(id, N'ISUSERTABLE') = 1)
+    DROP TABLE [dbo].[QRTZ_LOCKS]
+    ;
+
+    IF EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[dbo].[QRTZ_JOB_DETAILS]') AND OBJECTPROPERTY(id, N'ISUSERTABLE') = 1)
+    DROP TABLE [dbo].[QRTZ_JOB_DETAILS]
+    ;
+
+    IF EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[dbo].[QRTZ_SIMPLE_TRIGGERS]') AND OBJECTPROPERTY(id, N'ISUSERTABLE') = 1)
+    DROP TABLE [dbo].[QRTZ_SIMPLE_TRIGGERS]
+    ;
+
+    IF EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[dbo].[QRTZ_SIMPROP_TRIGGERS]') AND OBJECTPROPERTY(id, N'ISUSERTABLE') = 1)
+    DROP TABLE [dbo].[QRTZ_SIMPROP_TRIGGERS]
+    ;
+
+    IF EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[dbo].[QRTZ_TRIGGERS]') AND OBJECTPROPERTY(id, N'ISUSERTABLE') = 1)
+    DROP TABLE [dbo].[QRTZ_TRIGGERS]
+    ;
+
+    CREATE TABLE [dbo].[QRTZ_CALENDARS] (
+      [SCHED_NAME] [VARCHAR] (120)  NOT NULL ,
+      [CALENDAR_NAME] [VARCHAR] (200)  NOT NULL ,
+      [CALENDAR] [IMAGE] NOT NULL
+    ) ON [PRIMARY]
+    ;
+
+    CREATE TABLE [dbo].[QRTZ_CRON_TRIGGERS] (
+      [SCHED_NAME] [VARCHAR] (120)  NOT NULL ,
+      [TRIGGER_NAME] [VARCHAR] (200)  NOT NULL ,
+      [TRIGGER_GROUP] [VARCHAR] (200)  NOT NULL ,
+      [CRON_EXPRESSION] [VARCHAR] (120)  NOT NULL ,
+      [TIME_ZONE_ID] [VARCHAR] (80) 
+    ) ON [PRIMARY]
+    ;
+
+    CREATE TABLE [dbo].[QRTZ_FIRED_TRIGGERS] (
+      [SCHED_NAME] [VARCHAR] (120)  NOT NULL ,
+      [ENTRY_ID] [VARCHAR] (95)  NOT NULL ,
+      [TRIGGER_NAME] [VARCHAR] (200)  NOT NULL ,
+      [TRIGGER_GROUP] [VARCHAR] (200)  NOT NULL ,
+      [INSTANCE_NAME] [VARCHAR] (200)  NOT NULL ,
+      [FIRED_TIME] [BIGINT] NOT NULL ,
+      [SCHED_TIME] [BIGINT] NOT NULL ,
+      [PRIORITY] [INTEGER] NOT NULL ,
+      [STATE] [VARCHAR] (16)  NOT NULL,
+      [JOB_NAME] [VARCHAR] (200)  NULL ,
+      [JOB_GROUP] [VARCHAR] (200)  NULL ,
+      [IS_NONCONCURRENT] [VARCHAR] (1)  NULL ,
+      [REQUESTS_RECOVERY] [VARCHAR] (1)  NULL 
+    ) ON [PRIMARY]
+    ;
+
+    CREATE TABLE [dbo].[QRTZ_PAUSED_TRIGGER_GRPS] (
+      [SCHED_NAME] [VARCHAR] (120)  NOT NULL ,
+      [TRIGGER_GROUP] [VARCHAR] (200)  NOT NULL 
+    ) ON [PRIMARY]
+    ;
+
+    CREATE TABLE [dbo].[QRTZ_SCHEDULER_STATE] (
+      [SCHED_NAME] [VARCHAR] (120)  NOT NULL ,
+      [INSTANCE_NAME] [VARCHAR] (200)  NOT NULL ,
+      [LAST_CHECKIN_TIME] [BIGINT] NOT NULL ,
+      [CHECKIN_INTERVAL] [BIGINT] NOT NULL
+    ) ON [PRIMARY]
+    ;
+
+    CREATE TABLE [dbo].[QRTZ_LOCKS] (
+      [SCHED_NAME] [VARCHAR] (120)  NOT NULL ,
+      [LOCK_NAME] [VARCHAR] (40)  NOT NULL 
+    ) ON [PRIMARY]
+    ;
+
+    CREATE TABLE [dbo].[QRTZ_JOB_DETAILS] (
+      [SCHED_NAME] [VARCHAR] (120)  NOT NULL ,
+      [JOB_NAME] [VARCHAR] (200)  NOT NULL ,
+      [JOB_GROUP] [VARCHAR] (200)  NOT NULL ,
+      [DESCRIPTION] [VARCHAR] (250) NULL ,
+      [JOB_CLASS_NAME] [VARCHAR] (250)  NOT NULL ,
+      [IS_DURABLE] [VARCHAR] (1)  NOT NULL ,
+      [IS_NONCONCURRENT] [VARCHAR] (1)  NOT NULL ,
+      [IS_UPDATE_DATA] [VARCHAR] (1)  NOT NULL ,
+      [REQUESTS_RECOVERY] [VARCHAR] (1)  NOT NULL ,
+      [JOB_DATA] [IMAGE] NULL
+    ) ON [PRIMARY]
+    ;
+
+    CREATE TABLE [dbo].[QRTZ_SIMPLE_TRIGGERS] (
+      [SCHED_NAME] [VARCHAR] (120)  NOT NULL ,
+      [TRIGGER_NAME] [VARCHAR] (200)  NOT NULL ,
+      [TRIGGER_GROUP] [VARCHAR] (200)  NOT NULL ,
+      [REPEAT_COUNT] [BIGINT] NOT NULL ,
+      [REPEAT_INTERVAL] [BIGINT] NOT NULL ,
+      [TIMES_TRIGGERED] [BIGINT] NOT NULL
+    ) ON [PRIMARY]
+    ;
+
+    CREATE TABLE [dbo].[QRTZ_SIMPROP_TRIGGERS] (
+      [SCHED_NAME] [VARCHAR] (120)  NOT NULL ,
+      [TRIGGER_NAME] [VARCHAR] (200)  NOT NULL ,
+      [TRIGGER_GROUP] [VARCHAR] (200)  NOT NULL ,
+      [STR_PROP_1] [VARCHAR] (512) NULL,
+      [STR_PROP_2] [VARCHAR] (512) NULL,
+      [STR_PROP_3] [VARCHAR] (512) NULL,
+      [INT_PROP_1] [INT] NULL,
+      [INT_PROP_2] [INT] NULL,
+      [LONG_PROP_1] [BIGINT] NULL,
+      [LONG_PROP_2] [BIGINT] NULL,
+      [DEC_PROP_1] [NUMERIC] (13,4) NULL,
+      [DEC_PROP_2] [NUMERIC] (13,4) NULL,
+      [BOOL_PROP_1] [VARCHAR] (1) NULL,
+      [BOOL_PROP_2] [VARCHAR] (1) NULL,
+    ) ON [PRIMARY]
+    ;
+
+    CREATE TABLE [dbo].[QRTZ_BLOB_TRIGGERS] (
+      [SCHED_NAME] [VARCHAR] (120)  NOT NULL ,
+      [TRIGGER_NAME] [VARCHAR] (200)  NOT NULL ,
+      [TRIGGER_GROUP] [VARCHAR] (200)  NOT NULL ,
+      [BLOB_DATA] [IMAGE] NULL
+    ) ON [PRIMARY]
+    ;
+
+    CREATE TABLE [dbo].[QRTZ_TRIGGERS] (
+      [SCHED_NAME] [VARCHAR] (120)  NOT NULL ,
+      [TRIGGER_NAME] [VARCHAR] (200)  NOT NULL ,
+      [TRIGGER_GROUP] [VARCHAR] (200)  NOT NULL ,
+      [JOB_NAME] [VARCHAR] (200)  NOT NULL ,
+      [JOB_GROUP] [VARCHAR] (200)  NOT NULL ,
+      [DESCRIPTION] [VARCHAR] (250) NULL ,
+      [NEXT_FIRE_TIME] [BIGINT] NULL ,
+      [PREV_FIRE_TIME] [BIGINT] NULL ,
+      [PRIORITY] [INTEGER] NULL ,
+      [TRIGGER_STATE] [VARCHAR] (16)  NOT NULL ,
+      [TRIGGER_TYPE] [VARCHAR] (8)  NOT NULL ,
+      [START_TIME] [BIGINT] NOT NULL ,
+      [END_TIME] [BIGINT] NULL ,
+      [CALENDAR_NAME] [VARCHAR] (200)  NULL ,
+      [MISFIRE_INSTR] [SMALLINT] NULL ,
+      [JOB_DATA] [IMAGE] NULL
+    ) ON [PRIMARY]
+    ;
+
+    ALTER TABLE [dbo].[QRTZ_CALENDARS] WITH NOCHECK ADD
+      CONSTRAINT [PK_QRTZ_CALENDARS] PRIMARY KEY  CLUSTERED
+      (
+        [SCHED_NAME],
+        [CALENDAR_NAME]
+      )  ON [PRIMARY]
+    ;
+
+    ALTER TABLE [dbo].[QRTZ_CRON_TRIGGERS] WITH NOCHECK ADD
+      CONSTRAINT [PK_QRTZ_CRON_TRIGGERS] PRIMARY KEY  CLUSTERED
+      (
+        [SCHED_NAME],
+        [TRIGGER_NAME],
+        [TRIGGER_GROUP]
+      )  ON [PRIMARY]
+    ;
+
+    ALTER TABLE [dbo].[QRTZ_FIRED_TRIGGERS] WITH NOCHECK ADD
+      CONSTRAINT [PK_QRTZ_FIRED_TRIGGERS] PRIMARY KEY  CLUSTERED
+      (
+        [SCHED_NAME],
+        [ENTRY_ID]
+      )  ON [PRIMARY]
+    ;
+
+    ALTER TABLE [dbo].[QRTZ_PAUSED_TRIGGER_GRPS] WITH NOCHECK ADD
+      CONSTRAINT [PK_QRTZ_PAUSED_TRIGGER_GRPS] PRIMARY KEY  CLUSTERED
+      (
+        [SCHED_NAME],
+        [TRIGGER_GROUP]
+      )  ON [PRIMARY]
+    ;
+
+    ALTER TABLE [dbo].[QRTZ_SCHEDULER_STATE] WITH NOCHECK ADD
+      CONSTRAINT [PK_QRTZ_SCHEDULER_STATE] PRIMARY KEY  CLUSTERED
+      (
+        [SCHED_NAME],
+        [INSTANCE_NAME]
+      )  ON [PRIMARY]
+    ;
+
+    ALTER TABLE [dbo].[QRTZ_LOCKS] WITH NOCHECK ADD
+      CONSTRAINT [PK_QRTZ_LOCKS] PRIMARY KEY  CLUSTERED
+      (
+        [SCHED_NAME],
+        [LOCK_NAME]
+      )  ON [PRIMARY]
+    ;
+
+    ALTER TABLE [dbo].[QRTZ_JOB_DETAILS] WITH NOCHECK ADD
+      CONSTRAINT [PK_QRTZ_JOB_DETAILS] PRIMARY KEY  CLUSTERED
+      (
+        [SCHED_NAME],
+        [JOB_NAME],
+        [JOB_GROUP]
+      )  ON [PRIMARY]
+    ;
+
+    ALTER TABLE [dbo].[QRTZ_SIMPLE_TRIGGERS] WITH NOCHECK ADD
+      CONSTRAINT [PK_QRTZ_SIMPLE_TRIGGERS] PRIMARY KEY  CLUSTERED
+      (
+        [SCHED_NAME],
+        [TRIGGER_NAME],
+        [TRIGGER_GROUP]
+      )  ON [PRIMARY]
+    ;
+
+    ALTER TABLE [dbo].[QRTZ_SIMPROP_TRIGGERS] WITH NOCHECK ADD
+      CONSTRAINT [PK_QRTZ_SIMPROP_TRIGGERS] PRIMARY KEY  CLUSTERED
+      (
+        [SCHED_NAME],
+        [TRIGGER_NAME],
+        [TRIGGER_GROUP]
+      )  ON [PRIMARY]
+    ;
+
+    ALTER TABLE [dbo].[QRTZ_TRIGGERS] WITH NOCHECK ADD
+      CONSTRAINT [PK_QRTZ_TRIGGERS] PRIMARY KEY  CLUSTERED
+      (
+        [SCHED_NAME],
+        [TRIGGER_NAME],
+        [TRIGGER_GROUP]
+      )  ON [PRIMARY]
+    ;
+
+    ALTER TABLE [dbo].[QRTZ_CRON_TRIGGERS] ADD
+      CONSTRAINT [FK_QRTZ_CRON_TRIGGERS_QRTZ_TRIGGERS] FOREIGN KEY
+      (
+        [SCHED_NAME],
+        [TRIGGER_NAME],
+        [TRIGGER_GROUP]
+      ) REFERENCES [dbo].[QRTZ_TRIGGERS] (
+        [SCHED_NAME],
+        [TRIGGER_NAME],
+        [TRIGGER_GROUP]
+      ) ON DELETE CASCADE
+    ;
+
+    ALTER TABLE [dbo].[QRTZ_SIMPLE_TRIGGERS] ADD
+      CONSTRAINT [FK_QRTZ_SIMPLE_TRIGGERS_QRTZ_TRIGGERS] FOREIGN KEY
+      (
+        [SCHED_NAME],
+        [TRIGGER_NAME],
+        [TRIGGER_GROUP]
+      ) REFERENCES [dbo].[QRTZ_TRIGGERS] (
+        [SCHED_NAME],
+        [TRIGGER_NAME],
+        [TRIGGER_GROUP]
+      ) ON DELETE CASCADE
+    ;
+
+    ALTER TABLE [dbo].[QRTZ_SIMPROP_TRIGGERS] ADD
+      CONSTRAINT [FK_QRTZ_SIMPROP_TRIGGERS_QRTZ_TRIGGERS] FOREIGN KEY
+      (
+        [SCHED_NAME],
+        [TRIGGER_NAME],
+        [TRIGGER_GROUP]
+      ) REFERENCES [dbo].[QRTZ_TRIGGERS] (
+        [SCHED_NAME],
+        [TRIGGER_NAME],
+        [TRIGGER_GROUP]
+      ) ON DELETE CASCADE
+    ;
+
+    ALTER TABLE [dbo].[QRTZ_BLOB_TRIGGERS] ADD
+      CONSTRAINT [FK_QRTZ_BLOB_TRIGGERS_QRTZ_TRIGGERS] FOREIGN KEY
+      (
+        [SCHED_NAME],
+        [TRIGGER_NAME],
+        [TRIGGER_GROUP]
+      ) REFERENCES [dbo].[QRTZ_TRIGGERS] (
+        [SCHED_NAME],
+        [TRIGGER_NAME],
+        [TRIGGER_GROUP]
+      ) ON DELETE CASCADE
+    ;
+
+    ALTER TABLE [dbo].[QRTZ_TRIGGERS] ADD
+      CONSTRAINT [FK_QRTZ_TRIGGERS_QRTZ_JOB_DETAILS] FOREIGN KEY
+      (
+        [SCHED_NAME],
+        [JOB_NAME],
+        [JOB_GROUP]
+      ) REFERENCES [dbo].[QRTZ_JOB_DETAILS] (
+        [SCHED_NAME],
+        [JOB_NAME],
+        [JOB_GROUP]
+      )
+    ;
+
+    SET ANSI_NULLS ON
+    ;
+
+    SET QUOTED_IDENTIFIER ON
+    ;
+
+    SET ANSI_PADDING ON
+    ;
+    IF OBJECT_ID('dbo.ACTIVEMQ_ACKS','U') IS NOT NULL DROP TABLE [dbo].[ACTIVEMQ_ACKS];
+    CREATE TABLE [dbo].[ACTIVEMQ_ACKS](
+      [CONTAINER] [varchar](250) NOT NULL,
+      [SUB_DEST] [varchar](250) NULL,
+      [CLIENT_ID] [varchar](250) NOT NULL,
+      [SUB_NAME] [varchar](250) NOT NULL,
+      [SELECTOR] [varchar](250) NULL,
+      [LAST_ACKED_ID] [bigint] NULL,
+      [PRIORITY] [bigint] NOT NULL,
+      [XID] [varchar](250) NULL,
+    PRIMARY KEY CLUSTERED 
+    (
+      [CONTAINER] ASC,
+      [CLIENT_ID] ASC,
+      [SUB_NAME] ASC,
+      [PRIORITY] ASC
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+    ) ON [PRIMARY]
+
+    ;
+
+    SET ANSI_PADDING OFF
+    ;
+
+    ALTER TABLE [dbo].[ACTIVEMQ_ACKS] ADD  DEFAULT ((5)) FOR [PRIORITY]
+    ;
+
+    SET ANSI_NULLS ON
+    ;
+
+    SET QUOTED_IDENTIFIER ON
+    ;
+
+    SET ANSI_PADDING ON
+    ;
+    IF OBJECT_ID('dbo.ACTIVEMQ_LOCK','U') IS NOT NULL DROP TABLE [dbo].[ACTIVEMQ_LOCK];
+    CREATE TABLE [dbo].[ACTIVEMQ_LOCK](
+      [ID] [bigint] NOT NULL,
+      [TIME] [bigint] NULL,
+      [BROKER_NAME] [varchar](250) NULL,
+    PRIMARY KEY CLUSTERED 
+    (
+      [ID] ASC
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+    ) ON [PRIMARY]
+
+    ;
+
+    SET ANSI_PADDING OFF
+    ;
+
+    SET ANSI_NULLS ON
+    ;
+
+    SET QUOTED_IDENTIFIER ON
+    ;
+
+    SET ANSI_PADDING ON
+    ;
+    IF OBJECT_ID('dbo.ACTIVEMQ_MSGS','U') IS NOT NULL DROP TABLE [dbo].[ACTIVEMQ_MSGS];
+    CREATE TABLE [dbo].[ACTIVEMQ_MSGS](
+      [ID] [bigint] NOT NULL,
+      [CONTAINER] [varchar](250) NOT NULL,
+      [MSGID_PROD] [varchar](250) NULL,
+      [MSGID_SEQ] [bigint] NULL,
+      [EXPIRATION] [bigint] NULL,
+      [MSG] [image] NULL,
+      [PRIORITY] [bigint] NULL,
+      [XID] [varchar](250) NULL,
+    PRIMARY KEY CLUSTERED 
+    (
+      [ID] ASC
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+    ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+
+    ;
+
+    SET ANSI_NULLS ON
+    ;
+    SET QUOTED_IDENTIFIER ON
+    ;
+    CREATE TABLE [dbo].[allowedApprovers](
+      [id] [int] IDENTITY(1,1) NOT NULL,
+      [approval] [int] NOT NULL,
+      [approver] [int] NOT NULL,
+    PRIMARY KEY CLUSTERED 
+    (
+      [id] ASC
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    ) ON [PRIMARY]
+    ;
+    /****** Object:  Table [dbo].[approvals]    Script Date: 11/16/2021 2:22:18 PM ******/
+    SET ANSI_NULLS ON
+    ;
+    SET QUOTED_IDENTIFIER ON
+    ;
+    CREATE TABLE [dbo].[approvals](
+      [id] [int] IDENTITY(1,1) NOT NULL,
+      [approved] [int] NULL,
+      [approvedTS] [datetime2](7) NULL,
+      [createTS] [datetime2](7) NULL,
+      [label] [varchar](255) NULL,
+      [reason] [varchar](255) NULL,
+      [workflowObj] [text] NULL,
+      [approver] [int] NULL,
+      [workflow] [int] NOT NULL,
+    PRIMARY KEY CLUSTERED 
+    (
+      [id] ASC
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+    ;
+    /****** Object:  Table [dbo].[approverAttributes]    Script Date: 11/16/2021 2:22:18 PM ******/
+    SET ANSI_NULLS ON
+    ;
+    SET QUOTED_IDENTIFIER ON
+    ;
+    CREATE TABLE [dbo].[approverAttributes](
+      [id] [int] IDENTITY(1,1) NOT NULL,
+      [name] [varchar](255) NOT NULL,
+      [value] [varchar](255) NOT NULL,
+      [approverId] [int] NOT NULL,
+    PRIMARY KEY CLUSTERED 
+    (
+      [id] ASC
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    ) ON [PRIMARY]
+    ;
+    /****** Object:  Table [dbo].[approvers]    Script Date: 11/16/2021 2:22:18 PM ******/
+    SET ANSI_NULLS ON
+    ;
+    SET QUOTED_IDENTIFIER ON
+    ;
+    CREATE TABLE [dbo].[approvers](
+      [id] [int] IDENTITY(1,1) NOT NULL,
+      [userKey] [varchar](255) NULL,
+    PRIMARY KEY CLUSTERED 
+    (
+      [id] ASC
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    ) ON [PRIMARY]
+    ;
+    /****** Object:  Table [dbo].[auditLogs]    Script Date: 11/16/2021 2:22:18 PM ******/
+    SET ANSI_NULLS ON
+    ;
+    SET QUOTED_IDENTIFIER ON
+    ;
+    CREATE TABLE [dbo].[auditLogs](
+      [id] [int] IDENTITY(1,1) NOT NULL,
+      [attribute] [varchar](255) NULL,
+      [isEntry] [int] NOT NULL,
+      [val] [text] NULL,
+      [approval] [int] NULL,
+      [actionType] [int] NOT NULL,
+      [target] [int] NULL,
+      [userid] [int] NULL,
+      [workflow] [int] NULL,
+    PRIMARY KEY CLUSTERED 
+    (
+      [id] ASC
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+    ;
+    /****** Object:  Table [dbo].[auditLogType]    Script Date: 11/16/2021 2:22:18 PM ******/
+    SET ANSI_NULLS ON
+    ;
+    SET QUOTED_IDENTIFIER ON
+    ;
+    CREATE TABLE [dbo].[auditLogType](
+      [id] [int] IDENTITY(1,1) NOT NULL,
+      [name] [varchar](255) NOT NULL,
+    PRIMARY KEY CLUSTERED 
+    (
+      [id] ASC
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    ) ON [PRIMARY]
+    ;
+    /****** Object:  Table [dbo].[escalation]    Script Date: 11/16/2021 2:22:18 PM ******/
+    SET ANSI_NULLS ON
+    ;
+    SET QUOTED_IDENTIFIER ON
+    ;
+    CREATE TABLE [dbo].[escalation](
+      [id] [int] IDENTITY(1,1) NOT NULL,
+      [whenTS] [datetime2](7) NOT NULL,
+      [approval] [int] NOT NULL,
+    PRIMARY KEY CLUSTERED 
+    (
+      [id] ASC
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    ) ON [PRIMARY]
+    ;
+    /****** Object:  Table [dbo].[targets]    Script Date: 11/16/2021 2:22:18 PM ******/
+    SET ANSI_NULLS ON
+    ;
+    SET QUOTED_IDENTIFIER ON
+    ;
+    CREATE TABLE [dbo].[targets](
+      [id] [int] IDENTITY(1,1) NOT NULL,
+      [name] [varchar](255) NOT NULL,
+    PRIMARY KEY CLUSTERED 
+    (
+      [id] ASC
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    ) ON [PRIMARY]
+    ;
+    /****** Object:  Table [dbo].[userAttributes]    Script Date: 11/16/2021 2:22:18 PM ******/
+    SET ANSI_NULLS ON
+    ;
+    SET QUOTED_IDENTIFIER ON
+    ;
+    CREATE TABLE [dbo].[userAttributes](
+      [id] [int] IDENTITY(1,1) NOT NULL,
+      [name] [varchar](255) NOT NULL,
+      [value] [varchar](255) NOT NULL,
+      [userid] [int] NOT NULL,
+    PRIMARY KEY CLUSTERED 
+    (
+      [id] ASC
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    ) ON [PRIMARY]
+    ;
+    /****** Object:  Table [dbo].[users]    Script Date: 11/16/2021 2:22:18 PM ******/
+    SET ANSI_NULLS ON
+    ;
+    SET QUOTED_IDENTIFIER ON
+    ;
+    CREATE TABLE [dbo].[users](
+      [id] [int] IDENTITY(1,1) NOT NULL,
+      [userKey] [varchar](255) NOT NULL,
+    PRIMARY KEY CLUSTERED 
+    (
+      [id] ASC
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    ) ON [PRIMARY]
+    ;
+    /****** Object:  Table [dbo].[workflowParameters]    Script Date: 11/16/2021 2:22:18 PM ******/
+    SET ANSI_NULLS ON
+    ;
+    SET QUOTED_IDENTIFIER ON
+    ;
+    CREATE TABLE [dbo].[workflowParameters](
+      [id] [int] IDENTITY(1,1) NOT NULL,
+      [name] [varchar](255) NOT NULL,
+      [value] [varchar](255) NOT NULL,
+      [workflow] [int] NOT NULL,
+    PRIMARY KEY CLUSTERED 
+    (
+      [id] ASC
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    ) ON [PRIMARY]
+    ;
+    /****** Object:  Table [dbo].[workflows]    Script Date: 11/16/2021 2:22:18 PM ******/
+    SET ANSI_NULLS ON
+    ;
+    SET QUOTED_IDENTIFIER ON
+    ;
+    CREATE TABLE [dbo].[workflows](
+      [id] [int] IDENTITY(1,1) NOT NULL,
+      [completeTS] [datetime2](7) NULL,
+      [description] [text] NULL,
+      [label] [varchar](255) NULL,
+      [name] [varchar](255) NOT NULL,
+      [requestReason] [text] NULL,
+      [startTS] [datetime2](7) NULL,
+      [requesterid] [int] NULL,
+      [userid] [int] NULL,
+    PRIMARY KEY CLUSTERED 
+    (
+      [id] ASC
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+    ;
+    ALTER TABLE [dbo].[allowedApprovers]  WITH CHECK ADD  CONSTRAINT [FKel92fx0okym0rqt5bp0;8a9q] FOREIGN KEY([approval])
+    REFERENCES [dbo].[approvals] ([id])
+    ;
+    ALTER TABLE [dbo].[allowedApprovers] CHECK CONSTRAINT [FKel92fx0okym0rqt5bp0;8a9q]
+    ;
+    ALTER TABLE [dbo].[allowedApprovers]  WITH CHECK ADD  CONSTRAINT [FKf2kv6sg17kgwlm999g7ovqpwy] FOREIGN KEY([approver])
+    REFERENCES [dbo].[approvers] ([id])
+    ;
+    ALTER TABLE [dbo].[allowedApprovers] CHECK CONSTRAINT [FKf2kv6sg17kgwlm999g7ovqpwy]
+    ;
+    ALTER TABLE [dbo].[approvals]  WITH CHECK ADD  CONSTRAINT [FK5106341qr11yyqdn3xfj2qivj] FOREIGN KEY([workflow])
+    REFERENCES [dbo].[workflows] ([id])
+    ;
+    ALTER TABLE [dbo].[approvals] CHECK CONSTRAINT [FK5106341qr11yyqdn3xfj2qivj]
+    ;
+    ALTER TABLE [dbo].[approvals]  WITH CHECK ADD  CONSTRAINT [FKf7pmu7cgxgts4o3l6sdueokk0] FOREIGN KEY([approver])
+    REFERENCES [dbo].[approvers] ([id])
+    ;
+    ALTER TABLE [dbo].[approvals] CHECK CONSTRAINT [FKf7pmu7cgxgts4o3l6sdueokk0]
+    ;
+    ALTER TABLE [dbo].[approverAttributes]  WITH CHECK ADD  CONSTRAINT [FKfbjpbhv2aefrnyop0hwuhwsr3] FOREIGN KEY([approverId])
+    REFERENCES [dbo].[approvers] ([id])
+    ;
+    ALTER TABLE [dbo].[approverAttributes] CHECK CONSTRAINT [FKfbjpbhv2aefrnyop0hwuhwsr3]
+    ;
+    ALTER TABLE [dbo].[auditLogs]  WITH CHECK ADD  CONSTRAINT [FK37bhgh2oy3evaey113n1tbyta] FOREIGN KEY([target])
+    REFERENCES [dbo].[targets] ([id])
+    ;
+    ALTER TABLE [dbo].[auditLogs] CHECK CONSTRAINT [FK37bhgh2oy3evaey113n1tbyta]
+    ;
+    ALTER TABLE [dbo].[auditLogs]  WITH CHECK ADD  CONSTRAINT [FK7jtmxfrjhjeqsiwl4dki65lqc] FOREIGN KEY([actionType])
+    REFERENCES [dbo].[auditLogType] ([id])
+    ;
+    ALTER TABLE [dbo].[auditLogs] CHECK CONSTRAINT [FK7jtmxfrjhjeqsiwl4dki65lqc]
+    ;
+    ALTER TABLE [dbo].[auditLogs]  WITH CHECK ADD  CONSTRAINT [FKdquv9n7oyd9e6ao2787je3d3h] FOREIGN KEY([userid])
+    REFERENCES [dbo].[users] ([id])
+    ;
+    ALTER TABLE [dbo].[auditLogs] CHECK CONSTRAINT [FKdquv9n7oyd9e6ao2787je3d3h]
+    ;
+    ALTER TABLE [dbo].[auditLogs]  WITH CHECK ADD  CONSTRAINT [FKrmpsjnyik1rnwfyty62ca0eyi] FOREIGN KEY([workflow])
+    REFERENCES [dbo].[workflows] ([id])
+    ;
+    ALTER TABLE [dbo].[auditLogs] CHECK CONSTRAINT [FKrmpsjnyik1rnwfyty62ca0eyi]
+    ;
+    ALTER TABLE [dbo].[escalation]  WITH CHECK ADD  CONSTRAINT [FKb9a2uveqras28iokbmflu0r6d] FOREIGN KEY([approval])
+    REFERENCES [dbo].[approvals] ([id])
+    ;
+    ALTER TABLE [dbo].[escalation] CHECK CONSTRAINT [FKb9a2uveqras28iokbmflu0r6d]
+    ;
+    ALTER TABLE [dbo].[userAttributes]  WITH CHECK ADD  CONSTRAINT [FK1fdqahaxylln2kvdcirntdus7] FOREIGN KEY([userid])
+    REFERENCES [dbo].[users] ([id])
+    ;
+    ALTER TABLE [dbo].[userAttributes] CHECK CONSTRAINT [FK1fdqahaxylln2kvdcirntdus7]
+    ;
+    ALTER TABLE [dbo].[workflowParameters]  WITH CHECK ADD  CONSTRAINT [FKda7i6c6sodieql6p668mp4fkq] FOREIGN KEY([workflow])
+    REFERENCES [dbo].[workflows] ([id])
+    ;
+    ALTER TABLE [dbo].[workflowParameters] CHECK CONSTRAINT [FKda7i6c6sodieql6p668mp4fkq]
+    ;
+    ALTER TABLE [dbo].[workflows]  WITH CHECK ADD  CONSTRAINT [FKg659n86ll8m9ykbwrvkouwmns] FOREIGN KEY([userid])
+    REFERENCES [dbo].[users] ([id])
+    ;
+    ALTER TABLE [dbo].[workflows] CHECK CONSTRAINT [FKg659n86ll8m9ykbwrvkouwmns]
+    ;
+    ALTER TABLE [dbo].[workflows]  WITH CHECK ADD  CONSTRAINT [FKgv0no93i61ejpr5ijl6oekhjq] FOREIGN KEY([requesterid])
+    REFERENCES [dbo].[users] ([id])
+    ;
+    ALTER TABLE [dbo].[workflows] CHECK CONSTRAINT [FKgv0no93i61ejpr5ijl6oekhjq]
+    ;
+
+    CREATE TABLE [dbo].[localGroups](
+      [groupId] [int] IDENTITY(1,1) NOT NULL,
+      [description] [varchar](255) NULL,
+      [name] [varchar](255) NOT NULL,
+    CONSTRAINT [PK_localGroups] PRIMARY KEY CLUSTERED 
+    (
+      [groupId] ASC
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    ) ON [PRIMARY]
+    ;
+
+    SET ANSI_NULLS ON
+    ;
+    SET QUOTED_IDENTIFIER ON
+    ;
+    CREATE TABLE [dbo].[localUsers](
+      [userId] [int] IDENTITY(1,1) NOT NULL,
+      [firstName] [varchar](255) NULL,
+      [lastName] [varchar](255) NULL,
+      [mail] [varchar](255) NULL,
+      [sub] [varchar](255) NOT NULL,
+    CONSTRAINT [PK_localUsers] PRIMARY KEY CLUSTERED 
+    (
+      [userId] ASC
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    ) ON [PRIMARY]
+    ;
+
+    SET ANSI_NULLS ON
+    ;
+    SET QUOTED_IDENTIFIER ON
+    ;
+    CREATE TABLE [dbo].[userGroups](
+      [groupId] [int] NOT NULL,
+      [userId] [int] NOT NULL
+    ) ON [PRIMARY]
+    ;
+    ALTER TABLE [dbo].[userGroups]  WITH CHECK ADD  CONSTRAINT [FK_userGroups_localGroups] FOREIGN KEY([groupId])
+    REFERENCES [dbo].[localGroups] ([groupId])
+    ;
+    ALTER TABLE [dbo].[userGroups] CHECK CONSTRAINT [FK_userGroups_localGroups]
+    ;
+    ALTER TABLE [dbo].[userGroups]  WITH CHECK ADD  CONSTRAINT [FK_userGroups_localUsers] FOREIGN KEY([userId])
+    REFERENCES [dbo].[localUsers] ([userId])
+    ;
+    ALTER TABLE [dbo].[userGroups] CHECK CONSTRAINT [FK_userGroups_localUsers]
+    ;
+
+
+    INSERT INTO localGroups (name,description) VALUES ('administrators{{ .Values.openunison.naas.groups.internal.suffix }}','System administrators with approval access for new projects and new cluster admins');
+    INSERT INTO localGroups (name,description) VALUES ('administrators','System administrators with approval access for new projects and new cluster admins');
+    INSERT INTO localGroups (name,description) VALUES ('k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }}','Kubernetes cluster administrators');
+    INSERT INTO localGroups (name,description) VALUES ('k8s-cluster-k8s-administrators','Kubernetes cluster administrators');
+    INSERT INTO localGroups (name,description) VALUES ('System','System level groups not assigned to local users');
+    INSERT INTO localGroups (name,description) VALUES ('users','All users are members');
+
+    INSERT INTO localUsers (mail,sub) VALUES ('','system');
+
+    INSERT INTO userGroups (userId,groupId) VALUES (1,5);
+
+    SET ANSI_PADDING OFF
+    ;
+{{ end }}
+{{ if eq (substr 0 10 .Values.database.url)  "jdbc:mysql"}}
   sql_check_query: "show tables like 'QRTZ_TRIGGERS'"
   run_sql: |-
               CREATE TABLE `localUsers` (
@@ -623,6 +1378,7 @@ spec:
 
 
               commit; 
+{{ end }}
 {{ end }}
 ---
 apiVersion: v1

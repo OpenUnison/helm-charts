@@ -6,6 +6,12 @@ openunison:
   orchestra_release_name: orchestra
   orchestra_login_portal_name: orchestra-login-portal
   naas:
+    forms:
+      new_namespace:
+        use_default: true
+    workflows:
+      new_namespace:
+        use_default: true
     groups:
       interal:
         enabled: true

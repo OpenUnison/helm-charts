@@ -111,7 +111,7 @@ openunison:
   non_secret_data: {}
   secrets: []
   html:
-    image: docker.lab.tremolo.dev/nginx
+    image: docker.io/tremolosecurity/openunison-k8s-html
   enable_provisioning: false
   enable_activemq: true
   az_groups: []
