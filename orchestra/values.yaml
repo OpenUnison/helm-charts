@@ -140,4 +140,20 @@ openunison:
       - name: trustAlias
         source_type: static
         value: "amq-server"
+  naas:
+    forms:
+      new_namespace:
+        use_default: true
+    workflows:
+      new_namespace:
+        use_default: true
+    groups:
+      interal:
+        enabled: true
+        suffix: "-internal"
+      external:
+        suffix: "-external"
+        enabled: false
+        admin_group: "CN=openunison-admins,CN=Users,DC=ent2k12,DC=domain,DC=com"
+        cluster_admin_group: "CN=k8s_login_ckuster_admins,CN=Users,DC=ent2k12,DC=domain,DC=com"
       
