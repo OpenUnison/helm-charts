@@ -13,7 +13,7 @@ openunison:
       new_namespace:
         use_default: true
     groups:
-      interal:
+      internal:
         enabled: true
         suffix: "-internal"
       external:
