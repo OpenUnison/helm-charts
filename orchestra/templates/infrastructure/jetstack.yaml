@@ -63,6 +63,10 @@ spec:
           - name: kube-oidc-proxy-tls
             mountPath: /etc/oidc/tls
             readOnly: true
+          {{ if .Values.services.enable_tokenrequest | default false }}
+          - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+            name: ou-token
+          {{ end }}
         {{ if .Values.impersonation.resources }}
         resources:
           {{ if .Values.impersonation.resources.requests }}
@@ -93,6 +97,26 @@ spec:
             - key: tls.crt
               path: oidc-ca.pem
         {{ end }}
+        {{ if .Values.services.enable_tokenrequest | default false }}
+        - name: ou-token
+          projected:
+            defaultMode: 420
+            sources:
+            - serviceAccountToken:
+                audience: {{ .Values.services.token_request_audience | default "https://kubernetes.default.svc.cluster.local" }}
+                expirationSeconds: {{ .Values.services.token_request_expiration_seconds | default 60000 }}
+                path: "token"
+            - configMap:
+                items:
+                - key: "ca.crt"
+                  path: "ca.crt"
+                name: "kube-cacrt"
+            - configMap:
+                items:
+                - key: namespace
+                  path: namespace
+                name: namespace-holder
+        {{ end }}
         - name: kube-oidc-proxy-tls
           secret:
             secretName: unison-tls
@@ -114,6 +138,7 @@ spec:
       imagePullSecrets:
       - name: {{ .Values.services.pullSecret }}
       {{ end }}
+      automountServiceAccountToken: {{ not (.Values.services.enable_tokenrequest | default false) }}
 ---
 apiVersion: v1
 kind: Service

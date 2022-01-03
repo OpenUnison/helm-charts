@@ -50,7 +50,7 @@ saml:
 
 impersonation:
   use_jetstack: false
-  jetstack_oidc_proxy_image: quay.io/jetstack/kube-oidc-proxy:v0.3.0
+  jetstack_oidc_proxy_image: docker.io/tremolosecurity/kube-oidc-proxy:latest
   explicit_certificate_trust: true
   ca_secret_name: ou-tls-certificate
   

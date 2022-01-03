@@ -68,7 +68,7 @@ monitoring:
 
 impersonation:
   use_jetstack: true
-  jetstack_oidc_proxy_image: quay.io/jetstack/kube-oidc-proxy:v0.3.0
+  jetstack_oidc_proxy_image: docker.io/tremolosecurity/kube-oidc-proxy:latest
   explicit_certificate_trust: true
   ca_secret_name: ou-tls-certificate
 
@@ -118,3 +118,19 @@ openunison:
   precheck:
     image: docker.io/tremolosecurity/python3
   use_standard_jit_workflow: true
+  naas:
+    forms:
+      new_namespace:
+        use_default: true
+    workflows:
+      new_namespace:
+        use_default: true
+    groups:
+      internal:
+        enabled: true
+        suffix: "-internal"
+      external:
+        suffix: "-external"
+        enabled: false
+        admin_group: "CN=openunison-admins,CN=Users,DC=ent2k12,DC=domain,DC=com"
+        cluster_admin_group: "CN=k8s_login_ckuster_admins,CN=Users,DC=ent2k12,DC=domain,DC=com"

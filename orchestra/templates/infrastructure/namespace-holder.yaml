@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: namespace-holder
+  namespace: {{ .Release.Namespace }}
+data:
+  namespace: "{{ .Release.Namespace }}"

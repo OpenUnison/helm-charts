@@ -188,7 +188,7 @@ OpenUnison's built in reverse proxy doesn't support the SPDY protocol which kube
 ```
 impersonation:
   use_jetstack: true
-  jetstack_oidc_proxy_image: quay.io/jetstack/kube-oidc-proxy:v0.3.0
+  jetstack_oidc_proxy_image: docker.io/tremolosecurity/kube-oidc-proxy:latest
   explicit_certificate_trust: false
 ```
 ## Authorizing Access via RBAC
