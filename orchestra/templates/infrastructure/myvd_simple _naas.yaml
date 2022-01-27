@@ -19,18 +19,11 @@ data:
     server.globalChain.accesslog.className=com.tremolosecurity.proxy.myvd.log.AccessLog
 
     server.nameSpaces=rootdse,myvdroot,shadow,shadowUsers,shadowGroups
-    server.rootdse.chain=createTables,dse
+    server.rootdse.chain=dse
     server.rootdse.nameSpace=
     server.rootdse.weight=0
     server.rootdse.dse.className=net.sourceforge.myvd.inserts.RootDSE
     server.rootdse.dse.config.namingContexts=o=Tremolo
-
-    server.rootdse.createTables.className=com.tremolosecurity.unison.k8s.dataobjects.CreateLocalUsers
-    server.rootdse.createTables.config.driver=#[OU_JDBC_DRIVER]
-    server.rootdse.createTables.config.url=#[OU_JDBC_URL]
-    server.rootdse.createTables.config.user=#[OU_JDBC_USER]
-    server.rootdse.createTables.config.password=#[OU_JDBC_PASSWORD]
-    server.rootdse.createTables.config.dialect=#[OU_HIBERNATE_DIALECT]
 
 
     server.myvdroot.chain=root

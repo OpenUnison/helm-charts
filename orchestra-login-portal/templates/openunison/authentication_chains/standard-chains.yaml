@@ -59,6 +59,11 @@ spec:
       {{ else }}
       userLookupClassName: "com.tremolosecurity.unison.proxy.auth.openidconnect.loadUser.LoadAttributesFromWS"
       {{ end }}
+      {{ if hasKey .Values.oidc "forceauthentication" }}
+      forceAuthentication : {{ .Values.oidc.forceauthentication | quote }}
+      {{ else }}
+      forceAuthentication : "true"
+      {{ end }}
     secretParams:
     - name: secretid
       secretName: orchestra-secrets-source

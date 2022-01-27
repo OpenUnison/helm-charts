@@ -36,7 +36,7 @@ spec:
       - env:
         - name: JAVA_OPTS
           value: "-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom
-            -DunisonEnvironmentFile=/etc/openunison/ou.env -Djavax.net.ssl.trustStore=/etc/openunison/cacerts.jks"
+            -DunisonEnvironmentFile=/etc/openunison/ou.env -Djavax.net.ssl.trustStore=/etc/openunison/cacerts.jks -Dpolyglot.engine.WarnInterpreterOnly=false"
         - name: fortriggerupdates
           value: changeme
         image: {{ .Values.image }}
@@ -133,6 +133,11 @@ spec:
           name: custom-logos
           readOnly: true
         {{ end }}
+        {{ if .Values.openunison.debugConfigMap }}
+        - mountPath: /usr/local/openunison/work/webapp/WEB-INF/classes
+          name: custom-debug
+          readOnly: true
+        {{ end }}
       automountServiceAccountToken: {{ not (.Values.services.enable_tokenrequest | default false) }}
       dnsPolicy: ClusterFirst
       restartPolicy: Always
@@ -167,6 +172,11 @@ spec:
       - name: custom-logos
         configMap:
           name: {{ .Values.openunison.html.logosConfigMap | quote }}
+      {{ end }}
+      {{ if .Values.openunison.debugConfigMap }}
+      - name: custom-debug
+        configMap:
+          name: {{ .Values.openunison.debugConfigMap | quote }}
       {{ end }}
       {{ $length := len .Values.services.node_selectors }}
       {{ if eq $length 0  }}

@@ -75,6 +75,18 @@ spec:
         
         canDelegate: "yes"
         canPreApprove: "yes"
+
+        {{ if gt ( len .Values.openunison.naas.reasons ) 0 }}
+        reasonIsList: "true"
+        reasons:
+        {{ range .Values.openunison.naas.reasons }}
+        - {{ . | quote }}
+        {{ end }}
+        {{ else }}
+        reasonIsList: "false"
+        reasons: []
+        {{ end }}
+
         {{ else }}
         attributeNames: "sub"
         canDelegate: "NO"
