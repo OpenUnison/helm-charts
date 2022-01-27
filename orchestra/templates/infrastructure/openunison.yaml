@@ -793,7 +793,7 @@ spec:
     PRIMARY KEY CLUSTERED 
     (
       [id] ASC
-    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
     ) ON [PRIMARY]
     ;
     /****** Object:  Table [dbo].[approvals]    Script Date: 11/16/2021 2:22:18 PM ******/
@@ -814,7 +814,7 @@ spec:
     PRIMARY KEY CLUSTERED 
     (
       [id] ASC
-    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
     ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
     ;
     /****** Object:  Table [dbo].[approverAttributes]    Script Date: 11/16/2021 2:22:18 PM ******/
@@ -830,7 +830,7 @@ spec:
     PRIMARY KEY CLUSTERED 
     (
       [id] ASC
-    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
     ) ON [PRIMARY]
     ;
     /****** Object:  Table [dbo].[approvers]    Script Date: 11/16/2021 2:22:18 PM ******/
@@ -844,7 +844,7 @@ spec:
     PRIMARY KEY CLUSTERED 
     (
       [id] ASC
-    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
     ) ON [PRIMARY]
     ;
     /****** Object:  Table [dbo].[auditLogs]    Script Date: 11/16/2021 2:22:18 PM ******/
@@ -865,7 +865,7 @@ spec:
     PRIMARY KEY CLUSTERED 
     (
       [id] ASC
-    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
     ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
     ;
     /****** Object:  Table [dbo].[auditLogType]    Script Date: 11/16/2021 2:22:18 PM ******/
@@ -879,7 +879,7 @@ spec:
     PRIMARY KEY CLUSTERED 
     (
       [id] ASC
-    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
     ) ON [PRIMARY]
     ;
     /****** Object:  Table [dbo].[escalation]    Script Date: 11/16/2021 2:22:18 PM ******/
@@ -894,7 +894,7 @@ spec:
     PRIMARY KEY CLUSTERED 
     (
       [id] ASC
-    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
     ) ON [PRIMARY]
     ;
     /****** Object:  Table [dbo].[targets]    Script Date: 11/16/2021 2:22:18 PM ******/
@@ -908,7 +908,7 @@ spec:
     PRIMARY KEY CLUSTERED 
     (
       [id] ASC
-    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
     ) ON [PRIMARY]
     ;
     /****** Object:  Table [dbo].[userAttributes]    Script Date: 11/16/2021 2:22:18 PM ******/
@@ -924,7 +924,7 @@ spec:
     PRIMARY KEY CLUSTERED 
     (
       [id] ASC
-    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
     ) ON [PRIMARY]
     ;
     /****** Object:  Table [dbo].[users]    Script Date: 11/16/2021 2:22:18 PM ******/
@@ -938,7 +938,7 @@ spec:
     PRIMARY KEY CLUSTERED 
     (
       [id] ASC
-    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
     ) ON [PRIMARY]
     ;
     /****** Object:  Table [dbo].[workflowParameters]    Script Date: 11/16/2021 2:22:18 PM ******/
@@ -954,7 +954,7 @@ spec:
     PRIMARY KEY CLUSTERED 
     (
       [id] ASC
-    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
     ) ON [PRIMARY]
     ;
     /****** Object:  Table [dbo].[workflows]    Script Date: 11/16/2021 2:22:18 PM ******/
@@ -975,7 +975,7 @@ spec:
     PRIMARY KEY CLUSTERED 
     (
       [id] ASC
-    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
     ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
     ;
     ALTER TABLE [dbo].[allowedApprovers]  WITH CHECK ADD  CONSTRAINT [FKel92fx0okym0rqt5bp0;8a9q] FOREIGN KEY([approval])
@@ -1056,7 +1056,7 @@ spec:
     CONSTRAINT [PK_localGroups] PRIMARY KEY CLUSTERED 
     (
       [groupId] ASC
-    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
     ) ON [PRIMARY]
     ;
 
@@ -1073,7 +1073,7 @@ spec:
     CONSTRAINT [PK_localUsers] PRIMARY KEY CLUSTERED 
     (
       [userId] ASC
-    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
     ) ON [PRIMARY]
     ;
 
@@ -1099,9 +1099,13 @@ spec:
 
 
     INSERT INTO localGroups (name,description) VALUES ('administrators{{ .Values.openunison.naas.groups.internal.suffix }}','System administrators with approval access for new projects and new cluster admins');
-    INSERT INTO localGroups (name,description) VALUES ('administrators','System administrators with approval access for new projects and new cluster admins');
+    {{ if .Values.openunison.naas.groups.external.suffix }}
+    INSERT INTO localGroups (name,description) VALUES ('administrators{{ .Values.openunison.naas.groups.external.suffix }}','System administrators with approval access for new projects and new cluster admins');
+    {{ end }}
     INSERT INTO localGroups (name,description) VALUES ('k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }}','Kubernetes cluster administrators');
-    INSERT INTO localGroups (name,description) VALUES ('k8s-cluster-k8s-administrators','Kubernetes cluster administrators');
+    {{ if .Values.openunison.naas.groups.external.suffix }}
+    INSERT INTO localGroups (name,description) VALUES ('k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.external.suffix }}','Kubernetes cluster administrators');
+    {{ end }}
     INSERT INTO localGroups (name,description) VALUES ('System','System level groups not assigned to local users');
     INSERT INTO localGroups (name,description) VALUES ('users','All users are members');
 
@@ -1366,9 +1370,13 @@ spec:
               
 
               INSERT INTO localGroups (name,description) VALUES ('administrators{{ .Values.openunison.naas.groups.internal.suffix }}','System administrators with approval access for new projects and new cluster admins');
-              INSERT INTO localGroups (name,description) VALUES ('administrators','System administrators with approval access for new projects and new cluster admins');
+              {{ if .Values.openunison.naas.groups.external.suffix }}
+              INSERT INTO localGroups (name,description) VALUES ('administrators{{ .Values.openunison.naas.groups.external.suffix }}','System administrators with approval access for new projects and new cluster admins');
+              {{ end }}
               INSERT INTO localGroups (name,description) VALUES ('k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }}','Kubernetes cluster administrators');
-              INSERT INTO localGroups (name,description) VALUES ('k8s-cluster-k8s-administrators','Kubernetes cluster administrators');
+              {{ if .Values.openunison.naas.groups.external.suffix }}
+              INSERT INTO localGroups (name,description) VALUES ('k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.external.suffix }}','Kubernetes cluster administrators');
+              {{ end }}
               INSERT INTO localGroups (name,description) VALUES ('System','System level groups not assigned to local users');
               INSERT INTO localGroups (name,description) VALUES ('users','All users are members');
 
