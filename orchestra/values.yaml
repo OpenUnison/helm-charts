@@ -37,13 +37,9 @@ dashboard:
 certs:
   use_k8s_cm: false
 
-#trusted_certs: []
+trusted_certs: []
 
-trusted_certs:
-  - name: ldaps
-    pem_b64: SDFGSDFGHDFHSDFGSDGSDFGDS
-  - name: ldaps2
-    pem_b64: SDFGSDFGDHSDRT#$%#$%SDSDTF
+
 
 #active_directory:
 #  base: cn=users,dc=ent2k12,dc=domain,dc=com
