@@ -48,6 +48,8 @@ spec:
           - "--oidc-groups-claim=groups"
           {{ if .Values.impersonation.explicit_certificate_trust }}
           - "--oidc-ca-file=/etc/oidc/oidc-ca.pem"
+          {{ else }}
+          - "--oidc-ca-file=/etc/ssl/certs/ca-certificates.crt"
           {{ end }}
         imagePullPolicy: Always
         securityContext:
