@@ -35,7 +35,9 @@ spec:
     required: required
     params:
       bearerTokenName: oidcBearerToken
+      {{ if not .Values.oidc.client_id_is_secret  }}
       clientid: {{ .Values.oidc.client_id | quote }}
+      {{ end }}
       {{ if .Values.oidc.issuer }}
       issuer: {{ .Values.oidc.issuer | quote }}
       {{ else }}
@@ -68,6 +70,11 @@ spec:
     - name: secretid
       secretName: orchestra-secrets-source
       secretKey: OIDC_CLIENT_SECRET
+    {{ if .Values.oidc.client_id_is_secret }}
+    - name: clientid
+      secretName: orchestra-secrets-source
+      secretKey: OIDC_CLIENT_ID
+    {{ end }}
   - name: map
     required: required
     params:
