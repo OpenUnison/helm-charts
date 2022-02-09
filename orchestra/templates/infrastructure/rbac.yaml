@@ -56,7 +56,7 @@ subjects:
   name: openunison-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
 {{ end }}
-{{ if .Values.openunison.enabled_provisioning }}
+{{ if .Values.openunison.enable_provisioning }}
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
