@@ -129,7 +129,7 @@ spec:
       ldapAttribute: uid
       dnOU: saml
       defaultOC: inetOrgPerson
-      authCtxRef: ""
+      authCtxRef: "{{ .Values.saml.authnCtxClassRef }}"
       spSigKey: unison-saml2-rp-sig
       sigAlg: "RSA-SHA256"
       signAuthnReq: "true"
@@ -141,7 +141,11 @@ spec:
       dontLinkToLDAP: "true"
       logoutURL: "https://#[K8S_DASHBOARD_HOST]/logout"
       entityID: "#[IDP_ENTITY_ID]"
+      {{ if .Values.saml.logoutRedirectUrl }}
+      idpRedirLogoutURL: "{{ .Values.saml.logoutRedirectUrl }}"
+      {{ else }}
       idpRedirLogoutURL: "#[IDP_LOGOUT]"
+      {{ end }}
     secretParams: []
   - name: map
     required: required
