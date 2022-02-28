@@ -13,6 +13,11 @@ network:
   istio:
     selectors:
       istio: ingressgateway
+  traefik:
+    secure: true
+    entrypoints:
+      plaintext: web
+      tls: websecure
   
 
 cert_template:

@@ -10,6 +10,12 @@ metadata:
     app.kubernetes.io/part-of: openunison
   name: kube-oidc-proxy-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
+  {{ if eq .Values.network.ingress_type "traefik" }}
+  {{ if .Values.network.traefik.secure }} 
+  annotations:
+    traefik.ingress.kubernetes.io/service.serversscheme: https
+  {{ end }}
+  {{ end }}
 spec:
   replicas: {{ .Values.openunison.replicas }}
   selector:
@@ -154,11 +160,18 @@ metadata:
     app.kubernetes.io/part-of: openunison
   name: kube-oidc-proxy-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
+  {{ if eq .Values.network.ingress_type "traefik" }}
+  annotations:
+    {{ if .Values.network.traefik.secure }} 
+    traefik.ingress.kubernetes.io/service.serversscheme: https
+    {{ end }}
+  {{ end }}
 spec:
   ports:
   - port: 443
     protocol: TCP
     targetPort: 8443
+    name: https-kube-oidc-proxy
   selector:
     app: kube-oidc-proxy-{{ .Release.Name }}
 {{ end }}

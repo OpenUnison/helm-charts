@@ -10,9 +10,20 @@ metadata:
     app.kubernetes.io/part-of: network
   name: openunison-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
+  {{ if eq .Values.network.ingress_type "traefik" }}
+  annotations:
+    {{ if .Values.network.traefik.secure }} 
+    traefik.ingress.kubernetes.io/service.serversscheme: https
+    {{ end }}
+    traefik.ingress.kubernetes.io/service.sticky.cookie: "true"
+    traefik.ingress.kubernetes.io/service.sticky.cookie.name: openunison-sticky
+    traefik.ingress.kubernetes.io/service.sticky.cookie.secure: "true"
+    traefik.ingress.kubernetes.io/service.sticky.cookie.samesite: "none"
+    traefik.ingress.kubernetes.io/service.sticky.cookie.httponly: "true"
+  {{ end }}
 spec:
   ports:
-  {{ if eq .Values.network.ingress_type "istio" }}
+  {{ if or ( eq .Values.network.ingress_type "istio" ) ( eq .Values.network.ingress_type "traefik" ) }}
   - name: https-{{ .Release.Name }}
   {{ else }}
   - name: openunison-secure-{{ .Release.Name }}
@@ -20,7 +31,7 @@ spec:
     port: 443
     protocol: TCP
     targetPort: 8443
-  {{ if eq .Values.network.ingress_type "istio" }}
+  {{ if or ( eq .Values.network.ingress_type "istio" ) ( eq .Values.network.ingress_type "traefik" ) }}
   - name: http-{{ .Release.Name }}
   {{ else }}
   - name: openunison-insecure-{{ .Release.Name }}

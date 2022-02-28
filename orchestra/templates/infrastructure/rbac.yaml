@@ -319,7 +319,7 @@ metadata:
     app.kubernetes.io/part-of: openunison
 rules:
 - apiGroups: ["openunison.tremolo.io"]
-  resources: ["trusts","portalurls","orgs","authmechs","authchains","resultgroups","applications","customazs","targets","workflows","oujobs","reports","groupmetadatas","messagelisteners"]
+  resources: ["trusts","portalurls","orgs","authmechs","authchains","resultgroups","applications","customazs","targets","workflows","oujobs","reports","groupmetadatas","messagelisteners","javascriptmappings"]
   verbs:
   - get
   - list

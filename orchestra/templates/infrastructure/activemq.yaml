@@ -96,6 +96,10 @@ spec:
           mountPath: "/usr/local/activemq/data"
         - name: jetty-tmp
           mountPath: "/usr/local/activemq/tmp"
+        {{ if  .Values.openunison.activemq_use_pvc }}
+        - name: kahadb
+          mountPath: /activemq-data
+        {{ end }}
         {{ if .Values.amq }}
         {{ if .Values.amq.resources }}
         resources:
@@ -139,6 +143,11 @@ spec:
       - name: config-volume
         configMap:
           name: activemq-config-{{ .Release.Name }}
+      {{ if .Values.openunison.activemq_use_pvc}}
+      - name: kahadb
+        persistentVolumeClaim:
+          claimName: activemq-kahadb
+      {{ end }}
       {{ $length := len .Values.services.node_selectors }}
       {{ if eq $length 0  }}
       nodeSelector: {}
