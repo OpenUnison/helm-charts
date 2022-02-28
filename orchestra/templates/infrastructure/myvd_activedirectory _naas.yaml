@@ -35,7 +35,7 @@ data:
     server.shadow.weight=0
     server.shadow.entry.className=net.sourceforge.myvd.inserts.RootObject
 
-    server.shadowUsers.chain=loadGroups,map,makesub,tremolo
+    server.shadowUsers.chain=loadGroups,map,logit,makesub,tremolo
     server.shadowUsers.nameSpace=ou=users,ou=shadow,o=Tremolo
     server.shadowUsers.weight=0
     server.shadowUsers.enabled=true

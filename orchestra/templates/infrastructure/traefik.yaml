@@ -1,0 +1,113 @@
+{{ if eq .Values.network.ingress_type "traefik" }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.entrypoints: "{{ .Values.network.traefik.entrypoints.tls }}"
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    {{ range $key,$value := .Values.network.ingress_annotations }}
+    {{ $key }}: {{ quote $value }}
+    {{ end }}
+  name: openunison-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: ingress-traefik
+    app.kubernetes.io/part-of: openunison
+spec:
+  rules:
+  - host: {{ .Values.network.openunison_host }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: openunison-{{ .Release.Name }}
+            port:
+              {{ if .Values.network.traefik.secure }} 
+              
+              name: https-{{ .Release.Name }}
+              {{ else }}
+              number: 80
+              {{ end }}
+        path: "/"
+        pathType: Prefix
+  - host: {{ .Values.network.dashboard_host }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: openunison-{{ .Release.Name }}
+            port:
+              {{ if .Values.network.traefik.secure }} 
+              
+              name: https-{{ .Release.Name }}
+              {{ else }}
+              number: 80
+              {{ end }}
+        path: "/"
+        pathType: Prefix
+  {{ if eq .Values.enable_impersonation true }}
+  - host: {{ .Values.network.api_server_host }}
+    http:
+      paths:
+      - backend:
+          service:
+            {{ if eq .Values.impersonation.use_jetstack true }}
+            name: kube-oidc-proxy-{{ .Release.Name }}
+            {{ else }}
+            name: openunison-{{ .Release.Name }}
+            {{ end }}
+            port:
+              number: 443
+        path: "/"
+        pathType: Prefix
+  {{ end }}
+  tls:
+  - hosts:
+    - {{ .Values.network.openunison_host }}
+    - {{ .Values.network.dashboard_host }}
+    {{ if eq .Values.enable_impersonation true }}
+    - {{ .Values.network.api_server_host }}
+    {{ end }}
+    secretName: ou-tls-certificate
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: redirect-https
+  namespace: {{ .Release.Namespace }}
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+    port: "443"
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: http-{{ .Release.Name }}-redirect-to-https
+  namespace: {{ .Release.Namespace }}
+spec:
+  entryPoints:
+    - {{ .Values.network.traefik.entrypoints.plaintext }}
+  routes:
+    - match: HostRegexp(`{{ .Values.network.openunison_host }}`)
+      kind: Rule 
+      services:
+        - name: openunison-{{ .Release.Name }}
+          port: 80
+      middlewares:
+        - name: redirect-https
+          namespace: {{ .Release.Namespace }}
+    - match: HostRegexp(`{{ .Values.network.dashboard_host }}`)
+      kind: Rule 
+      services:
+        - name: openunison-{{ .Release.Name }}
+          port: 80
+      middlewares:
+        - name: redirect-https
+          namespace: {{ .Release.Namespace }}
+{{ end }}
