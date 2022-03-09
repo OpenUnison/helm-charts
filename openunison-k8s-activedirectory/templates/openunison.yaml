@@ -538,7 +538,7 @@ spec:
         {{ end }}
       {{ end }}
     {{ end }}
-    
+  sql_check_query: "SELECT 1  FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE' AND TABLE_NAME='approvers'"
   run_sql: |-
               # By: Ron Cordell - roncordell
               #  I didn't see this anywhere, so I thought I'd post it here. This is the script from Quartz to create the tables in a MySQL database, modified to use INNODB instead of MYISAM.
