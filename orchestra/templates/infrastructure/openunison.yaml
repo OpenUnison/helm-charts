@@ -359,187 +359,970 @@ spec:
 {{ end }}
 {{ if .Values.openunison.enable_provisioning }}
 {{ if eq (substr 0 15 .Values.database.url)  "jdbc:postgresql"}}
-  #sql_check_query: 
-  run_ sql: |-
-    DROP TABLE IF EXISTS  qrtz_fired_trigger`s;
-    DROP TABLE IF EXISTS  QRTZ_PAUSED_TRIGGER_GRPS;
-    DROP TABLE IF EXISTS  QRTZ_SCHEDULER_STATE;
-    DROP TABLE IF EXISTS  QRTZ_LOCKS;
-    DROP TABLE IF EXISTS  qrtz_simple_triggers;
-    DROP TABLE IF EXISTS  qrtz_cron_triggers;
-    DROP TABLE IF EXISTS  qrtz_simprop_triggers;
-    DROP TABLE IF EXISTS  QRTZ_BLOB_TRIGGERS;
-    DROP TABLE IF EXISTS  qrtz_triggers;
-    DROP TABLE IF EXISTS  qrtz_job_details;
-    DROP TABLE IF EXISTS  qrtz_calendars;
+  sql_check_query: "SELECT FROM pg_tables WHERE  schemaname = 'public' AND  tablename  = 'approvers';"
+  run_sql: |-
+    SET statement_timeout = 0;
+    SET lock_timeout = 0;
+    SET idle_in_transaction_session_timeout = 0;
+    SET client_encoding = 'UTF8';
+    SET standard_conforming_strings = on;
+    SELECT pg_catalog.set_config('search_path', '', false);
+    SET check_function_bodies = false;
+    SET xmloption = content;
+    SET client_min_messages = warning;
+    SET row_security = off;
 
-    CREATE TABLE qrtz_job_details
-      (
-        SCHED_NAME VARCHAR(120) NOT NULL,
-        JOB_NAME  VARCHAR(200) NOT NULL,
-        JOB_GROUP VARCHAR(200) NOT NULL,
-        DESCRIPTION VARCHAR(250) NULL,
-        JOB_CLASS_NAME   VARCHAR(250) NOT NULL,
-        IS_DURABLE BOOL NOT NULL,
-        IS_NONCONCURRENT BOOL NOT NULL,
-        IS_UPDATE_DATA BOOL NOT NULL,
-        REQUESTS_RECOVERY BOOL NOT NULL,
-        JOB_DATA BYTEA NULL,
-        PRIMARY KEY (SCHED_NAME,JOB_NAME,JOB_GROUP)
-    );
+    SET default_tablespace = '';
 
-    CREATE TABLE qrtz_triggers
-      (
-        SCHED_NAME VARCHAR(120) NOT NULL,
-        TRIGGER_NAME VARCHAR(200) NOT NULL,
-        TRIGGER_GROUP VARCHAR(200) NOT NULL,
-        JOB_NAME  VARCHAR(200) NOT NULL,
-        JOB_GROUP VARCHAR(200) NOT NULL,
-        DESCRIPTION VARCHAR(250) NULL,
-        NEXT_FIRE_TIME BIGINT NULL,
-        PREV_FIRE_TIME BIGINT NULL,
-        PRIORITY INTEGER NULL,
-        TRIGGER_STATE VARCHAR(16) NOT NULL,
-        TRIGGER_TYPE VARCHAR(8) NOT NULL,
-        START_TIME BIGINT NOT NULL,
-        END_TIME BIGINT NULL,
-        CALENDAR_NAME VARCHAR(200) NULL,
-        MISFIRE_INSTR SMALLINT NULL,
-        JOB_DATA BYTEA NULL,
-        PRIMARY KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP),
-        FOREIGN KEY (SCHED_NAME,JOB_NAME,JOB_GROUP)
-      REFERENCES QRTZ_JOB_DETAILS(SCHED_NAME,JOB_NAME,JOB_GROUP)
-    );
+    SET default_table_access_method = heap;
 
-    CREATE TABLE qrtz_simple_triggers
-      (
-        SCHED_NAME VARCHAR(120) NOT NULL,
-        TRIGGER_NAME VARCHAR(200) NOT NULL,
-        TRIGGER_GROUP VARCHAR(200) NOT NULL,
-        REPEAT_COUNT BIGINT NOT NULL,
-        REPEAT_INTERVAL BIGINT NOT NULL,
-        TIMES_TRIGGERED BIGINT NOT NULL,
-        PRIMARY KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP),
-        FOREIGN KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP)
-      REFERENCES QRTZ_TRIGGERS(SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP)
-    );
 
-    CREATE TABLE qrtz_cron_triggers
-      (
-        SCHED_NAME VARCHAR(120) NOT NULL,
-        TRIGGER_NAME VARCHAR(200) NOT NULL,
-        TRIGGER_GROUP VARCHAR(200) NOT NULL,
-        CRON_EXPRESSION VARCHAR(120) NOT NULL,
-        TIME_ZONE_ID VARCHAR(80),
-        PRIMARY KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP),
-        FOREIGN KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP)
-      REFERENCES QRTZ_TRIGGERS(SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP)
-    );
-
-    CREATE TABLE qrtz_simprop_triggers
-      (
-        SCHED_NAME VARCHAR(120) NOT NULL,
-        TRIGGER_NAME VARCHAR(200) NOT NULL,
-        TRIGGER_GROUP VARCHAR(200) NOT NULL,
-        STR_PROP_1 VARCHAR(512) NULL,
-        STR_PROP_2 VARCHAR(512) NULL,
-        STR_PROP_3 VARCHAR(512) NULL,
-        INT_PROP_1 INT NULL,
-        INT_PROP_2 INT NULL,
-        LONG_PROP_1 BIGINT NULL,
-        LONG_PROP_2 BIGINT NULL,
-        DEC_PROP_1 NUMERIC(13,4) NULL,
-        DEC_PROP_2 NUMERIC(13,4) NULL,
-        BOOL_PROP_1 BOOL NULL,
-        BOOL_PROP_2 BOOL NULL,
-        PRIMARY KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP),
-        FOREIGN KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP)
-        REFERENCES QRTZ_TRIGGERS(SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP)
-    );
-
-    CREATE TABLE qrtz_blob_triggers
-      (
-        SCHED_NAME VARCHAR(120) NOT NULL,
-        TRIGGER_NAME VARCHAR(200) NOT NULL,
-        TRIGGER_GROUP VARCHAR(200) NOT NULL,
-        BLOB_DATA BYTEA NULL,
-        PRIMARY KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP),
-        FOREIGN KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP)
-            REFERENCES QRTZ_TRIGGERS(SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP)
-    );
-
-    CREATE TABLE qrtz_calendars
-      (
-        SCHED_NAME VARCHAR(120) NOT NULL,
-        CALENDAR_NAME  VARCHAR(200) NOT NULL,
-        CALENDAR BYTEA NOT NULL,
-        PRIMARY KEY (SCHED_NAME,CALENDAR_NAME)
+    CREATE TABLE public.activemq_acks (
+        container character varying(250) NOT NULL,
+        sub_dest character varying(250),
+        client_id character varying(250) NOT NULL,
+        sub_name character varying(250) NOT NULL,
+        selector character varying(250),
+        last_acked_id bigint,
+        priority bigint DEFAULT 5 NOT NULL,
+        xid character varying(250)
     );
 
 
-    CREATE TABLE qrtz_paused_trigger_grps
-      (
-        SCHED_NAME VARCHAR(120) NOT NULL,
-        TRIGGER_GROUP  VARCHAR(200) NOT NULL,
-        PRIMARY KEY (SCHED_NAME,TRIGGER_GROUP)
+    ALTER TABLE public.activemq_acks OWNER TO postgres;
+
+
+    CREATE TABLE public.activemq_lock (
+        id bigint NOT NULL,
+        "time" bigint,
+        broker_name character varying(250)
     );
 
-    CREATE TABLE qrtz_fired_triggers
-      (
-        SCHED_NAME VARCHAR(120) NOT NULL,
-        ENTRY_ID VARCHAR(95) NOT NULL,
-        TRIGGER_NAME VARCHAR(200) NOT NULL,
-        TRIGGER_GROUP VARCHAR(200) NOT NULL,
-        INSTANCE_NAME VARCHAR(200) NOT NULL,
-        FIRED_TIME BIGINT NOT NULL,
-        SCHED_TIME BIGINT NOT NULL,
-        PRIORITY INTEGER NOT NULL,
-        STATE VARCHAR(16) NOT NULL,
-        JOB_NAME VARCHAR(200) NULL,
-        JOB_GROUP VARCHAR(200) NULL,
-        IS_NONCONCURRENT BOOL NULL,
-        REQUESTS_RECOVERY BOOL NULL,
-        PRIMARY KEY (SCHED_NAME,ENTRY_ID)
+
+    ALTER TABLE public.activemq_lock OWNER TO postgres;
+
+
+    CREATE TABLE public.activemq_msgs (
+        id bigint NOT NULL,
+        container character varying(250) NOT NULL,
+        msgid_prod character varying(250),
+        msgid_seq bigint,
+        expiration bigint,
+        msg bytea,
+        priority bigint,
+        xid character varying(250)
     );
 
-    CREATE TABLE qrtz_scheduler_state
-      (
-        SCHED_NAME VARCHAR(120) NOT NULL,
-        INSTANCE_NAME VARCHAR(200) NOT NULL,
-        LAST_CHECKIN_TIME BIGINT NOT NULL,
-        CHECKIN_INTERVAL BIGINT NOT NULL,
-        PRIMARY KEY (SCHED_NAME,INSTANCE_NAME)
+
+    ALTER TABLE public.activemq_msgs OWNER TO postgres;
+
+
+    CREATE TABLE public.allowedapprovers (
+        id integer NOT NULL,
+        approval integer NOT NULL,
+        approver integer NOT NULL
     );
 
-    CREATE TABLE qrtz_locks
-      (
-        SCHED_NAME VARCHAR(120) NOT NULL,
-        LOCK_NAME  VARCHAR(40) NOT NULL,
-        PRIMARY KEY (SCHED_NAME,LOCK_NAME)
+
+    ALTER TABLE public.allowedapprovers OWNER TO postgres;
+
+
+    CREATE SEQUENCE public.allowedapprovers_id_seq
+        AS integer
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1;
+
+
+    ALTER TABLE public.allowedapprovers_id_seq OWNER TO postgres;
+
+
+    ALTER SEQUENCE public.allowedapprovers_id_seq OWNED BY public.allowedapprovers.id;
+
+
+
+    CREATE TABLE public.approvals (
+        id integer NOT NULL,
+        approved integer,
+        approvedts timestamp without time zone,
+        createts timestamp without time zone,
+        label character varying(255),
+        reason character varying(255),
+        workflowobj text,
+        approver integer,
+        workflow integer NOT NULL
     );
 
-    create index idx_qrtz_j_req_recovery on qrtz_job_details(SCHED_NAME,REQUESTS_RECOVERY);
-    create index idx_qrtz_j_grp on qrtz_job_details(SCHED_NAME,JOB_GROUP);
 
-    create index idx_qrtz_t_j on qrtz_triggers(SCHED_NAME,JOB_NAME,JOB_GROUP);
-    create index idx_qrtz_t_jg on qrtz_triggers(SCHED_NAME,JOB_GROUP);
-    create index idx_qrtz_t_c on qrtz_triggers(SCHED_NAME,CALENDAR_NAME);
-    create index idx_qrtz_t_g on qrtz_triggers(SCHED_NAME,TRIGGER_GROUP);
-    create index idx_qrtz_t_state on qrtz_triggers(SCHED_NAME,TRIGGER_STATE);
-    create index idx_qrtz_t_n_state on qrtz_triggers(SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP,TRIGGER_STATE);
-    create index idx_qrtz_t_n_g_state on qrtz_triggers(SCHED_NAME,TRIGGER_GROUP,TRIGGER_STATE);
-    create index idx_qrtz_t_next_fire_time on qrtz_triggers(SCHED_NAME,NEXT_FIRE_TIME);
-    create index idx_qrtz_t_nft_st on qrtz_triggers(SCHED_NAME,TRIGGER_STATE,NEXT_FIRE_TIME);
-    create index idx_qrtz_t_nft_misfire on qrtz_triggers(SCHED_NAME,MISFIRE_INSTR,NEXT_FIRE_TIME);
-    create index idx_qrtz_t_nft_st_misfire on qrtz_triggers(SCHED_NAME,MISFIRE_INSTR,NEXT_FIRE_TIME,TRIGGER_STATE);
-    create index idx_qrtz_t_nft_st_misfire_grp on qrtz_triggers(SCHED_NAME,MISFIRE_INSTR,NEXT_FIRE_TIME,TRIGGER_GROUP,TRIGGER_STATE);
+    ALTER TABLE public.approvals OWNER TO postgres;
 
-    create index idx_qrtz_ft_trig_inst_name on qrtz_fired_triggers(SCHED_NAME,INSTANCE_NAME);
-    create index idx_qrtz_ft_inst_job_req_rcvry on qrtz_fired_triggers(SCHED_NAME,INSTANCE_NAME,REQUESTS_RECOVERY);
-    create index idx_qrtz_ft_j_g on qrtz_fired_triggers(SCHED_NAME,JOB_NAME,JOB_GROUP);
-    create index idx_qrtz_ft_jg on qrtz_fired_triggers(SCHED_NAME,JOB_GROUP);
-    create index idx_qrtz_ft_t_g on qrtz_fired_triggers(SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP);
-    create index idx_qrtz_ft_tg on qrtz_fired_triggers(SCHED_NAME,TRIGGER_GROUP);
+
+    CREATE SEQUENCE public.approvals_id_seq
+        AS integer
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1;
+
+
+    ALTER TABLE public.approvals_id_seq OWNER TO postgres;
+
+
+    ALTER SEQUENCE public.approvals_id_seq OWNED BY public.approvals.id;
+
+
+
+    CREATE TABLE public.approverattributes (
+        id integer NOT NULL,
+        name character varying(255) NOT NULL,
+        value character varying(255) NOT NULL,
+        approverid integer NOT NULL
+    );
+
+
+    ALTER TABLE public.approverattributes OWNER TO postgres;
+
+
+    CREATE SEQUENCE public.approverattributes_id_seq
+        AS integer
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1;
+
+
+    ALTER TABLE public.approverattributes_id_seq OWNER TO postgres;
+
+
+    ALTER SEQUENCE public.approverattributes_id_seq OWNED BY public.approverattributes.id;
+
+
+
+    CREATE TABLE public.approvers (
+        id integer NOT NULL,
+        userkey character varying(255)
+    );
+
+
+    ALTER TABLE public.approvers OWNER TO postgres;
+
+
+    CREATE SEQUENCE public.approvers_id_seq
+        AS integer
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1;
+
+
+    ALTER TABLE public.approvers_id_seq OWNER TO postgres;
+
+
+    ALTER SEQUENCE public.approvers_id_seq OWNED BY public.approvers.id;
+
+
+
+    CREATE TABLE public.auditlogs (
+        id integer NOT NULL,
+        attribute character varying(255),
+        isentry integer NOT NULL,
+        val text,
+        approval integer,
+        actiontype integer NOT NULL,
+        target integer,
+        userid integer,
+        workflow integer
+    );
+
+
+    ALTER TABLE public.auditlogs OWNER TO postgres;
+
+
+    CREATE SEQUENCE public.auditlogs_id_seq
+        AS integer
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1;
+
+
+    ALTER TABLE public.auditlogs_id_seq OWNER TO postgres;
+
+
+    ALTER SEQUENCE public.auditlogs_id_seq OWNED BY public.auditlogs.id;
+
+
+
+    CREATE TABLE public.auditlogtype (
+        id integer NOT NULL,
+        name character varying(255) NOT NULL
+    );
+
+
+    ALTER TABLE public.auditlogtype OWNER TO postgres;
+
+
+    CREATE SEQUENCE public.auditlogtype_id_seq
+        AS integer
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1;
+
+
+    ALTER TABLE public.auditlogtype_id_seq OWNER TO postgres;
+
+
+    ALTER SEQUENCE public.auditlogtype_id_seq OWNED BY public.auditlogtype.id;
+
+
+
+    CREATE TABLE public.escalation (
+        id integer NOT NULL,
+        whents timestamp without time zone NOT NULL,
+        approval integer NOT NULL
+    );
+
+
+    ALTER TABLE public.escalation OWNER TO postgres;
+
+
+    CREATE SEQUENCE public.escalation_id_seq
+        AS integer
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1;
+
+
+    ALTER TABLE public.escalation_id_seq OWNER TO postgres;
+
+
+    ALTER SEQUENCE public.escalation_id_seq OWNED BY public.escalation.id;
+
+
+
+    CREATE TABLE public.qrtz_blob_triggers (
+        sched_name character varying(120) NOT NULL,
+        trigger_name character varying(200) NOT NULL,
+        trigger_group character varying(200) NOT NULL,
+        blob_data bytea
+    );
+
+
+    ALTER TABLE public.qrtz_blob_triggers OWNER TO postgres;
+
+
+    CREATE TABLE public.qrtz_calendars (
+        sched_name character varying(120) NOT NULL,
+        calendar_name character varying(200) NOT NULL,
+        calendar bytea NOT NULL
+    );
+
+
+    ALTER TABLE public.qrtz_calendars OWNER TO postgres;
+
+
+    CREATE TABLE public.qrtz_cron_triggers (
+        sched_name character varying(120) NOT NULL,
+        trigger_name character varying(200) NOT NULL,
+        trigger_group character varying(200) NOT NULL,
+        cron_expression character varying(120) NOT NULL,
+        time_zone_id character varying(80)
+    );
+
+
+    ALTER TABLE public.qrtz_cron_triggers OWNER TO postgres;
+
+
+    CREATE TABLE public.qrtz_fired_triggers (
+        sched_name character varying(120) NOT NULL,
+        entry_id character varying(95) NOT NULL,
+        trigger_name character varying(200) NOT NULL,
+        trigger_group character varying(200) NOT NULL,
+        instance_name character varying(200) NOT NULL,
+        fired_time bigint NOT NULL,
+        sched_time bigint NOT NULL,
+        priority integer NOT NULL,
+        state character varying(16) NOT NULL,
+        job_name character varying(200),
+        job_group character varying(200),
+        is_nonconcurrent boolean,
+        requests_recovery boolean
+    );
+
+
+    ALTER TABLE public.qrtz_fired_triggers OWNER TO postgres;
+
+
+    CREATE TABLE public.qrtz_job_details (
+        sched_name character varying(120) NOT NULL,
+        job_name character varying(200) NOT NULL,
+        job_group character varying(200) NOT NULL,
+        description character varying(250),
+        job_class_name character varying(250) NOT NULL,
+        is_durable boolean NOT NULL,
+        is_nonconcurrent boolean NOT NULL,
+        is_update_data boolean NOT NULL,
+        requests_recovery boolean NOT NULL,
+        job_data bytea
+    );
+
+
+    ALTER TABLE public.qrtz_job_details OWNER TO postgres;
+
+
+    CREATE TABLE public.qrtz_locks (
+        sched_name character varying(120) NOT NULL,
+        lock_name character varying(40) NOT NULL
+    );
+
+
+    ALTER TABLE public.qrtz_locks OWNER TO postgres;
+
+
+    CREATE TABLE public.qrtz_paused_trigger_grps (
+        sched_name character varying(120) NOT NULL,
+        trigger_group character varying(200) NOT NULL
+    );
+
+
+    ALTER TABLE public.qrtz_paused_trigger_grps OWNER TO postgres;
+
+
+    CREATE TABLE public.qrtz_scheduler_state (
+        sched_name character varying(120) NOT NULL,
+        instance_name character varying(200) NOT NULL,
+        last_checkin_time bigint NOT NULL,
+        checkin_interval bigint NOT NULL
+    );
+
+
+    ALTER TABLE public.qrtz_scheduler_state OWNER TO postgres;
+
+
+    CREATE TABLE public.qrtz_simple_triggers (
+        sched_name character varying(120) NOT NULL,
+        trigger_name character varying(200) NOT NULL,
+        trigger_group character varying(200) NOT NULL,
+        repeat_count bigint NOT NULL,
+        repeat_interval bigint NOT NULL,
+        times_triggered bigint NOT NULL
+    );
+
+
+    ALTER TABLE public.qrtz_simple_triggers OWNER TO postgres;
+
+
+    CREATE TABLE public.qrtz_simprop_triggers (
+        sched_name character varying(120) NOT NULL,
+        trigger_name character varying(200) NOT NULL,
+        trigger_group character varying(200) NOT NULL,
+        str_prop_1 character varying(512),
+        str_prop_2 character varying(512),
+        str_prop_3 character varying(512),
+        int_prop_1 integer,
+        int_prop_2 integer,
+        long_prop_1 bigint,
+        long_prop_2 bigint,
+        dec_prop_1 numeric(13,4),
+        dec_prop_2 numeric(13,4),
+        bool_prop_1 boolean,
+        bool_prop_2 boolean
+    );
+
+
+    ALTER TABLE public.qrtz_simprop_triggers OWNER TO postgres;
+
+
+    CREATE TABLE public.qrtz_triggers (
+        sched_name character varying(120) NOT NULL,
+        trigger_name character varying(200) NOT NULL,
+        trigger_group character varying(200) NOT NULL,
+        job_name character varying(200) NOT NULL,
+        job_group character varying(200) NOT NULL,
+        description character varying(250),
+        next_fire_time bigint,
+        prev_fire_time bigint,
+        priority integer,
+        trigger_state character varying(16) NOT NULL,
+        trigger_type character varying(8) NOT NULL,
+        start_time bigint NOT NULL,
+        end_time bigint,
+        calendar_name character varying(200),
+        misfire_instr smallint,
+        job_data bytea
+    );
+
+
+    ALTER TABLE public.qrtz_triggers OWNER TO postgres;
+
+
+    CREATE TABLE public.targets (
+        id integer NOT NULL,
+        name character varying(255) NOT NULL
+    );
+
+
+    ALTER TABLE public.targets OWNER TO postgres;
+
+
+    CREATE SEQUENCE public.targets_id_seq
+        AS integer
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1;
+
+
+    ALTER TABLE public.targets_id_seq OWNER TO postgres;
+
+
+    ALTER SEQUENCE public.targets_id_seq OWNED BY public.targets.id;
+
+
+
+    CREATE TABLE public.userattributes (
+        id integer NOT NULL,
+        name character varying(255) NOT NULL,
+        value character varying(255) NOT NULL,
+        userid integer NOT NULL
+    );
+
+
+    ALTER TABLE public.userattributes OWNER TO postgres;
+
+
+    CREATE SEQUENCE public.userattributes_id_seq
+        AS integer
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1;
+
+
+    ALTER TABLE public.userattributes_id_seq OWNER TO postgres;
+
+
+    ALTER SEQUENCE public.userattributes_id_seq OWNED BY public.userattributes.id;
+
+
+
+    CREATE TABLE public.users (
+        id integer NOT NULL,
+        userkey character varying(255) NOT NULL
+    );
+
+
+    ALTER TABLE public.users OWNER TO postgres;
+
+
+    CREATE SEQUENCE public.users_id_seq
+        AS integer
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1;
+
+
+    ALTER TABLE public.users_id_seq OWNER TO postgres;
+
+
+    ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
+
+
+
+    CREATE TABLE public.workflowparameters (
+        id integer NOT NULL,
+        name character varying(255) NOT NULL,
+        value character varying(255) NOT NULL,
+        workflow integer NOT NULL
+    );
+
+
+    ALTER TABLE public.workflowparameters OWNER TO postgres;
+
+
+    CREATE SEQUENCE public.workflowparameters_id_seq
+        AS integer
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1;
+
+
+    ALTER TABLE public.workflowparameters_id_seq OWNER TO postgres;
+
+
+    ALTER SEQUENCE public.workflowparameters_id_seq OWNED BY public.workflowparameters.id;
+
+
+
+    CREATE TABLE public.workflows (
+        id integer NOT NULL,
+        completets timestamp without time zone,
+        description text,
+        label character varying(255),
+        name character varying(255) NOT NULL,
+        requestreason character varying(255),
+        startts timestamp without time zone,
+        requesterid integer,
+        userid integer
+    );
+
+
+    ALTER TABLE public.workflows OWNER TO postgres;
+
+
+    CREATE SEQUENCE public.workflows_id_seq
+        AS integer
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1;
+
+
+    ALTER TABLE public.workflows_id_seq OWNER TO postgres;
+
+
+    ALTER SEQUENCE public.workflows_id_seq OWNED BY public.workflows.id;
+
+
+
+    ALTER TABLE ONLY public.allowedapprovers ALTER COLUMN id SET DEFAULT nextval('public.allowedapprovers_id_seq'::regclass);
+
+
+
+    ALTER TABLE ONLY public.approvals ALTER COLUMN id SET DEFAULT nextval('public.approvals_id_seq'::regclass);
+
+
+
+    ALTER TABLE ONLY public.approverattributes ALTER COLUMN id SET DEFAULT nextval('public.approverattributes_id_seq'::regclass);
+
+
+
+    ALTER TABLE ONLY public.approvers ALTER COLUMN id SET DEFAULT nextval('public.approvers_id_seq'::regclass);
+
+
+
+    ALTER TABLE ONLY public.auditlogs ALTER COLUMN id SET DEFAULT nextval('public.auditlogs_id_seq'::regclass);
+
+
+
+    ALTER TABLE ONLY public.auditlogtype ALTER COLUMN id SET DEFAULT nextval('public.auditlogtype_id_seq'::regclass);
+
+
+
+    ALTER TABLE ONLY public.escalation ALTER COLUMN id SET DEFAULT nextval('public.escalation_id_seq'::regclass);
+
+
+
+    ALTER TABLE ONLY public.targets ALTER COLUMN id SET DEFAULT nextval('public.targets_id_seq'::regclass);
+
+
+
+    ALTER TABLE ONLY public.userattributes ALTER COLUMN id SET DEFAULT nextval('public.userattributes_id_seq'::regclass);
+
+
+
+    ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+
+
+
+    ALTER TABLE ONLY public.workflowparameters ALTER COLUMN id SET DEFAULT nextval('public.workflowparameters_id_seq'::regclass);
+
+
+
+    ALTER TABLE ONLY public.workflows ALTER COLUMN id SET DEFAULT nextval('public.workflows_id_seq'::regclass);
+
+
+
+    ALTER TABLE ONLY public.activemq_lock
+        ADD CONSTRAINT activemq_lock_pkey PRIMARY KEY (id);
+
+
+
+    ALTER TABLE ONLY public.activemq_msgs
+        ADD CONSTRAINT activemq_msgs_pkey PRIMARY KEY (id);
+
+
+
+    ALTER TABLE ONLY public.allowedapprovers
+        ADD CONSTRAINT allowedapprovers_pkey PRIMARY KEY (id);
+
+
+
+    ALTER TABLE ONLY public.approvals
+        ADD CONSTRAINT approvals_pkey PRIMARY KEY (id);
+
+
+
+    ALTER TABLE ONLY public.approverattributes
+        ADD CONSTRAINT approverattributes_pkey PRIMARY KEY (id);
+
+
+
+    ALTER TABLE ONLY public.approvers
+        ADD CONSTRAINT approvers_pkey PRIMARY KEY (id);
+
+
+
+    ALTER TABLE ONLY public.auditlogs
+        ADD CONSTRAINT auditlogs_pkey PRIMARY KEY (id);
+
+
+
+    ALTER TABLE ONLY public.auditlogtype
+        ADD CONSTRAINT auditlogtype_pkey PRIMARY KEY (id);
+
+
+
+    ALTER TABLE ONLY public.escalation
+        ADD CONSTRAINT escalation_pkey PRIMARY KEY (id);
+
+
+
+    ALTER TABLE ONLY public.activemq_acks
+        ADD CONSTRAINT pk_activemq_acks PRIMARY KEY (container, client_id, sub_name);
+
+
+
+    ALTER TABLE ONLY public.qrtz_blob_triggers
+        ADD CONSTRAINT qrtz_blob_triggers_pkey PRIMARY KEY (sched_name, trigger_name, trigger_group);
+
+
+
+    ALTER TABLE ONLY public.qrtz_calendars
+        ADD CONSTRAINT qrtz_calendars_pkey PRIMARY KEY (sched_name, calendar_name);
+
+
+
+    ALTER TABLE ONLY public.qrtz_cron_triggers
+        ADD CONSTRAINT qrtz_cron_triggers_pkey PRIMARY KEY (sched_name, trigger_name, trigger_group);
+
+
+
+    ALTER TABLE ONLY public.qrtz_fired_triggers
+        ADD CONSTRAINT qrtz_fired_triggers_pkey PRIMARY KEY (sched_name, entry_id);
+
+
+
+    ALTER TABLE ONLY public.qrtz_job_details
+        ADD CONSTRAINT qrtz_job_details_pkey PRIMARY KEY (sched_name, job_name, job_group);
+
+
+
+    ALTER TABLE ONLY public.qrtz_locks
+        ADD CONSTRAINT qrtz_locks_pkey PRIMARY KEY (sched_name, lock_name);
+
+
+
+    ALTER TABLE ONLY public.qrtz_paused_trigger_grps
+        ADD CONSTRAINT qrtz_paused_trigger_grps_pkey PRIMARY KEY (sched_name, trigger_group);
+
+
+
+    ALTER TABLE ONLY public.qrtz_scheduler_state
+        ADD CONSTRAINT qrtz_scheduler_state_pkey PRIMARY KEY (sched_name, instance_name);
+
+
+
+    ALTER TABLE ONLY public.qrtz_simple_triggers
+        ADD CONSTRAINT qrtz_simple_triggers_pkey PRIMARY KEY (sched_name, trigger_name, trigger_group);
+
+
+
+    ALTER TABLE ONLY public.qrtz_simprop_triggers
+        ADD CONSTRAINT qrtz_simprop_triggers_pkey PRIMARY KEY (sched_name, trigger_name, trigger_group);
+
+
+
+    ALTER TABLE ONLY public.qrtz_triggers
+        ADD CONSTRAINT qrtz_triggers_pkey PRIMARY KEY (sched_name, trigger_name, trigger_group);
+
+
+
+    ALTER TABLE ONLY public.targets
+        ADD CONSTRAINT targets_pkey PRIMARY KEY (id);
+
+
+
+    ALTER TABLE ONLY public.userattributes
+        ADD CONSTRAINT userattributes_pkey PRIMARY KEY (id);
+
+
+
+    ALTER TABLE ONLY public.users
+        ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+
+    ALTER TABLE ONLY public.workflowparameters
+        ADD CONSTRAINT workflowparameters_pkey PRIMARY KEY (id);
+
+
+
+    ALTER TABLE ONLY public.workflows
+        ADD CONSTRAINT workflows_pkey PRIMARY KEY (id);
+
+
+
+    CREATE INDEX activemq_acks_xidx ON public.activemq_acks USING btree (xid);
+
+
+
+    CREATE INDEX activemq_msgs_cidx ON public.activemq_msgs USING btree (container);
+
+
+
+    CREATE INDEX activemq_msgs_eidx ON public.activemq_msgs USING btree (expiration);
+
+
+
+    CREATE INDEX activemq_msgs_iidx ON public.activemq_msgs USING btree (id, xid, container);
+
+
+
+    CREATE INDEX activemq_msgs_midx ON public.activemq_msgs USING btree (msgid_prod, msgid_seq);
+
+
+
+    CREATE INDEX activemq_msgs_pidx ON public.activemq_msgs USING btree (priority);
+
+
+
+    CREATE INDEX activemq_msgs_xidx ON public.activemq_msgs USING btree (xid);
+
+
+
+    CREATE INDEX idx_qrtz_ft_inst_job_req_rcvry ON public.qrtz_fired_triggers USING btree (sched_name, instance_name, requests_recovery);
+
+
+
+    CREATE INDEX idx_qrtz_ft_j_g ON public.qrtz_fired_triggers USING btree (sched_name, job_name, job_group);
+
+
+
+    CREATE INDEX idx_qrtz_ft_jg ON public.qrtz_fired_triggers USING btree (sched_name, job_group);
+
+
+
+    CREATE INDEX idx_qrtz_ft_t_g ON public.qrtz_fired_triggers USING btree (sched_name, trigger_name, trigger_group);
+
+
+
+    CREATE INDEX idx_qrtz_ft_tg ON public.qrtz_fired_triggers USING btree (sched_name, trigger_group);
+
+
+
+    CREATE INDEX idx_qrtz_ft_trig_inst_name ON public.qrtz_fired_triggers USING btree (sched_name, instance_name);
+
+
+
+    CREATE INDEX idx_qrtz_j_grp ON public.qrtz_job_details USING btree (sched_name, job_group);
+
+
+
+    CREATE INDEX idx_qrtz_j_req_recovery ON public.qrtz_job_details USING btree (sched_name, requests_recovery);
+
+
+
+    CREATE INDEX idx_qrtz_t_c ON public.qrtz_triggers USING btree (sched_name, calendar_name);
+
+
+
+    CREATE INDEX idx_qrtz_t_g ON public.qrtz_triggers USING btree (sched_name, trigger_group);
+
+
+
+    CREATE INDEX idx_qrtz_t_j ON public.qrtz_triggers USING btree (sched_name, job_name, job_group);
+
+
+
+    CREATE INDEX idx_qrtz_t_jg ON public.qrtz_triggers USING btree (sched_name, job_group);
+
+
+
+    CREATE INDEX idx_qrtz_t_n_g_state ON public.qrtz_triggers USING btree (sched_name, trigger_group, trigger_state);
+
+
+
+    CREATE INDEX idx_qrtz_t_n_state ON public.qrtz_triggers USING btree (sched_name, trigger_name, trigger_group, trigger_state);
+
+
+
+    CREATE INDEX idx_qrtz_t_next_fire_time ON public.qrtz_triggers USING btree (sched_name, next_fire_time);
+
+
+
+    CREATE INDEX idx_qrtz_t_nft_misfire ON public.qrtz_triggers USING btree (sched_name, misfire_instr, next_fire_time);
+
+
+
+    CREATE INDEX idx_qrtz_t_nft_st ON public.qrtz_triggers USING btree (sched_name, trigger_state, next_fire_time);
+
+
+
+    CREATE INDEX idx_qrtz_t_nft_st_misfire ON public.qrtz_triggers USING btree (sched_name, misfire_instr, next_fire_time, trigger_state);
+
+
+
+    CREATE INDEX idx_qrtz_t_nft_st_misfire_grp ON public.qrtz_triggers USING btree (sched_name, misfire_instr, next_fire_time, trigger_group, trigger_state);
+
+
+
+    CREATE INDEX idx_qrtz_t_state ON public.qrtz_triggers USING btree (sched_name, trigger_state);
+
+
+
+    ALTER TABLE ONLY public.userattributes
+        ADD CONSTRAINT fk1fdqahaxylln2kvdcirntdus7 FOREIGN KEY (userid) REFERENCES public.users(id);
+
+
+
+    ALTER TABLE ONLY public.auditlogs
+        ADD CONSTRAINT fk37bhgh2oy3evaey113n1tbyta FOREIGN KEY (target) REFERENCES public.targets(id);
+
+
+
+    ALTER TABLE ONLY public.approvals
+        ADD CONSTRAINT fk5106341qr11yyqdn3xfj2qivj FOREIGN KEY (workflow) REFERENCES public.workflows(id);
+
+
+
+    ALTER TABLE ONLY public.auditlogs
+        ADD CONSTRAINT fk7jtmxfrjhjeqsiwl4dki65lqc FOREIGN KEY (actiontype) REFERENCES public.auditlogtype(id);
+
+
+
+    ALTER TABLE ONLY public.escalation
+        ADD CONSTRAINT fkb9a2uveqras28iokbmflu0r6d FOREIGN KEY (approval) REFERENCES public.approvals(id);
+
+
+
+    ALTER TABLE ONLY public.workflowparameters
+        ADD CONSTRAINT fkda7i6c6sodieql6p668mp4fkq FOREIGN KEY (workflow) REFERENCES public.workflows(id);
+
+
+
+    ALTER TABLE ONLY public.auditlogs
+        ADD CONSTRAINT fkdquv9n7oyd9e6ao2787je3d3h FOREIGN KEY (userid) REFERENCES public.users(id);
+
+
+
+    ALTER TABLE ONLY public.allowedapprovers
+        ADD CONSTRAINT fkel92fx0okym0rqt5bp0go8a9q FOREIGN KEY (approval) REFERENCES public.approvals(id);
+
+
+
+    ALTER TABLE ONLY public.allowedapprovers
+        ADD CONSTRAINT fkf2kv6sg17kgwlm999g7ovqpwy FOREIGN KEY (approver) REFERENCES public.approvers(id);
+
+
+
+    ALTER TABLE ONLY public.approvals
+        ADD CONSTRAINT fkf7pmu7cgxgts4o3l6sdueokk0 FOREIGN KEY (approver) REFERENCES public.approvers(id);
+
+
+
+    ALTER TABLE ONLY public.approverattributes
+        ADD CONSTRAINT fkfbjpbhv2aefrnyop0hwuhwsr3 FOREIGN KEY (approverid) REFERENCES public.approvers(id);
+
+
+
+    ALTER TABLE ONLY public.workflows
+        ADD CONSTRAINT fkg659n86ll8m9ykbwrvkouwmns FOREIGN KEY (userid) REFERENCES public.users(id);
+
+
+
+    ALTER TABLE ONLY public.workflows
+        ADD CONSTRAINT fkgv0no93i61ejpr5ijl6oekhjq FOREIGN KEY (requesterid) REFERENCES public.users(id);
+
+
+
+    ALTER TABLE ONLY public.auditlogs
+        ADD CONSTRAINT fkrmpsjnyik1rnwfyty62ca0eyi FOREIGN KEY (workflow) REFERENCES public.workflows(id);
+
+
+
+    ALTER TABLE ONLY public.qrtz_blob_triggers
+        ADD CONSTRAINT qrtz_blob_triggers_sched_name_trigger_name_trigger_group_fkey FOREIGN KEY (sched_name, trigger_name, trigger_group) REFERENCES public.qrtz_triggers(sched_name, trigger_name, trigger_group);
+
+
+
+    ALTER TABLE ONLY public.qrtz_cron_triggers
+        ADD CONSTRAINT qrtz_cron_triggers_sched_name_trigger_name_trigger_group_fkey FOREIGN KEY (sched_name, trigger_name, trigger_group) REFERENCES public.qrtz_triggers(sched_name, trigger_name, trigger_group);
+
+
+
+    ALTER TABLE ONLY public.qrtz_simple_triggers
+        ADD CONSTRAINT qrtz_simple_triggers_sched_name_trigger_name_trigger_group_fkey FOREIGN KEY (sched_name, trigger_name, trigger_group) REFERENCES public.qrtz_triggers(sched_name, trigger_name, trigger_group);
+
+
+
+    ALTER TABLE ONLY public.qrtz_simprop_triggers
+        ADD CONSTRAINT qrtz_simprop_triggers_sched_name_trigger_name_trigger_grou_fkey FOREIGN KEY (sched_name, trigger_name, trigger_group) REFERENCES public.qrtz_triggers(sched_name, trigger_name, trigger_group);
+
+
+
+    ALTER TABLE ONLY public.qrtz_triggers
+        ADD CONSTRAINT qrtz_triggers_sched_name_job_name_job_group_fkey FOREIGN KEY (sched_name, job_name, job_group) REFERENCES public.qrtz_job_details(sched_name, job_name, job_group);
+
+    CREATE TABLE public.localUsers (
+        userid SERIAL PRIMARY KEY,
+        firstName varchar(255) NOT NULL,
+        lastName varchar(255) NOT NULL,
+        mail varchar(255) NOT NULL,
+        sub varchar(255) NOT NULL UNIQUE
+    );
+
+    CREATE TABLE public.localGroups (
+        groupId SERIAL PRIMARY KEY,
+        description varchar(255) NULL,
+        name varchar(255) NOT NULL UNIQUE
+    );
+
+    CREATE TABLE public.userGroups(
+        groupId int,
+        userId int,
+        CONSTRAINT fk_group
+          FOREIGN KEY(groupId)
+            REFERENCES public.localGroups(groupId),
+        CONSTRAINT fk_user
+          FOREIGN KEY(userId)
+            REFERENCES public.localUsers(userId)
+
+    );
+
+    INSERT INTO public.localGroups (name,description) VALUES ('administrators{{ .Values.openunison.naas.groups.internal.suffix }}','System administrators with approval access for new projects and new cluster admins');
+    {{ if .Values.openunison.naas.groups.external.suffix }}
+    INSERT INTO public.localGroups (name,description) VALUES ('administrators{{ .Values.openunison.naas.groups.external.suffix }}','System administrators with approval access for new projects and new cluster admins');
+    {{ end }}
+    INSERT INTO public.localGroups (name,description) VALUES ('k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }}','Kubernetes cluster administrators');
+    {{ if .Values.openunison.naas.groups.external.suffix }}
+    INSERT INTO public.localGroups (name,description) VALUES ('k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.external.suffix }}','Kubernetes cluster administrators');
+    {{ end }}
+    INSERT INTO public.localGroups (name,description) VALUES ('System','System level groups not assigned to local users');
+    INSERT INTO public.localGroups (name,description) VALUES ('users','All users are members');
+
+    INSERT INTO public.localUsers (mail,sub,firstName,lastName) VALUES ('','system','system','system');
+
+    INSERT INTO public.userGroups (userId,groupId) VALUES (1,5);
+
+
 {{ end }}
 {{ if eq (substr 0 14 .Values.database.url)  "jdbc:sqlserver"}}
   sql_check_query: "SELECT 1  FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE' AND TABLE_NAME='approvers'"
