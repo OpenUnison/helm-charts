@@ -18,6 +18,13 @@ spec:
     filterChain: 
     - className: com.tremolosecurity.proxy.filters.SetNoCacheHeaders
       params: {}
+    {{ if .Values.dashboard.require_session }}
+    - className: com.tremolosecurity.proxy.filters.AzFilter
+      params:
+        rules:
+        - "custom;require-session"
+        azFail: "force-logout"
+    {{ end }}
     {{ if .Values.enable_impersonation }}
     - className: com.tremolosecurity.proxy.filters.K8sInjectImpersonation
       params:

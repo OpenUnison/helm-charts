@@ -158,6 +158,12 @@ spec:
       - "displayName|composite|${displayName}"
       - "memberOf|user|memberOf"
 {{ end }}
+{{ if .Values.openunison.include_auth_chain }}
+  - name: include
+    params:
+      chainName: {{ .Values.openunison.include_auth_chain }}
+    required: required
+{{ end }}
   - name: jit
     required: required
     params: 
