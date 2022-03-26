@@ -1,0 +1,39 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Target
+metadata:
+  name: azuread
+  namespace: {{ .Release.Namespace }}
+spec:
+  className: com.tremolosecurity.provisioning.core.providers.AzureADProvider
+  params:
+  - name: clientId
+    value: "{{ .Values.oidc.client_id }}"
+  - name: tenantId
+    value: "{{ .Values.azure.tennant_id }}"
+  secretParams:
+  - name: clientSecret
+    secretName: orchestra-secrets-source
+    secretKey: OIDC_CLIENT_SECRET
+  targetAttributes:
+  - name: displayName
+    source: displayName
+    sourceType: user
+  - name: givenName
+    source: givenName
+    sourceType: user
+  - name: surname
+    source: surname
+    sourceType: user
+  - name: userPrincipalName
+    source: userPrincipalName
+    sourceType: user
+  - name: id
+    source: id
+    sourceType: user
+  - name: mail
+    source: mail
+    sourceType: user
+  - name: accountEnabled
+    source: accountEnabled
+    sourceType: user
