@@ -1,0 +1,263 @@
+{{ if .Values.openunison.enable_provisioning }}
+{{ if eq (substr 0 15 .Values.database.url)  "jdbc:postgresql"}}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Report
+metadata:
+  name: my-open-requests
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: reports
+    app.kubernetes.io/part-of: openunison
+spec:
+  name: My Open Requests
+  description: List of your currently open requests and the approvers responsible for acting on them
+  groupBy: id
+  groupings: true
+  orgId: B158BD40-0C1B-11E3-8FFD-0800200C9A66
+  parameters:
+    beginDate: false
+    endDate: false
+    userKey: false
+    currentUser: true
+  sql: select  approvals.id,approvals.label AS Approval ,approvals.createTS AS "Approval Opened",workflows.name AS "Workflow Name",workflows.label AS "Workflow Label",workflows.requestReason AS "Request Reason", concat((SELECT value FROM userAttributes WHERE userAttributes.name='givenname' AND userid=users.id),' ',(SELECT value FROM userAttributes WHERE userAttributes.name='sn' AND userid=users.id)) as "Subject Name", (SELECT value FROM userAttributes WHERE name='mail' AND userid=users.id) as "Subject Email", (SELECT value FROM approverAttributes WHERE name='givenname' AND approverid=approvers.id) as "First Name",(SELECT value FROM approverAttributes WHERE name='sn' AND approverid=approvers.id) as "Last Name",(SELECT value FROM approverAttributes WHERE name='mail' AND approverid=approvers.id) as "Email"  from approvals inner join workflows on approvals.workflow=workflows.id inner join users on workflows.userid=users.id inner join allowedApprovers on approvals.id=allowedApprovers.approval inner join approvers on approvers.id=allowedApprovers.approver where users.userKey=? AND approvedTS is null order by approvals.createTS ASC, approvals.id ASC
+  headerFields:
+  - Approval
+  - Subject Name
+  - Subject Email
+  - Workflow Name
+  - Workflow Label
+  - Request Reason
+  dataFields:
+  - First Name
+  - Last Name
+  - Email
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Report
+metadata:
+  name: approvals-completed-by-me
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: reports
+    app.kubernetes.io/part-of: openunison
+spec:
+  name: Approvals Completed by Me
+  description: All approvals you approved or denied
+  groupBy: wid
+  groupings: false
+  orgId: B158BD40-0C1B-11E3-8FFD-0800200C9A66
+  parameters:
+    beginDate: false
+    endDate: false
+    userKey: false
+    currentUser: true
+  sql: select  workflows.id AS wid, approvals.id AS aid,approvals.label AS Approval ,approvals.createTS AS "Approval Opened",workflows.name AS "Workflow Name",workflows.label AS "Workflow Label",workflows.requestReason AS "Request Reason", concat((SELECT value FROM userAttributes WHERE name='givenname' AND userid=users.id),' ',(SELECT value FROM userAttributes WHERE name='sn' AND userid=users.id)) as "Subject Name", (SELECT value FROM userAttributes WHERE name='mail' AND userid=users.id) as "Subject Email", (SELECT value FROM approverAttributes WHERE name='givenname' AND approverid=approvers.id) as "First Name",(SELECT value FROM approverAttributes WHERE name='sn' AND approverid=approvers.id) as "Last Name",(SELECT value FROM approverAttributes WHERE name='mail' AND approverid=approvers.id) as "Email",CASE WHEN approvals.approved = 1 THEN 'Approved' ELSE 'Rejected' END AS "Approval Result",approvals.approvedTS AS "Approved Date",approvals.reason AS Reason from approvals inner join approvers on approvals.approver=approvers.id inner join workflows on workflows.id=approvals.workflow inner join users on users.id=workflows.userid WHERE approvers.userKey=? order by approvals.approvedTS DESC;
+  headerFields: []
+  dataFields:
+  - Workflow Name
+  - Workflow Label
+  - Subject Name
+  - Subject Email
+  - Request Reason
+  - Approval
+  - Approval Result
+  - Approved Date
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Report
+metadata:
+  name: open-approvals
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: reports
+    app.kubernetes.io/part-of: openunison
+spec:
+  name: Open Approvals
+  description: Lists all of the approvals that are currently waiting action
+  groupBy: id
+  groupings: true
+  orgId: d2f56bce-b0d4-44fa-8c5d-bd600b0bc589
+  parameters:
+    beginDate: false
+    endDate: false
+    userKey: false
+  sql: |-
+    select
+    approvals.id,approvals.label AS Approval ,approvals.createTS AS "Approval Opened",workflows.name AS "Workflow Name",workflows.label AS "Workflow Label",workflows.requestReason AS "Request Reason",
+    concat((SELECT value FROM userAttributes WHERE name='givenname' AND userid=users.id),' ',(SELECT value FROM userAttributes WHERE name='sn' AND userid=users.id)) as "Subject Name", (SELECT value FROM userAttributes WHERE name='mail' AND userid=users.id) as "Subject Email",
+    (SELECT value FROM approverAttributes WHERE name='givenname' AND approverid=approvers.id) as "First Name",(SELECT value FROM approverAttributes WHERE name='sn' AND approverid=approvers.id) as "Last Name",(SELECT value FROM approverAttributes WHERE name='mail' AND approverid=approvers.id) as "Email Address"
+    from approvals inner join workflows on approvals.workflow=workflows.id inner join users on workflows.userid=users.id inner join allowedApprovers on approvals.id=allowedApprovers.approval inner join approvers on approvers.id=allowedApprovers.approver where approvedTS is null
+    order by approvals.createTS ASC, approvals.id ASC
+  headerFields:
+  - Approval
+  - Subject Name
+  - Subject Email
+  - Workflow Name
+  - Workflow Label
+  - Request Reason
+  dataFields:
+  - First Name
+  - Last Name
+  - Email Address
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Report
+metadata:
+  name: completed-approvals
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: reports
+    app.kubernetes.io/part-of: openunison
+spec:
+  name: Completed Approvals
+  description: All approvals completed in a given set of dates
+  groupBy: wid
+  groupings: true
+  orgId: d2f56bce-b0d4-44fa-8c5d-bd600b0bc589
+  parameters:
+    beginDate: true
+    endDate: true
+    userKey: false
+  sql: |-
+    select 
+    workflows.id AS wid, approvals.id AS aid,approvals.label AS Approval ,approvals.createTS AS "Approval Opened",workflows.name AS "Workflow Name",workflows.label AS "Workflow Label",workflows.requestReason AS "Request Reason",
+    concat((SELECT value FROM userAttributes WHERE name='givenname' AND userid=users.id),' ',(SELECT value FROM userAttributes WHERE name='sn' AND userid=users.id)) as "Subject Name", (SELECT value FROM userAttributes WHERE name='mail' AND userid=users.id) as "Subject Email",
+    (SELECT value FROM approverAttributes WHERE name='givenname' AND approverid=approvers.id) as "First Name",(SELECT value FROM approverAttributes WHERE name='sn' AND approverid=approvers.id) as "Last Name",(SELECT value FROM approverAttributes WHERE name='mail' AND approverid=approvers.id) as "Email",CASE WHEN approvals.approved = 1 THEN 'Approved' ELSE 'Rejected' END AS "Approval Result",approvals.approvedTS AS "Approved Date",approvals.reason AS Reason
+    from approvals inner join approvers on approvals.approver=approvers.id inner join workflows on workflows.id=approvals.workflow inner join users on users.id=workflows.userid WHERE approvals.approvedTS >= ? AND approvals.approvedTS <= ? order by approvals.id ASC,workflows.id ASC;
+  headerFields:
+  - Workflow Name
+  - Workflow Label
+  - Subject Name
+  - Subject Email
+  - Request Reason
+  dataFields:
+  - Approval
+  - First Name
+  - Last Name
+  - Email
+  - Approval Result
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Report
+metadata:
+  name: single-user-change-log
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: reports
+    app.kubernetes.io/part-of: openunison
+spec:
+  name: Single User Change Log
+  description: All changes to the chosen user
+  groupBy: id
+  groupings: true
+  orgId: d2f56bce-b0d4-44fa-8c5d-bd600b0bc589
+  parameters:
+    beginDate: false
+    endDate: false
+    userKey: true
+  sql: |-
+    select
+    (SELECT value FROM userAttributes WHERE userAttributes.name='givenname' AND userid=users.id) AS "First Name", (SELECT value FROM userAttributes WHERE userAttributes.name='sn' AND userid=users.id) AS "Last Name", (SELECT value FROM userAttributes WHERE userAttributes.name='mail' AND userid=users.id) AS "Email Address" ,workflows.id,
+    workflows.name as "Workflow Name",workflows.label AS "Workflow Label",workflows.startTS AS "Workflow Started",workflows.completeTS AS "Workflow Completed",workflows.requestReason AS "Request Reason",
+    auditLogType.name  AS "Action",CASE WHEN isEntry = 1 THEN 'Object' ELSE 'Attribute' END AS "Target Type",auditLogs.attribute AS "Name",auditLogs.val AS "Value"
+    from users inner join auditLogs on users.id=auditLogs.userid inner join auditLogType on auditLogType.id=auditLogs.actionType inner join workflows on workflows.id=auditLogs.workflow where users.userKey=?
+    order by workflows.completeTS ASC ,workflows.id ASC , auditLogs.isEntry DESC
+  headerFields:
+  - Workflow Name
+  - Workflow Label
+  - Request Reason
+  - Workflow Started
+  - Workflow Completed
+  - First Name
+  - Last Name
+  - Email Address
+  dataFields:
+  - Action
+  - Target Type
+  - Name
+  - Value
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Report
+metadata:
+  name: change-log-for-period
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: reports
+    app.kubernetes.io/part-of: openunison
+spec:
+  name: Change Log for Period
+  description: Changes to all users between the two selected dates
+  groupBy: id
+  groupings: true
+  orgId: d2f56bce-b0d4-44fa-8c5d-bd600b0bc589
+  parameters:
+    beginDate: true
+    endDate: true
+    userKey: false
+  sql: |-
+    select
+    (SELECT value FROM userAttributes WHERE name='givenname' AND userid=users.id) AS "First Name", (SELECT value FROM userAttributes WHERE name='sn' AND userid=users.id) AS "Last Name", (SELECT value FROM userAttributes WHERE name='mail' AND userid=users.id) AS "Email Address" ,workflows.id,
+    workflows.name as "Workflow Name",workflows.label AS "Workflow Label",workflows.startTS AS "Workflow Started",workflows.completeTS AS "Workflow Completed",workflows.requestReason AS "Request Reason",
+    auditLogType.name  AS "Action",CASE WHEN isEntry = 1 THEN 'Object' ELSE 'Attribute' END AS "Target Type",auditLogs.attribute AS "Name",auditLogs.val AS "Value"
+    from users inner join auditLogs on users.id=auditLogs.userid inner join auditLogType on auditLogType.id=auditLogs.actionType inner join workflows on workflows.id=auditLogs.workflow where workflows.completeTS >= ? and workflows.completeTS <= ?
+    order by workflows.completeTS ASC ,workflows.id ASC , auditLogs.isEntry DESC
+  headerFields:
+  - Workflow Name
+  - Workflow Label
+  - Request Reason
+  - Workflow Started
+  - Workflow Completed
+  - First Name
+  - Last Name
+  - Email Address
+  dataFields:
+  - Action
+  - Target Type
+  - Name
+  - Value
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Report
+metadata:
+  name: dormant-users
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: reports
+    app.kubernetes.io/part-of: openunison
+spec:
+  name: Dormant Users
+  description: Users the have not logged into Kubernetes for 30 days
+  groupBy: id
+  groupings: false
+  orgId: d2f56bce-b0d4-44fa-8c5d-bd600b0bc589
+  parameters:
+    beginDate: false
+    endDate: false
+    userKey: false
+  sql: select (SELECT value FROM userAttributes WHERE name='uid' AND userid=user_id) AS "User ID",(SELECT value FROM userAttributes WHERE name='givenname' AND userid=user_id) AS "First Name", (SELECT value FROM userAttributes WHERE name='sn' AND userid=user_id) AS "Last Name", (SELECT value FROM userAttributes WHERE name='mail' AND userid=user_id) AS "Email Address",last_login AS "Last Login Date", AGE(CURRENT_DATE, DATE(last_login)) AS "Days Since Last Login"  from  (select userid as user_id,max(completeTS) as last_login from workflows where name='jitdb' group by userid) X where (extract('epoch' FROM age(last_login::timestamp)) / 86400) > 10
+  headerFields: []
+  dataFields:
+  - User ID
+  - First Name
+  - Last Name
+  - Email Address
+  - Last Login Date
+  - Days Since Last Login
+{{ end }}
+{{ end }}

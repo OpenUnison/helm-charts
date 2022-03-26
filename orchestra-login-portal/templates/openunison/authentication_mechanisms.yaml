@@ -174,4 +174,36 @@ spec:
   uri: "/auth/az"
   init: {}
   secretParams: []
+---
+apiVersion: openunison.tremolo.io/v1
+kind: AuthenticationMechanism
+metadata:
+  name: js
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-authmechs
+    app.kubernetes.io/part-of: openunison
+spec:
+  className: com.tremolosecurity.proxy.auth.JavaScriptAuth
+  init: {}
+  secretParams: []
+  uri: /auth/js
+---
+apiVersion: openunison.tremolo.io/v1
+kind: AuthenticationMechanism
+metadata:
+  name: include
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-authmechs
+    app.kubernetes.io/part-of: openunison
+spec:
+  className: com.tremolosecurity.proxy.auth.IncludeChain
+  init: {}
+  secretParams: []
+  uri: /auth/include
 

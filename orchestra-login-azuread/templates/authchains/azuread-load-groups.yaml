@@ -1,0 +1,47 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: AuthenticationChain
+metadata:
+  name: azuread-load-groups
+  namespace: openunison
+spec:
+  authMechs:
+  - name: js
+    params:
+      js: |-
+        function doAuth(request,response,as) {
+          // setup classes that we can use from Java
+          Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+          ProxyConstants = Java.type("com.tremolosecurity.proxy.util.ProxyConstants");
+          GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+          HashMap = Java.type("java.util.HashMap");
+          System = Java.type("java.lang.System");
+          
+          // get the session data needed
+          var session = request.getSession();
+          var holder = request.getAttribute(ProxyConstants.AUTOIDM_CFG);
+
+          var ac = request.getSession().getAttribute(ProxyConstants.AUTH_CTL);
+
+          // Load the user from AzureAD by their UserPrincipalName (user@domain)
+          var upn = ac.getAuthInfo().getAttribs().get("uid").getValues().get(0);
+          var azuread = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget("azuread");
+          var userFromAzureAD = azuread.findUser(upn,new HashMap());
+
+          // remove the old groups, then add the ones from the lookup to AzureAD
+          var memberof = ac.getAuthInfo().getAttribs().get("memberOf");
+          if (memberof == null) {
+              memberof = new Attribute("memberOf");
+              ac.getAuthInfo().getAttribs().put("memberOf",memberof);
+          }
+          memberof.getValues().clear();
+          memberof.getValues().addAll(userFromAzureAD.getGroups());
+
+          as.setExecuted(true);
+          as.setSuccess(true);
+          holder.getConfig().getAuthManager().nextAuth(request, response,session,false);
+
+        }
+    required: required
+  level: 20
+  root: o=Tremolo

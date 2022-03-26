@@ -1,0 +1,18 @@
+{{ if .Values.dashboard.require_session }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: CustomAuthorization
+metadata:
+  name: require-session
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-customaz
+    app.kubernetes.io/part-of: openunison
+spec:
+  className: com.tremolosecurity.proxy.az.UserHasSessionAz
+  params:
+    target: "k8s"
+    namespace: "{{ .Release.Namespace }}"
+{{ end }}
