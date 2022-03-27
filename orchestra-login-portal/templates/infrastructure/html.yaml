@@ -12,11 +12,10 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  labels:
-    app: ouhtml-{{ .Release.Name }}
   name: ouhtml-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
   labels:
+    app: ouhtml-{{ .Release.Name }}
     app.kubernetes.io/name: openunison
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: html
