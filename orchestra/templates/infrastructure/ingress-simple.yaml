@@ -1,0 +1,65 @@
+{{ if eq .Values.network.ingress_type "simple" }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    {{ range $key,$value := .Values.network.ingress_annotations }}
+    {{ $key }}: {{ quote $value }}
+    {{ end }}
+  name: openunison-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: ingress-simple
+    app.kubernetes.io/part-of: openunison
+spec:
+  rules:
+  - host: {{ .Values.network.openunison_host }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: openunison-{{ .Release.Name }}
+            port: 
+              number: 443
+        path: "/"
+        pathType: Prefix
+  - host: {{ .Values.network.dashboard_host }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: openunison-{{ .Release.Name }}
+            port:
+              number: 443
+        path: "/"
+        pathType: Prefix
+  {{ if eq .Values.enable_impersonation true }}
+  - host: {{ .Values.network.api_server_host }}
+    http:
+      paths:
+      - backend:
+          service:
+            {{ if eq .Values.impersonation.use_jetstack true }}
+            name: kube-oidc-proxy-{{ .Release.Name }}
+            {{ else }}
+            name: openunison-{{ .Release.Name }}
+            {{ end }}
+            port:
+              number: 443
+        path: "/"
+        pathType: Prefix
+  {{ end }}
+  tls:
+  - hosts:
+    - {{ .Values.network.openunison_host }}
+    - {{ .Values.network.dashboard_host }}
+    {{ if eq .Values.enable_impersonation true }}
+    - {{ .Values.network.api_server_host }}
+    {{ end }}
+    secretName: ou-tls-certificate
+
+
+{{ end }}

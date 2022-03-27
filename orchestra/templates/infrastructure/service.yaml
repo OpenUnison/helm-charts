@@ -45,6 +45,6 @@ spec:
   sessionAffinityConfig:
     clientIP:
       timeoutSeconds: 10800
-  type: ClusterIP
+  type: "{{ .Values.network.service_type | default "ClusterIP" }}"
 status:
   loadBalancer: {}

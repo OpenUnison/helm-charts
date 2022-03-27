@@ -174,4 +174,5 @@ spec:
     name: https-kube-oidc-proxy
   selector:
     app: kube-oidc-proxy-{{ .Release.Name }}
+  type: "{{ .Values.network.service_type | default "ClusterIP" }}"
 {{ end }}
