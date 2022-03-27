@@ -39,7 +39,7 @@ spec:
     {{ $ingress_annotations := .Values.network.ingress_annotations }}
     {{ $length := len $ingress_annotations }}
     {{ if eq $length 0  }}
-    annoations: []
+    annotations: []
     {{ else }}
     annotations: {{ range $key,$value := $ingress_annotations }}
     - name: {{ $key }}
