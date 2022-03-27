@@ -8,8 +8,7 @@ network:
   createIngressCertificate: true
   ingress_type: nginx
   ingress_certificate: ou-tls-certificate
-  ingress_annotations:
-    kubernetes.io/ingress.class: nginx
+  ingress_annotations: {}
   istio:
     selectors:
       istio: ingressgateway
