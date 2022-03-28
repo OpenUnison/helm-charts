@@ -2,5 +2,5 @@ apiVersion: v2
 name: orchestra-login-azuread
 description: Creates OpenUnison objects for loading groups from AzureAD
 type: application
-version: 1.0.0
+version: 1.0.1
 appVersion: "1.0.29"
