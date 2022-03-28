@@ -25,6 +25,7 @@ spec:
 
           // Load the user from AzureAD by their UserPrincipalName (user@domain)
           var upn = ac.getAuthInfo().getAttribs().get("uid").getValues().get(0);
+          System.out.println("User Principal Name :'" + upn + "'");
           var azuread = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget("azuread");
           var userFromAzureAD = azuread.findUser(upn,new HashMap());
 
