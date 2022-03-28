@@ -31,4 +31,3 @@ spec:
     timeout: 1
     scope: -1
     cookiesEnabled: false
-    keyAlias: session-unison
