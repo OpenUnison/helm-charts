@@ -24,7 +24,8 @@ spec:
           var ac = request.getSession().getAttribute(ProxyConstants.AUTH_CTL);
 
           // Load the user from AzureAD by their UserPrincipalName (user@domain)
-          var upn = ac.getAuthInfo().getAttribs().get("uid").getValues().get(0);
+          var upn = ac.getAuthInfo().getAttribs().get("{{ .Values.azure.uid_attribute_name }}").getValues().get(0);
+          
           var azuread = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget("azuread");
           var userFromAzureAD = azuread.findUser(upn,new HashMap());
 
