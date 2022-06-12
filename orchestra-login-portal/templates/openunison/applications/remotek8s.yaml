@@ -1,9 +1,8 @@
-{{ if and .Values.openunison.enable_provisioning .Values.openunison.enable_activemq }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Application
 metadata:
-  name: activemq
+  name: remotek8s
   namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/name: openunison
@@ -12,26 +11,29 @@ metadata:
     app.kubernetes.io/part-of: openunison
 spec:
   azTimeoutMillis: 3000
-  isApp: true
+  isApp: false
   urls:
   - hosts:
     - "#[OU_HOST]"
-    filterChain: 
-    - className: com.tremolosecurity.proxy.filters.HideCookie
-      params: {}
-    uri: "/admin"
-    proxyTo: https://amq.{{ .Release.Namespace }}.svc:8162${fullURI}
-    authChain: login-service
-    overrideHost: true
-    overrideReferer: true
+    filterChain: []
+    uri: "/auth/idp/remotek8s"
     azRules:
-    - scope: filter
-      constraint: "(groups=administrators{{ .Values.openunison.naas.groups.external.suffix }})"
-    - scope: filter
-      constraint: "(groups=administrators{{ .Values.openunison.naas.groups.internal.suffix }})"
-    results: 
+    - scope: dn
+      constraint: ou=doesnotexist
+    results:
       azFail: default-login-failure
       auFail: default-login-failure
+    idp:
+      className: com.tremolosecurity.idp.providers.OpenIDConnectIdP
+      params:
+        jwtSigningKey: "unison-saml2-rp-sig"
+      mappings:
+        strict: true
+        map:
+        - targetAttributeName: sub
+          targetAttributeSource: sub
+          sourceType: user
+      trusts: []
   cookieConfig:
     sessionCookieName: tremolosession
     domain: "#[OU_HOST]"
@@ -42,4 +44,3 @@ spec:
     timeout: {{ .Values.network.session_inactivity_timeout_seconds }}
     scope: -1
     cookiesEnabled: true
-{{ end }}

@@ -9,10 +9,10 @@ spec:
   className: com.tremolosecurity.unison.openshiftv3.OpenShiftTarget
   params:
   - name: url
-    value: {{ .Values.cluster.management.target.url }}
+    value: https://{{ .Values.cluster.management.target.url }}
   - name: useToken
     value: {{ .Values.cluster.management.target.useToken | quote }}
-  {{ if .Values.cluster.management.target.certificate }}
+  {{ if .Values.cluster.management.target.base64_certificate }}
   - name: certificate
     value: {{ .Values.cluster.management.target.base64_certificate | quote }}
   {{ end }}
@@ -21,9 +21,9 @@ spec:
   - name: oidcIdp
     value: remotek8s
   - name: oidcSub
-    value: openunison
+    value: openunison-control-plane
   - name: oidcAudience
-    value: kubernetes
+    value: https://{{ .Values.cluster.management.target.url }}/
   - name: label
     value: {{ .Values.cluster.label }}
   {{ if .Values.cluster.management.target.gitUrl }}

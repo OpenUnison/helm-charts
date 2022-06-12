@@ -21,6 +21,7 @@ spec:
     {{ if and (eq .Values.enable_impersonation true) (eq .Values.impersonation.use_jetstack false ) }}
     - {{ .Values.network.api_server_host }}
     {{ end }}
+    
     port:
       name: http
       number: 80

@@ -1,0 +1,16 @@
+{{ if .Values.cluster.external_group_name }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: GroupMetaData
+metadata:
+  name: external-administrators-{{ .Values.cluster.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-groupmetadata
+    app.kubernetes.io/part-of: openunison
+spec:
+  groupName: k8s-cluster-k8s-{{ .Values.cluster.name }}-administrators{{ .Values.cluster.external_group_name_suffix }}
+  externalName: {{ .Values.cluster.external_group_name }}
+{{ end }}

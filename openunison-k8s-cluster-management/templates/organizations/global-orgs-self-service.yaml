@@ -45,4 +45,28 @@ spec:
   showInReports: false
   showInRequestAccess: true
   uuid: 441a2bf1-3e47-4d40-a994-99faa15f997a
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: openunison-internal-management
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-orgs
+    app.kubernetes.io/part-of: openunison
+spec:
+  label: "OpenUnison Internal Management Workflows"
+  azRules:
+  - scope: group
+    constraint: cn=administrators{{ .Values.openunison.naas.groups.external.suffix }},ou=groups,ou=shadow,o=Tremolo
+  - scope: group  
+    constraint: cn=administrators{{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
+  description: "Workflows that can be run by an administrator for internal tasks"
+  parent: B158BD40-0C1B-11E3-8FFD-0800200C9A66
+  showInPortal: false
+  showInReports: false
+  showInRequestAccess: true
+  uuid: ca5ad0bb-b207-41ad-93e4-cffab65dd37c
 {{ end }}

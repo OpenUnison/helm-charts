@@ -25,6 +25,9 @@ spec:
         app: amq-{{ .Release.Name  }}
         operated-by: openunison-operator
     spec:
+      securityContext:
+        fsGroup: 400
+
       containers:
       - env:
         - name: ACTIVEMQ_DEBUG_OPTS

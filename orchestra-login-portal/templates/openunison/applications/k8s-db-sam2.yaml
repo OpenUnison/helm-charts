@@ -20,6 +20,20 @@ spec:
     filterChain: []
     uri: "/auth/idp/k8sdb-saml2"
     azRules:
+    {{ if .Values.openunison.enable_provisioning }}
+    {{ if .Values.openunison.naas.groups.external.enabled }}
+    - constraint: (groups=k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.external.suffix }})
+      scope: filter
+    {{ end }}
+    {{ if .Values.openunison.naas.groups.internal.enabled }}
+    - constraint: (groups=k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }})
+      scope: filter
+    {{ end }}
+    - constraint: (groups=k8s-namespace-administrators-k8s-*)
+      scope: filter
+    - constraint: (groups=k8s-namespace-viewer-k8s-*)
+      scope: filter
+    {{ else }}
     {{ $length := len .Values.openunison.az_groups }}
     {{ if eq $length 0 }}
     - scope: dn
@@ -28,6 +42,7 @@ spec:
     {{ range $az_group := .Values.openunison.az_groups }}
     - scope: filter
       constraint: (groups={{ $az_group }})
+    {{ end }}
     {{ end }}
     {{ end }}
     results:
