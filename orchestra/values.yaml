@@ -120,6 +120,8 @@ openunison:
   enable_activemq: true
   precheck:
     image: docker.io/tremolosecurity/python3
+  management_proxy:
+    enabled: false
   queue:
     max_producers: 2
     connection_factory: com.tremolosecurity.provisioning.amq.AmqSingleKeyProvider
