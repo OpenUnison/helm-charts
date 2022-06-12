@@ -112,6 +112,8 @@ openunison:
   precheck:
     image: docker.io/tremolosecurity/python3
   use_standard_jit_workflow: true
+  management_proxy:
+    enabled: false
   naas:
     forms:
       new_namespace:
