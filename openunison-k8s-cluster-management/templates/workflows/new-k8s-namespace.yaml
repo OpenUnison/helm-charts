@@ -20,6 +20,9 @@ spec:
                {{ if .Values.openunison.naas.groups.external.enabled }}
                - adminGroup
                - viewerGroup
+               {{ if .Values.openunison.naas.groups.internal.enabled }}
+               - enableInternal
+               {{ end }}
                {{ end }}
                keepInUser: "false"
 
@@ -31,6 +34,20 @@ spec:
                - givenName
                - sn
                - mail
+
+          {{ if not .Values.openunison.naas.groups.external.enabled }}
+           - taskType: addAttribute
+             name: enableInternal
+             value: enabled
+             addToRequest: true
+          {{ else }}
+          {{ if not .Values.openunison.naas.groups.internal.enabled }}
+           - taskType: addAttribute
+             name: enableInternal
+             value: disabled
+             addToRequest: true
+          {{ end }}
+          {{ end }}
 
            - taskType: customTask
              className: com.tremolosecurity.provisioning.tasks.CheckForGit
@@ -218,7 +235,7 @@ spec:
                       name: "$nameSpace$"
                       labels:
                         name: "$nameSpace$"
-                        tremolo.io/request-access: enabled
+                        tremolo.io/request-access: $enableInternal$
                       annotations:
                         tremolo.io/managedByGit: "$useGit$"
                         $gitUrlAnnotation$

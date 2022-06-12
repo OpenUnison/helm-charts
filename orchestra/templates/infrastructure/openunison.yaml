@@ -89,6 +89,9 @@ spec:
               {{ if eq .Values.enable_impersonation true }}
               - {{ .Values.network.api_server_host }}
               {{ end }} 
+              {{ if and (.Values.openunison.management_proxy) (eq .Values.openunison.management_proxy.enabled true)  }}
+              - {{ .Values.openunison.management_proxy.host }}
+              {{ end }}
           import_into_ks: certificate
           name: unison-ca
           tls_secret_name: ou-tls-certificate
@@ -219,6 +222,14 @@ spec:
       value: {{ .Values.smtp.from }}
     - name: SMTP_TLS
       value: {{ .Values.smtp.tls | quote }}
+    - name: "openunison.naas.external"
+      value: "{{ .Values.openunison.naas.groups.external.enabled }}"
+    - name: "openunison.naas.internal"
+      value: "{{ .Values.openunison.naas.groups.internal.enabled }}"
+    - name: "openunison.naas.external-suffix"
+      value: "{{ .Values.openunison.naas.groups.external.suffix }}"
+    - name: "openunison.naas.internal-suffix"
+      value: "{{ .Values.openunison.naas.groups.internal.suffix }}"
 {{ else }}
     - name: OPENUNISON_PROVISIONING_ENABLED
       value: "false"

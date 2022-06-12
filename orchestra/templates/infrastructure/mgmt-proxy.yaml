@@ -1,0 +1,310 @@
+{{ if and (.Values.openunison.management_proxy) (eq .Values.openunison.management_proxy.enabled true)  }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  creationTimestamp:
+  name: kube-management-proxy-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: kube-management-proxy
+    app.kubernetes.io/part-of: openunison
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: impersonator-kube-management-proxy-{{ .Release.Namespace }}-{{ .Release.Name }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: kube-management-proxy
+    app.kubernetes.io/part-of: openunison
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - users
+  verbs:
+  - impersonate
+  resourceNames:
+  - openunison-control-plane
+- apiGroups:
+  - ""
+  resources:
+  - groups
+  verbs:
+  - impersonate
+  resourceNames:
+  - "system:authenticated"
+- apiGroups:
+  - "authentication.k8s.io"
+  resources:
+  - "userextras/scopes"
+  - "userextras/remote-client-ip"
+  - "tokenreviews"
+  # to support end user impersonation
+  - "userextras/originaluser.jetstack.io-user"
+  - "userextras/originaluser.jetstack.io-groups"
+  - "userextras/originaluser.jetstack.io-extra"
+  verbs:
+  - "create"
+  - "impersonate"
+- apiGroups: 
+  - "authorization.k8s.io"
+  resources:
+  - "subjectaccessreviews"
+  verbs:
+  - "create"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: impersonator-kube-management-proxy-{{ .Release.Namespace }}-{{ .Release.Name }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: kube-management-proxy
+    app.kubernetes.io/part-of: openunison
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: impersonator-kube-management-proxy-{{ .Release.Namespace }}-{{ .Release.Name }}
+subjects:
+- kind: ServiceAccount
+  name: kube-management-proxy-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: admin-kube-management-proxy-{{ .Release.Namespace }}-{{ .Release.Name }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: kube-management-proxy
+    app.kubernetes.io/part-of: openunison
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: k8s-cluster-k8s-sat2.tremolo.lan-administrators
+{{ if .Values.openunison.management_proxy.external_admin_group  }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: external-admin-{{ .Release.Namespace }}-{{ .Release.Name }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: kube-management-proxy
+    app.kubernetes.io/part-of: openunison
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- apiGroup: rbac.authorization.k8s.io 
+  kind: Group
+  name: k8s-cluster-k8s-{{ .Values.k8s_cluster_name }}-administrators{{ .Values.openunison.management_proxy.external_suffix }}
+{{ end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: kube-management-proxy-{{ .Release.Name }}
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: kube-management-proxy
+    app.kubernetes.io/part-of: openunison
+  name: kube-management-proxy-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  {{ if eq .Values.network.ingress_type "traefik" }}
+  {{ if .Values.network.traefik.secure }} 
+  annotations:
+    traefik.ingress.kubernetes.io/service.serversscheme: https
+  {{ end }}
+  {{ end }}
+spec:
+  replicas: {{ .Values.openunison.replicas }}
+  selector:
+    matchLabels:
+      app: kube-management-proxy-{{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: kube-management-proxy-{{ .Release.Name }}
+        app.kubernetes.io/name: openunison
+        app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+        app.kubernetes.io/component: kube-management-proxy
+        app.kubernetes.io/part-of: openunison
+    spec:
+      serviceAccountName: kube-management-proxy-{{ .Release.Name }}
+      containers:
+      - image: {{ .Values.impersonation.jetstack_oidc_proxy_image}}
+        ports:
+        - containerPort: 8443
+        - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        name: kube-management-proxy-{{ .Release.Name }}
+        command: ["kube-oidc-proxy"]
+        args:
+          - "--secure-port=8443"
+          - "--tls-cert-file=/etc/oidc/tls/crt.pem"
+          - "--tls-private-key-file=/etc/oidc/tls/key.pem"
+          - "--oidc-client-id=https://{{ .Values.openunison.management_proxy.host }}/"
+          - "--oidc-issuer-url={{ .Values.openunison.management_proxy.remote.issuer }}"
+          - "--oidc-username-claim=sub"
+          - "--oidc-groups-claim=groups"
+          {{ if .Values.openunison.management_proxy.remote.cert_alias }}
+          - "--oidc-ca-file=/etc/oidc/oidc-ca.pem"
+          {{ else }}
+          - "--oidc-ca-file=/etc/ssl/certs/ca-certificates.crt"
+          {{ end }}
+        imagePullPolicy: Always
+        securityContext:
+          runAsUser: 10001
+          runAsGroup: 10001
+          allowPrivilegeEscalation: false
+        volumeMounts:
+          {{ if .Values.openunison.management_proxy.remote.cert_alias }}
+          - name: kube-oidc-proxy-config
+            mountPath: /etc/oidc
+            readOnly: true
+          {{ end }}
+          - name: kube-oidc-proxy-tls
+            mountPath: /etc/oidc/tls
+            readOnly: true
+          {{ if .Values.services.enable_tokenrequest | default false }}
+          - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+            name: ou-token
+          {{ end }}
+        {{ if .Values.openunison.management_proxy.resources }}
+        resources:
+          {{ if .Values.openunison.management_proxy.resources.requests }}
+          requests:
+            {{ if .Values.openunison.management_proxy.resources.requests.memory }}
+            memory: {{ quote .Values.openunison.management_proxy.resources.requests.memory }}
+            {{ end }}
+            {{ if .Values.openunison.management_proxy.resources.requests.cpu }}
+            cpu: {{ quote .Values.openunison.management_proxy.resources.requests.cpu }}
+            {{ end }}
+          {{ end }}
+          {{ if .Values.openunison.management_proxy.resources.limits }}
+          limits:
+            {{ if .Values.openunison.management_proxy.resources.limits.memory }}
+            memory: {{ quote .Values.openunison.management_proxy.resources.limits.memory }}
+            {{ end }}
+            {{ if .Values.openunison.management_proxy.resources.limits.cpu }}
+            cpu: {{ quote .Values.openunison.management_proxy.resources.limits.cpu }}
+            {{ end }}
+          {{ end }}
+        {{ end }}
+      volumes:
+        {{ if .Values.openunison.management_proxy.remote.cert_alias }}
+        - name: kube-oidc-proxy-config
+          secret:
+            secretName: {{ .Values.openunison.management_proxy.remote.cert_alias }}
+            items:
+            - key: tls.crt
+              path: oidc-ca.pem
+        {{ end }}
+        {{ if .Values.services.enable_tokenrequest | default false }}
+        - name: ou-token
+          projected:
+            defaultMode: 420
+            sources:
+            - serviceAccountToken:
+                audience: {{ .Values.services.token_request_audience | default "https://kubernetes.default.svc.cluster.local" }}
+                expirationSeconds: {{ .Values.services.token_request_expiration_seconds | default 60000 }}
+                path: "token"
+            - configMap:
+                items:
+                - key: "ca.crt"
+                  path: "ca.crt"
+                name: "kube-cacrt"
+            - configMap:
+                items:
+                - key: namespace
+                  path: namespace
+                name: namespace-holder
+        {{ end }}
+        - name: kube-oidc-proxy-tls
+          secret:
+            secretName: unison-tls
+            items:
+            - key: tls.crt
+              path: crt.pem
+            - key: tls.key
+              path: key.pem
+      {{ $length := len .Values.services.node_selectors }}
+      {{ if eq $length 0  }}
+      nodeSelector: {}
+      {{ else }}
+      nodeSelector: {{ range $key,$value := .Values.services.node_selectors }}
+        {{ $key }}: {{ quote $value }}
+      {{ end }}
+      {{ end }}
+
+      {{ if .Values.services.pullSecret }}
+      imagePullSecrets:
+      - name: {{ .Values.services.pullSecret }}
+      {{ end }}
+      automountServiceAccountToken: {{ not (.Values.services.enable_tokenrequest | default false) }}
+{{ if .Values.openunison.management_proxy.remote.cert_alias }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Values.openunison.management_proxy.remote.cert_alias }}
+  namespace: {{ .Release.Namespace }}
+type: kubernetes.io/tls
+data:
+  {{ $cert_alias := .Values.openunison.management_proxy.remote.cert_alias }}
+  {{ range $cert := .Values.trusted_certs }}
+  {{ if eq $cert_alias $cert.name }}
+  tls.crt: {{ $cert.pem_b64 }}
+  {{ end }}
+  tls.key: ""
+  {{ end }}
+{{ end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: kube-management-proxy-{{ .Release.Name }}
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: kube-management-proxy
+    app.kubernetes.io/part-of: openunison
+  name: kube-management-proxy-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  {{ if eq .Values.network.ingress_type "traefik" }}
+  annotations:
+    {{ if .Values.network.traefik.secure }} 
+    traefik.ingress.kubernetes.io/service.serversscheme: https
+    {{ end }}
+  {{ end }}
+spec:
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 8443
+    name: https-kube-management-proxy
+  selector:
+    app: kube-management-proxy-{{ .Release.Name }}
+  type: "{{ .Values.network.service_type | default "ClusterIP" }}"
+{{ end }}

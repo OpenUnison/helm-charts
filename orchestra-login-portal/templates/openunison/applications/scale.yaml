@@ -95,7 +95,7 @@ spec:
         uidAttributeName: uid
         roleAttribute: groups
         
-        showPortalOrgs: "#[SHOW_PORTAL_ORGS:false]"
+        showPortalOrgs: "{{ .Values.openunison.non_secret_data.SHOW_PORTAL_ORGS | default "false"  }}"
         logoutURL: "/logout"
         
         enableApprovals: {{ .Values.openunison.enable_provisioning | quote }}

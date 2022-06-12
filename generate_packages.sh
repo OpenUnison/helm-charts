@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export REPO=""
+export REPO="$1"
 
 rm -rf /tmp/helm
 mkdir /tmp/helm

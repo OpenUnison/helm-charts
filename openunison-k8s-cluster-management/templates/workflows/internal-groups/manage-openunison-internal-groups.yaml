@@ -17,7 +17,7 @@ spec:
     - name: target
       value: jitdb
     - name: sql
-      value: SELECT name,description FROM localGroups where name like '%{{ .Values.openunison.naas.groups.internal.suffix }}'
+      value: SELECT name,description FROM localGroups where name like '%{{ .Values.openunison.naas.groups.internal.suffix }}' 
   tasks: |-
            - taskType: customTask
              className: com.tremolosecurity.provisioning.customTasks.LoadAttributes

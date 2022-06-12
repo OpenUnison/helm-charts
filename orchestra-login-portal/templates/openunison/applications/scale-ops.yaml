@@ -29,7 +29,7 @@ spec:
     overrideReferer: true
     azRules:
     - scope: filter
-      constraint: "(groups=administrators)"
+      constraint: "(groups=administrators{{ .Values.openunison.naas.groups.external.suffix }})"
     - scope: filter
       constraint: "(groups=administrators{{ .Values.openunison.naas.groups.internal.suffix }})"
     results: 
@@ -54,11 +54,11 @@ spec:
         scaleMainURI: /scale/main
         homeUrl: /scale/
         bases:
-        - OopenUnison=o=Tremolo
+        - OpenUnison=o=Tremolo
     uri: /ops/ops
     azRules:
     - scope: filter
-      constraint: (groups=administrators)
+      constraint: (groups=administrators{{ .Values.openunison.naas.groups.external.suffix }})
     - scope: filter
       constraint: "(groups=administrators{{ .Values.openunison.naas.groups.internal.suffix }})"
     authChain: login-service

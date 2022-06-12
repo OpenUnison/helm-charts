@@ -1,12 +1,12 @@
-{{ if and (.Values.crd.deploy) (eq .Values.crd.betas false) }}
 ---
+# Source: openunison-operator/templates/openunison-crd.yaml
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: users.openunison.tremolo.io
   labels:
     app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/instance: openunison-openunison
     app.kubernetes.io/component: crd
     app.kubernetes.io/part-of: openunison
 spec:
@@ -46,13 +46,14 @@ spec:
     shortNames:
     - usr
 ---
+# Source: openunison-operator/templates/openunison-crd.yaml
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: oidc-sessions.openunison.tremolo.io
   labels:
     app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/instance: openunison-openunison
     app.kubernetes.io/component: crd
     app.kubernetes.io/part-of: openunison
 spec:
@@ -91,13 +92,14 @@ spec:
     shortNames:
     - oidc
 ---
+# Source: openunison-operator/templates/openunison-crd.yaml
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: openunisons.openunison.tremolo.io
   labels:
     app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/instance: openunison-openunison
     app.kubernetes.io/component: crd
     app.kubernetes.io/part-of: openunison
 spec:
@@ -2164,13 +2166,14 @@ spec:
     shortNames:
     - ou
 ---
+# Source: openunison-operator/templates/openunison-crd.yaml
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: trusts.openunison.tremolo.io
   labels:
     app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/instance: openunison-openunison
     app.kubernetes.io/component: crd
     app.kubernetes.io/part-of: openunison
 spec:
@@ -2238,15 +2241,16 @@ spec:
     singular: trust
     kind: Trust
     shortNames:
-    - trust    
+    - trust
 ---
+# Source: openunison-operator/templates/openunison-crd.yaml
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: portalurls.openunison.tremolo.io
   labels:
     app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/instance: openunison-openunison
     app.kubernetes.io/component: crd
     app.kubernetes.io/part-of: openunison
 spec:
@@ -2307,13 +2311,14 @@ spec:
     shortNames:
     - portalurl
 ---
+# Source: openunison-operator/templates/openunison-crd.yaml
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: orgs.openunison.tremolo.io
   labels:
     app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/instance: openunison-openunison
     app.kubernetes.io/component: crd
     app.kubernetes.io/part-of: openunison
 spec:
@@ -2383,13 +2388,14 @@ spec:
     shortNames:
     - orgs
 ---
+# Source: openunison-operator/templates/openunison-crd.yaml
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: targets.openunison.tremolo.io
   labels:
     app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/instance: openunison-openunison
     app.kubernetes.io/component: crd
     app.kubernetes.io/part-of: openunison
 spec:
@@ -2474,15 +2480,16 @@ spec:
     singular: target
     kind: Target
     shortNames:
-    - target     
+    - target
 ---
+# Source: openunison-operator/templates/openunison-crd.yaml
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: workflows.openunison.tremolo.io
   labels:
     app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/instance: openunison-openunison
     app.kubernetes.io/component: crd
     app.kubernetes.io/part-of: openunison
 spec:
@@ -2543,13 +2550,14 @@ spec:
     shortNames:
     - workflow
 ---
+# Source: openunison-operator/templates/openunison-crd.yaml
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: reports.openunison.tremolo.io
   labels:
     app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/instance: openunison-openunison
     app.kubernetes.io/component: crd
     app.kubernetes.io/part-of: openunison
 spec:
@@ -2615,13 +2623,14 @@ spec:
     shortNames:
     - report
 ---
+# Source: openunison-operator/templates/openunison-crd.yaml
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: oujobs.openunison.tremolo.io
   labels:
     app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/instance: openunison-openunison
     app.kubernetes.io/component: crd
     app.kubernetes.io/part-of: openunison
 spec:
@@ -2695,13 +2704,14 @@ spec:
     shortNames:
     - oujob
 ---
+# Source: openunison-operator/templates/openunison-crd.yaml
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: messagelisteners.openunison.tremolo.io
   labels:
     app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/instance: openunison-openunison
     app.kubernetes.io/component: crd
     app.kubernetes.io/part-of: openunison
 spec:
@@ -2754,13 +2764,14 @@ spec:
     shortNames:
     - msglstnr
 ---
+# Source: openunison-operator/templates/openunison-crd.yaml
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: resultgroups.openunison.tremolo.io
   labels:
     app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/instance: openunison-openunison
     app.kubernetes.io/component: crd
     app.kubernetes.io/part-of: openunison
 spec:
@@ -2814,13 +2825,14 @@ spec:
     shortNames:
     - resgrp
 ---
+# Source: openunison-operator/templates/openunison-crd.yaml
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: customazs.openunison.tremolo.io
   labels:
     app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/instance: openunison-openunison
     app.kubernetes.io/component: crd
     app.kubernetes.io/part-of: openunison
 spec:
@@ -2852,13 +2864,14 @@ spec:
     shortNames:
     - caz
 ---
+# Source: openunison-operator/templates/openunison-crd.yaml
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: authmechs.openunison.tremolo.io
   labels:
     app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/instance: openunison-openunison
     app.kubernetes.io/component: crd
     app.kubernetes.io/part-of: openunison
 spec:
@@ -2908,13 +2921,14 @@ spec:
     shortNames:
     - authm
 ---
+# Source: openunison-operator/templates/openunison-crd.yaml
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: authchains.openunison.tremolo.io
   labels:
     app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/instance: openunison-openunison
     app.kubernetes.io/component: crd
     app.kubernetes.io/part-of: openunison
 spec:
@@ -3003,13 +3017,14 @@ spec:
     shortNames:
     - authc
 ---
+# Source: openunison-operator/templates/openunison-crd.yaml
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: applications.openunison.tremolo.io
   labels:
     app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/instance: openunison-openunison
     app.kubernetes.io/component: crd
     app.kubernetes.io/part-of: openunison
 spec:
@@ -3262,13 +3277,14 @@ spec:
     shortNames:
     - app
 ---
+# Source: openunison-operator/templates/openunison-crd.yaml
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: groupmetadatas.openunison.tremolo.io
   labels:
     app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/instance: openunison-openunison
     app.kubernetes.io/component: crd
     app.kubernetes.io/part-of: openunison
 spec:
@@ -3299,13 +3315,14 @@ spec:
     shortNames:
     - gmd
 ---
+# Source: openunison-operator/templates/openunison-crd.yaml
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: javascriptmappings.openunison.tremolo.io
   labels:
     app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/instance: openunison-openunison
     app.kubernetes.io/component: crd
     app.kubernetes.io/part-of: openunison
 spec:
@@ -3332,4 +3349,3 @@ spec:
     kind: JavaScriptMapping
     shortNames:
     - jsm
-{{ end }}

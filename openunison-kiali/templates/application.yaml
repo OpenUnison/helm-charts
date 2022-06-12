@@ -11,6 +11,7 @@ spec:
   - hosts:
     - "#[OU_HOST]"
     filterChain:
+    - className: com.tremolosecurity.proxy.filters.HideCookie
     - className: com.tremolosecurity.proxy.filters.SetNoCacheHeaders
     {{ if .Values.enable_impersonation }}
     - className: com.tremolosecurity.proxy.filters.K8sInjectImpersonation

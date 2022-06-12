@@ -52,6 +52,18 @@ spec:
         path: "/"
         pathType: Prefix
   {{ end }}
+  {{ if and (.Values.openunison.management_proxy) (eq .Values.openunison.management_proxy.enabled true)  }}
+  - host: {{ .Values.openunison.management_proxy.host }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: kube-management-proxy-{{ .Release.Name }}
+            port:
+              number: 443
+        path: "/"
+        pathType: Prefix
+  {{ end }}
   tls:
   - hosts:
     - {{ .Values.network.openunison_host }}
@@ -59,7 +71,8 @@ spec:
     {{ if eq .Values.enable_impersonation true }}
     - {{ .Values.network.api_server_host }}
     {{ end }}
+    {{ if and (.Values.openunison.management_proxy) (eq .Values.openunison.management_proxy.enabled true)  }}
+    - {{ .Values.openunison.management_proxy.host }}
+    {{ end }}
     secretName: ou-tls-certificate
-
-
 {{ end }}

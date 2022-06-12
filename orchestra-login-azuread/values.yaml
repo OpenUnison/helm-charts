@@ -1,2 +1,3 @@
 azure:
   uid_attribute_name: oid
+  debug: false

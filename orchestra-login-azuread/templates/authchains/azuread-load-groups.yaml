@@ -23,6 +23,12 @@ spec:
 
           var ac = request.getSession().getAttribute(ProxyConstants.AUTH_CTL);
 
+          {{ if .Values.azure.debug }}
+          for (let key of ac.getAuthInfo().getAttribs().keySet()) {
+            System.out.println(key + "=" + ac.getAuthInfo().getAttribs().get(key).getValues());
+          }
+          {{ end }}
+          
           // Load the user from AzureAD by their UserPrincipalName (user@domain)
           var upn = ac.getAuthInfo().getAttribs().get("{{ .Values.azure.uid_attribute_name }}").getValues().get(0);
           
