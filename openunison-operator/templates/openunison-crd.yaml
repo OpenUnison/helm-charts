@@ -3015,9 +3015,262 @@ metadata:
 spec:
   group: openunison.tremolo.io
   versions:
-    - name: v1
+    - name: v2
       served: true
       storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          description: Contains the configuration for a web application, identity provider, or API
+          properties:
+            spec:
+              type: object
+              properties:
+                
+                azTimeoutMillis:
+                  type: integer
+                  description: Number of milliseconds authorization decisions should be cached for
+                isApp:
+                  type: boolean
+                  description: If true, the application is assumed to be a reverse proxy or local API.  If false, the application is an identity provider
+                urls:
+                  type: array
+                  description: List of URLs that make up an application
+                  items:
+                    type: object
+                    properties:
+                      hosts:
+                        type: array
+                        description: List of host names that this URL is valid for.  May be `*` for all hosts
+                        items:
+                          type: string
+                      filterChain:
+                        type: array
+                        description: List of filters that can manipulate request and response headers
+                        items:
+                          type: object
+                          properties:
+                            className:
+                              type: string
+                              description: Implementation of `com.tremolosecurity.proxy.filter.HttpFilter`
+                            params:
+                              type: object
+                              description: List of configuration parameters.  Parameters may be a `string` or an `array` of `string`
+                              additionalProperties: true
+                            secretParams:
+                              type: array
+                              description: Load parameters directly from Kubernetes `Secret` objects
+                              items:
+                                type: object
+                                properties:
+                                  name:
+                                    type: string
+                                    description: The name of the filter parameter
+                                  secretName:
+                                    type: string
+                                    description: The name of the Kubernetes `Secret`
+                                  secretKey:
+                                    type: string 
+                                    description: The name of the key in the `data` section of the `Secret`  
+                      proxyTo:
+                        type: string
+                        description: "**Optional** If isApp is true, determines the URL to forward the request to.  typically uses the form `https://host:port${fullURI}` where `${fullURI}` is replaced with the path section of the requested URL"
+                      proxyConfiguration:
+                        type: object
+                        description: Provides timeout configurations for proxying to the `proxyTo` URL.  If omited, there are no timeouts
+                        properties:
+                          connectionTimeoutMillis:
+                            type: integer
+                            description: The number of milliseconds an attempted connection will wait until timing out.  Defaults to `0`, which is no timeout
+                          requestTimeoutMillis:
+                            type: integer
+                            description: The number of milliseconds in an individual request will wait until timing out.  Defaults to `0`, which is no timeout
+                          socketTimeoutMillis:
+                            type: integer
+                            description: The number of milliseconds a socket can remain open without receiving any data.  Defaults to `0`, which is no timeout
+
+                      uri:
+                        type: string
+                        description: The path of the URL, the portian after the host that this URL will match on
+                      regex:
+                        type: boolean
+                        desscription: if true, the `uri` is interpreted as a regular expression
+                      authChain:
+                        type: string
+                        description:  The name of an `AuthenticationChain` that will be used to authenticate access to this URL
+                      overrideHost:
+                        type: boolean
+                        description: If true, the the proxied request will include the original request's `HOST` header
+                      overrideReferer:
+                        type: boolean
+                        description: If true, and referals' hosts are overriden with the orginal request's `HOST` header
+                      results:
+                        type: object
+                        description: Actions that will triger as the result to an authentication or authorization event
+                        properties:
+                          auSuccess:
+                            type: string
+                            description: The name of a `ResultGroup` that will be executed when a user successfully authenticates to this URL
+                          auFail:
+                            type: string
+                            description: The name of a `ResultGroup` that will be executed when a user fails to authenticate to this URL
+                          azSuccess:
+                            type: string
+                            description: The name of a `ResultGroup` that will be executed when a user is successfully authorized for this URL
+                          azFail:
+                            type: string
+                            description: The name of a `ResultGroup` that will be executed when a user is failed to be authorized for this URL
+                      azRules:
+                        type: array
+                        description:  "List of rules used to authorize access.  Authorization succeeds if **ANY** of these rules pass"
+                        items:
+                          type: object
+                          properties:
+                            scope:
+                              type: string
+                              enum:
+                              - group
+                              - dynamicGroup
+                              - dn
+                              - custom
+                              - filter
+                              description: |-
+                                One of:
+                                - `group` - The DN of a group the suer must be a member of in OpenUnison's virtual directory
+                                - `dynamicGroup` - The DN of an LDAP dynamic group the suer must be a member of in OpenUnison's virtual directory
+                                - `dn` - The DN of an area of the virtual directory where all users under that DN are authorized
+                                - `custom` - The name of a `CustomAuthorization`.  Can be followed by a `!` with parameters.  For instance `SomeCustomAZ!param1!param2` will call the custom authorization `SomeCustomAZ` with the parameters `param1` and `param2`
+                                - `filter` - An LDAP filter that will be applied to a logged in user
+                            constraint:
+                              type: string
+                              description:  How to enforce this rule based on the `scope`
+                      idp:
+                        type: object
+                        description: Configuration for an `Application` that acts as an identity provider
+                        properties:
+                          className:
+                            type: string
+                            description: Implementation of `com.tremolosecurity.idp.server.IdentityProvider`
+                          params:
+                            type: object
+                            description: properties to be passed to the identity provider.  Values can be either a `string` or an array of `string`
+                            additionalProperties: true
+                          secretParams:
+                            type: array
+                            description: Load parameters directly from Kubernetes `Secret` objects
+                            items:
+                              type: object
+                              properties:
+                                name:
+                                  type: string
+                                  description: The name of the identity provider parameter
+                                secretName:
+                                  type: string
+                                  description: The name of the Kubernetes `Secret`
+                                secretKey:
+                                  type: string
+                                  description: The name of the key in the `data` section of the `Secret`    
+                          mappings:
+                            type: object
+                            description: Provides mappings from a user's attributes into an identity provider's assertions
+                            properties:
+                              strict:
+                                type: boolean
+                                description: If true, only mapped attributes will be included in the assertion.  If false, all attributes and mapped attributes are included.
+                              map:
+                                type: array
+                                description: list of mappings
+                                items:
+                                  type: object
+                                  properties:
+                                    targetAttributeName:
+                                      type: string
+                                      description: The name of the attribute as it will appear in the assertion
+                                    targetAttributeSource:
+                                      type: string
+                                      description: |-
+                                        Depends on `sourceType`:
+                                        - `static` - The specific value of the attribute
+                                        - `user` - The name of the attribute from the user to use
+                                        - `composite` - Assemble an attribute from the first values of other attributes and static content.  For instance `${givenName} ${sn}` where `givenName` is `First` and `sn` is `Last` will create the value `First Last`
+                                        - `custom` - Implementation of `com.tremolosecurity.provisioning.mapping.CustomMapping`, parameters can be supplied after a `|` that's comma delimited.  For instance, `com.tremolosecurity.mapping.JavaScriptMapping|k8s,openunison,argocd-groups` Uses the `JavaScriptMapping`, passing the parameters `k8s`, `openunison`, and `argocd-groups` as parameters
+                                    sourceType:
+                                      type: string
+                                      enum:
+                                        - static
+                                        - user
+                                        - custom
+                                        - composite
+                          trusts:
+                            type: array
+                            description: List of trusted clients
+                            items:
+                              type: object
+                              properties:
+                                name:
+                                  type: string
+                                  description: The name of the trust
+                                params:
+                                  description: The parameters to pass the to trust configuration.  Values may be a `string` or an array of `string`
+                                  type: object
+                                  additionalProperties: true  
+                                secretParams:
+                                  type: array
+                                  description: Load parameters directly from Kubernetes `Secret` objects
+                                  items:
+                                    type: object
+                                    properties:
+                                      name:
+                                        type: string
+                                        description: The name of the trust parameter
+                                      secretName:
+                                        type: string
+                                        description: The name of the Kubernetes `Secret`
+                                      secretKey:
+                                        type: string
+                                        description: The name of the key in the `data` section of the `Secret`      
+                cookieConfig:
+                  type: object
+                  description: Determines how an `Application` manages its session via cookies
+                  properties:
+                    sessionCookieName:
+                      type: string
+                      description: Name of the cookie
+                    domain:
+                      type: string
+                      description: The domain the cookie applies to.  Can be `*` to apply to any domain the URLs of the application accept
+                    scope:
+                      type: integer
+                      description: ignore
+                    logoutURI:
+                      type: string
+                      description: The URI, or path in the URL, that triggers the ending of the session
+                    keyAlias:
+                      type: string
+                      description:  The name of the key in OpenUnison's keystore used to encrypt the session cookie
+                    timeout:
+                      type: integer
+                      description: The time, in seconds, that an idle session should be discarded
+                    secure:
+                      type: boolean
+                      description: If true, cookies require an HTTPS connection
+                    httpOnly:
+                      type: boolean
+                      description: If true, cookies are not accessible from javascript
+                    sameSite:
+                      type: string
+                      description: Used to set the `SameSite` option in a cookie.  One of `None`, `Lax`, `Strict`, `Ignore`
+                      enum:
+                      - None
+                      - Lax
+                      - Strict
+                      - Ignore
+                    cookiesEnabled:
+                      type: boolean                   
+                      description: If true, sessions are enabled.  If false (such as for an API), no session is generated or tracked
+    - name: v1
+      served: true
+      storage: false
       schema:
         openAPIV3Schema:
           type: object
