@@ -38,7 +38,7 @@ spec:
         groupAttribute: groups
     {{ end }}
     uri: "/"
-    proxyTo: https://{{ .Values.dashboard.servicename }}.{{ .Values.dashboard.namespace }}.svc${fullURI}
+    proxyTo: https://{{ .Values.dashboard.service_name }}.{{ .Values.dashboard.namespace }}.svc${fullURI}
     {{ if .Values.dashboard.proxy }}
     proxyConfiguration:
       connectionTimeoutMillis: {{ .Values.dashboard.proxy.connectionTimeoutMillis | default 0}}
