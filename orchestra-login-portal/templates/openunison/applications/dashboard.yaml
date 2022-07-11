@@ -1,5 +1,9 @@
 ---
+{{ if .Values.dashboard.proxy }}
+apiVersion: openunison.tremolo.io/v2
+{{ else }}
 apiVersion: openunison.tremolo.io/v1
+{{ end }}
 kind: Application
 metadata:
   name: dashboard
@@ -14,7 +18,7 @@ spec:
   isApp: true
   urls:
   - hosts:
-    - "#[K8S_DASHBOARD_HOST]"
+    - "{{ .Values.network.dashboard_host }}"
     filterChain: 
     - className: com.tremolosecurity.proxy.filters.SetNoCacheHeaders
       params: {}
@@ -34,7 +38,13 @@ spec:
         groupAttribute: groups
     {{ end }}
     uri: "/"
-    proxyTo: https://#[K8S_DASHBOARD_SERVICE:kubernetes-dashboard].#[K8S_DASHBOARD_NAMESPACE:kube-system].svc${fullURI}
+    proxyTo: https://{{ .Values.dashboard.service_name }}.{{ .Values.dashboard.namespace }}.svc${fullURI}
+    {{ if .Values.dashboard.proxy }}
+    proxyConfiguration:
+      connectionTimeoutMillis: {{ .Values.dashboard.proxy.connectionTimeoutMillis | default 0}}
+      requestTimeoutMillis: {{ .Values.dashboard.proxy.requestTimeoutMillis | default 0}}
+      socketTimeoutMillis: {{ .Values.dashboard.proxy.socketTimeoutMillis | default 0}}
+    {{ end }}
     authChain: k8s-db-oidc
     overrideHost: true
     overrideReferer: true
@@ -73,7 +83,7 @@ spec:
       auFail: default-login-failure
     
   - hosts:
-    - "#[K8S_DASHBOARD_HOST]"
+    - "{{ .Values.network.dashboard_host }}"
     filterChain:
     - className: com.tremolosecurity.prelude.filters.StopProcessing
       params: {}
@@ -86,7 +96,7 @@ spec:
       azSuccess: logout
   cookieConfig:
     sessionCookieName: tremolosession
-    domain: "#[K8S_DASHBOARD_HOST]"
+    domain: "{{ .Values.network.dashboard_host }}"
     secure: true
     httpOnly: true
     logoutURI: "/logout"
