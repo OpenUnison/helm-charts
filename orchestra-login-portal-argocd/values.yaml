@@ -134,3 +134,6 @@ openunison:
         admin_group: "CN=openunison-admins,CN=Users,DC=ent2k12,DC=domain,DC=com"
         cluster_admin_group: "CN=k8s_login_ckuster_admins,CN=Users,DC=ent2k12,DC=domain,DC=com"
     reasons: []
+
+crd:
+  deploy: true
