@@ -5,7 +5,7 @@ metadata:
   name: openunison-operator
   namespace: {{ .Release.Namespace }}
   annotations:
-    argocd.argoproj.io/sync-wave: "10"
+    argocd.argoproj.io/sync-wave: "0"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -20,7 +20,7 @@ metadata:
   name: openunison-operator
   namespace: {{ .Release.Namespace }}
   annotations:
-    argocd.argoproj.io/sync-wave: "10"
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
