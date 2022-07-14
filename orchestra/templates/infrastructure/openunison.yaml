@@ -5,6 +5,7 @@ metadata:
   name: {{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
   annotations:
+    argocd.argoproj.io/sync-wave: "20"
     helm-update: {{ now | date "Jan 2 15:04:05 2006 MST" }}
   labels:
     app.kubernetes.io/name: openunison
@@ -2371,6 +2372,8 @@ kind: ConfigMap
 metadata:
   name: api-server-config
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
 data:
   oidc-api-server-flags: |-
                            --oidc-issuer-url=https://{{ .Values.network.openunison_host }}/auth/idp/k8sIdp

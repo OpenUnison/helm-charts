@@ -11,6 +11,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: kube-management-proxy
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -21,6 +23,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: kube-management-proxy
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
 rules:
 - apiGroups:
   - ""
@@ -67,6 +71,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: kube-management-proxy
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -85,6 +91,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: kube-management-proxy
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -104,6 +112,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: kube-management-proxy
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -128,6 +138,7 @@ metadata:
   {{ if eq .Values.network.ingress_type "traefik" }}
   {{ if .Values.network.traefik.secure }} 
   annotations:
+    argocd.argoproj.io/sync-wave: "20"
     traefik.ingress.kubernetes.io/service.serversscheme: https
   {{ end }}
   {{ end }}
@@ -269,6 +280,8 @@ kind: Secret
 metadata:
   name: {{ .Values.openunison.management_proxy.remote.cert_alias }}
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
 type: kubernetes.io/tls
 data:
   {{ $cert_alias := .Values.openunison.management_proxy.remote.cert_alias }}
@@ -290,6 +303,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: kube-management-proxy
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
   name: kube-management-proxy-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
   {{ if eq .Values.network.ingress_type "traefik" }}

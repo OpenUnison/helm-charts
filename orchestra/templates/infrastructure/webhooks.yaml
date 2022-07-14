@@ -16,6 +16,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: webhooks
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
 webhooks:
 - name: "workflows-openunison.tremolo.io"
   rules:

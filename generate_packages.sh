@@ -1,5 +1,8 @@
 #!/bin/bash
 
+
+./generate-argocd.sh
+
 export REPO="$1"
 
 rm -rf /tmp/helm

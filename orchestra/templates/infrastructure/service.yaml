@@ -8,6 +8,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: service
     app.kubernetes.io/part-of: network
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
   name: openunison-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
   {{ if eq .Values.network.ingress_type "traefik" }}

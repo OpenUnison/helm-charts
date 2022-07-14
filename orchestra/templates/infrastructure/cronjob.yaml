@@ -9,6 +9,8 @@ metadata:
     app.kubernetes.io/part-of: openunison
   name: check-certs-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
 spec:
   concurrencyPolicy: Allow
   failedJobsHistoryLimit: 1

@@ -4,6 +4,8 @@ kind: ServiceAccount
 metadata:
   name: openunison-operator
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -17,6 +19,8 @@ metadata:
     app.kubernetes.io/part-of: openunison
   name: openunison-operator
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -50,7 +54,11 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+        {{ if .Values.operator }}
+        image: {{ .Values.operator.image | default "docker.io/tremolosecurity/openunison-k8s-operator" }}
+        {{ else }}
         image: {{ .Values.image | default "docker.io/tremolosecurity/openunison-k8s-operator" }}
+        {{ end }}
         command:
         - java
         - -jar

@@ -8,6 +8,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: rbac
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -20,6 +22,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: html
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   progressDeadlineSeconds: 600
   replicas: {{ .Values.openunison.replicas }}
@@ -155,6 +159,8 @@ metadata:
     app: ouhtml-{{ .Release.Name }}
   name: ouhtml-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   ports:
   - port: 8080

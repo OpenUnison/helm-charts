@@ -12,6 +12,8 @@ metadata:
     app.kubernetes.io/component: openunison-workflows
     app.kubernetes.io/part-of: openunison
     tremolo.io/wf-type: login
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   description: JIT
   inList: false

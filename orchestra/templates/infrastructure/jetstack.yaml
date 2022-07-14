@@ -13,6 +13,7 @@ metadata:
   {{ if eq .Values.network.ingress_type "traefik" }}
   {{ if .Values.network.traefik.secure }} 
   annotations:
+    argocd.argoproj.io/sync-wave: "20"
     traefik.ingress.kubernetes.io/service.serversscheme: https
   {{ end }}
   {{ end }}
