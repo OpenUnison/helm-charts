@@ -137,3 +137,4 @@ openunison:
 
 crd:
   deploy: true
+  betas: false
