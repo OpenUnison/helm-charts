@@ -15,7 +15,13 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "25"
     traefik.ingress.kubernetes.io/service.serversscheme: https
+  {{ else }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
   {{ end }}
+  {{ else }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
   {{ end }}
 spec:
   replicas: {{ .Values.openunison.replicas }}
