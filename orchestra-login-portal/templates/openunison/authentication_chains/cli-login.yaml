@@ -162,6 +162,8 @@ kind: AuthenticationChain
 metadata:
   name: login-service-cli
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   level: 20
   root: o=Tremolo
