@@ -12,7 +12,7 @@ metadata:
   name: amq-{{ .Release.Name  }}
   namespace: {{ .Release.Namespace  }}
   annotations:
-    argocd.argoproj.io/sync-wave: "20"
+    argocd.argoproj.io/sync-wave: "25"
 spec:
   strategy:
     type: Recreate
