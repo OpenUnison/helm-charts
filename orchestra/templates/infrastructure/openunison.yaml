@@ -200,7 +200,11 @@ spec:
 
 {{ if .Values.openunison.enable_provisioning }}
     - name: OPENUNISON_PROVISIONING_ENABLED
+      {{ if .Values.openunison.naas.readOnly }}
+      value: "false"
+      {{ else }}
       value: "true"
+      {{ end }}
     - name: OU_HIBERNATE_DIALECT
       value: {{ .Values.database.hibernate_dialect }}
     - name: OU_QUARTZ_DIALECT

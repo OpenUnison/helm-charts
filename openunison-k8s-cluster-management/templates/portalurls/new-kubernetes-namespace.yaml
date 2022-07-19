@@ -1,3 +1,6 @@
+{{ if .Values.openunison.naas.readOnly }}
+
+{{ else }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: PortalUrl
@@ -12,3 +15,4 @@ spec:
   azRules:
   - constraint: o=Tremolo
     scope: dn
+{{ end }}

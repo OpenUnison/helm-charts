@@ -52,6 +52,8 @@ spec:
     value: ""
   - name: customProvider
     value: ""
+  - name: readOnly
+    value: "{{ .Values.openunison.naas.readOnly | default false }}"
   secretParams:
   - name: password
     secretName: orchestra-secrets-source
