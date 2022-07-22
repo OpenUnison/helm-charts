@@ -13,6 +13,26 @@ openunison:
       new_namespace:
         use_default: true
     groups:
+      roles: []
+      default:
+      - name: administrators
+        rolebindingtype: ClusterRole
+        rolebinding: admin
+        bindingname: admins
+        description: Manage kubernetes namespace $cluster$ $nameSpace$
+        external:
+          fieldName: adminGroup
+          label: "Administrator Group"
+          errorMessage: "Invalid administrator group"
+      - name: viewer
+        rolebindingtype: ClusterRole
+        rolebinding: view
+        description: View kubernetes namespace $cluster$ $nameSpace$
+        bindingname: viewers
+        external:
+          fieldName: viewerGroup
+          label: "Viewer Group"
+          errorMessage: "Invalid viewer group"
       internal:
         enabled: true
         suffix: "-internal"
