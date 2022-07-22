@@ -44,10 +44,14 @@ spec:
   azRules:
   - constraint: (groups=k8s-cluster-k8s-administrators)
     scope: filter
-  - constraint: (groups=k8s-namespace-administrators-k8s-*)
+  {{ range $role := .Values.openunison.naas.groups.default }}
+  - constraint: (groups=k8s-namespace-{{ $role.name }}-k8s-*)
     scope: filter
-  - constraint: (groups=k8s-namespace-viewer-k8s-*)
+  {{ end }}
+  {{ range $role := .Values.openunison.naas.groups.roles }}
+  - constraint: (groups=k8s-namespace-{{ $role.name }}-k8s-*)
     scope: filter
+  {{ end }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: PortalUrl
@@ -62,10 +66,14 @@ spec:
   azRules:
   - constraint: (groups=k8s-cluster-k8s-administrators)
     scope: filter
-  - constraint: (groups=k8s-namespace-administrators-k8s-*)
+  {{ range $role := .Values.openunison.naas.groups.default }}
+  - constraint: (groups=k8s-namespace-{{ $role.name }}-k8s-*)
     scope: filter
-  - constraint: (groups=k8s-namespace-viewer-k8s-*)
+  {{ end }}
+  {{ range $role := .Values.openunison.naas.groups.roles }}
+  - constraint: (groups=k8s-namespace-{{ $role.name }}-k8s-*)
     scope: filter
+  {{ end }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Org

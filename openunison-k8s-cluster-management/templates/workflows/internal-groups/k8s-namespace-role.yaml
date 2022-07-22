@@ -101,6 +101,7 @@ spec:
                  setPassword: false
                  onlyPassedInAttributes: false
                  attributes: ["uid"]
+               {{ range $bind := $role.bindings }}
                - taskType: customTask
                  className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
                  params:
@@ -109,19 +110,21 @@ spec:
                     kind: RoleBinding
                     apiVersion: rbac.authorization.k8s.io/v1
                     metadata:
-                      name: {{ $role.bindingname }}-binding{{ $root.Values.openunison.naas.groups.internal.suffix }}
+                      name: {{ $bind.binding }}-binding{{ $root.Values.openunison.naas.groups.internal.suffix }}
                       namespace: "$name$"
                     subjects:
                     - kind: Group
                       name: k8s-namespace-{{ $role.name }}-$cluster$-$name${{ $root.Values.openunison.naas.groups.internal.suffix }}
                       apiGroup: rbac.authorization.k8s.io
                     roleRef:
-                      kind: {{ $role.rolebindingtype }}
-                      name: {{ $role.rolebinding }}
+                      kind: {{ $bind.type }}
+                      name: {{ $bind.name }}
                       apiGroup: rbac.authorization.k8s.io
                    kind: RoleBinding 
                    url: /apis/rbac.authorization.k8s.io/v1/namespaces/$name$/rolebindings
                    srcType: yaml
+
+               {{ end }} 
 
                - taskType: notifyUser
                  subject: {{ $role.workflow.userNotification.subject }}
@@ -256,6 +259,8 @@ spec:
                  setPassword: false
                  onlyPassedInAttributes: false
                  attributes: ["uid"]
+
+               {{ range $bind := $role.bindings }}
                - taskType: customTask
                  className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
                  params:
@@ -264,19 +269,20 @@ spec:
                     kind: RoleBinding
                     apiVersion: rbac.authorization.k8s.io/v1
                     metadata:
-                      name: {{ $role.bindingname }}-binding{{ $root.Values.openunison.naas.groups.internal.suffix }}
+                      name: {{ $bind.binding }}-binding{{ $root.Values.openunison.naas.groups.internal.suffix }}
                       namespace: "$name$"
                     subjects:
                     - kind: Group
                       name: k8s-namespace-{{ $role.name }}-$cluster$-$name${{ $root.Values.openunison.naas.groups.internal.suffix }}
                       apiGroup: rbac.authorization.k8s.io
                     roleRef:
-                      kind: {{ $role.rolebindingtype }}
-                      name: {{ $role.rolebinding }}
+                      kind: {{ $bind.type }}
+                      name: {{ $bind.name }}
                       apiGroup: rbac.authorization.k8s.io
                    kind: RoleBinding 
                    url: /apis/rbac.authorization.k8s.io/v1/namespaces/$name$/rolebindings
                    srcType: yaml
+               {{ end }}
 
                - taskType: notifyUser
                  subject: {{ $role.workflow.userNotification.subject }}

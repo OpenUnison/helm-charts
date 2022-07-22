@@ -40,10 +40,14 @@ spec:
     - constraint: (groups=k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }})
       scope: filter
     {{ end }}
-    - constraint: (groups=k8s-namespace-administrators-k8s-*)
+    {{ range $role := .Values.openunison.naas.groups.default }}
+    - constraint: (groups=k8s-namespace-{{ $role.name }}-k8s-*)
       scope: filter
-    - constraint: (groups=k8s-namespace-viewer-k8s-*)
+    {{ end }}
+    {{ range $role := .Values.openunison.naas.groups.roles }}
+    - constraint: (groups=k8s-namespace-{{ $role.name }}-k8s-*)
       scope: filter
+    {{ end }}
     {{ else }}
     {{ $length := len .Values.openunison.az_groups }}
     {{ if eq $length 0 }}

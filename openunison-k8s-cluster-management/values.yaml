@@ -16,9 +16,10 @@ openunison:
       roles: []
       default:
       - name: administrators
-        rolebindingtype: ClusterRole
-        rolebinding: admin
-        bindingname: admins
+        bindings:
+          - type: ClusterRole
+            binding: admins
+            name: admin
         description: Manage kubernetes namespace $cluster$ $nameSpace$
         workflow:
           label: "namespace administrator"
@@ -36,10 +37,11 @@ openunison:
           label: "Administrator Group"
           errorMessage: "Invalid administrator group"
       - name: viewer
-        rolebindingtype: ClusterRole
-        rolebinding: view
         description: View kubernetes namespace $cluster$ $nameSpace$
-        bindingname: viewers
+        bindings:
+          - type: ClusterRole
+            binding: viewers
+            name: view
         external:
           fieldName: viewerGroup
           label: "Viewer Group"

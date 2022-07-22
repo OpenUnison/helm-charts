@@ -151,6 +151,49 @@ openunison:
       new_namespace:
         use_default: true
     groups:
+      default:
+      - name: administrators
+        bindings:
+          - type: ClusterRole
+            binding: admins
+            name: admin
+        description: Manage kubernetes namespace $cluster$ $nameSpace$
+        workflow:
+          label: "namespace administrator"
+          displayLabel: $name$ Administrator
+          emailTemplate: Approve administrator access to $cluster$ $name$
+          approvalLabel: Approve administrator access for $cluster$ - $name$
+          userNotification:
+            subject: Admin access to $cluster$ $name$ approved
+            message: Your access has been approved
+          org:
+            label: Administrators
+            description: Namespace Administrators
+        external:
+          fieldName: adminGroup
+          label: "Administrator Group"
+          errorMessage: "Invalid administrator group"
+      - name: viewer
+        description: View kubernetes namespace $cluster$ $nameSpace$
+        bindings:
+          - type: ClusterRole
+            binding: viewers
+            name: view
+        external:
+          fieldName: viewerGroup
+          label: "Viewer Group"
+          errorMessage: "Invalid viewer group"
+        workflow:
+          label: "namespace viewer"
+          displayLabel: $name$ Administrator
+          emailTemplate: Approve viewer access to $cluster$ $name$
+          approvalLabel: Approve viewer access for $cluster$ - $name$
+          userNotification:
+            subject: View access to $cluster$ $name$ approved
+            message: Your access has been approved
+          org:
+            label: Viewers
+            description: Namespace Viewers
       internal:
         enabled: true
         suffix: "-internal"

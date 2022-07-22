@@ -235,6 +235,10 @@ spec:
       value: "{{ .Values.openunison.naas.groups.external.suffix }}"
     - name: "openunison.naas.internal-suffix"
       value: "{{ .Values.openunison.naas.groups.internal.suffix }}"
+    - name: "openunison.naas.default-groups"
+      value: {{ .Values.openunison.naas.groups.default | toJson | b64enc | quote }}
+    - name: "openunison.naas.roles"
+      value: {{ .Values.openunison.naas.groups.roles | toJson | b64enc | quote }}
 {{ else }}
     - name: OPENUNISON_PROVISIONING_ENABLED
       value: "false"

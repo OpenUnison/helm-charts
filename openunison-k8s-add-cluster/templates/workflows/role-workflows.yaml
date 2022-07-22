@@ -1,0 +1,31 @@
+{{- $root := . -}}
+{{ range $role := .Values.naasRoles }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: {{ $root.Values.cluster.name }}-namespace-{{ $role.name }}
+  namespace: {{ $root.Release.Namespace }}
+spec:
+  description: {{ $role.description }}
+  inList: true
+  label: {{ $role.workflow.displayLabel }}
+  orgId: org-cluster-{{ $root.Values.cluster.name }}-{{ $role.name }}
+  dynamicConfiguration:
+    dynamic: true
+    className: com.tremolosecurity.unison.openshiftv3.wf.OpenShiftWorkflows
+    params:
+    - name: target
+      value: k8s-{{ $root.Values.cluster.name }}
+    - name: kind
+      value: /api/v1/namespaces
+    
+  tasks: |-
+           - taskType: addAttribute
+             name: cluster
+             value: k8s-{{ $root.Values.cluster.name }}
+             remove: false
+             addToRequest: true
+           - taskType: callWorkflow
+             name: k8s-namespace-{{ $role.name }}
+{{ end }}
