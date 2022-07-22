@@ -1,38 +1,43 @@
 {{ if .Values.openunison.naas.groups.internal.enabled }}
+{{- $root := . -}}
+{{ range $role := .Values.openunison.naas.groups.default }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Org
 metadata:
-  name: control-plane-namespace-admins
-  namespace: {{ .Release.Namespace }}
+  name: control-plane-namespace-{{ $role.name}}
+  namespace: {{ $root.Release.Namespace }}
 spec:
-  label: Administrators
+  label: {{ $role.workflow.org.label }}
   azRules:
   - constraint: o=Tremolo
     scope: dn
-  description: Namespace Administrators
+  description: {{ $role.workflow.org.description }}
   parent: org-cluster-control-plane
   showInPortal: false
   showInReports: false
   showInRequestAccess: true
-  uuid: org-cluster-control-plane-admins
+  uuid: org-cluster-control-plane-{{ $role.name}}
+{{ end }}
+{{ range $role := .Values.openunison.naas.groups.roles }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Org
 metadata:
-  name: control-plane-namespace-viewers
-  namespace: {{ .Release.Namespace }}
+  name: control-plane-namespace-{{ $role.name}}
+  namespace: {{ $root.Release.Namespace }}
 spec:
-  label: Viewers
+  label: {{ $role.workflow.org.label }}
   azRules:
   - constraint: o=Tremolo
     scope: dn
-  description: Namespace Viewer
+  description: {{ $role.workflow.org.description }}
   parent: org-cluster-control-plane
   showInPortal: false
   showInReports: false
   showInRequestAccess: true
-  uuid: org-cluster-control-plane-viewers
+  uuid: org-cluster-control-plane-{{ $role.name}}
+{{ end }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Org
