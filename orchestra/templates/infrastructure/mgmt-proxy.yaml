@@ -99,8 +99,8 @@ roleRef:
   name: cluster-admin
 subjects:
 - apiGroup: rbac.authorization.k8s.io
-  kind: Group
-  name: k8s-cluster-k8s-sat2.tremolo.lan-administrators
+  kind: User
+  name: openunison-control-plane
 {{ if .Values.openunison.management_proxy.external_admin_group  }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
