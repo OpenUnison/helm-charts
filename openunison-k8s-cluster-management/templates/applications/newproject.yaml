@@ -1,5 +1,5 @@
 {{ if .Values.openunison.naas.forms.new_namespace.use_default }}
-{{- $root := . -}}
+{{ $root := . }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Application
@@ -64,9 +64,10 @@ spec:
         attributeNames:
         - cluster
         - nameSpace
+        {{ range $attr := .Values.openunison.naas.forms.new_namespace.additional_attributes }}
+        - {{ $attr.name }}
+        {{ end }}
         {{ if .Values.openunison.naas.groups.external.enabled }}
-        #- adminGroup
-        #- viewerGroup
         {{ range $role := .Values.openunison.naas.groups.default }}
         - {{ $role.external.fieldName }}
         {{ end }}
@@ -103,6 +104,35 @@ spec:
         nameSpace.maxChars: "63"
         nameSpace.unique: "false"
         nameSpace.type: "text"
+
+        {{ range $attr := .Values.openunison.naas.forms.new_namespace.additional_attributes }}
+        {{ $attr.name }}.displayName: "{{ $attr.displayName }}"
+        {{ $attr.name }}.readOnly: "false"
+        {{ $attr.name }}.required: "false"
+        {{ $attr.name }}.regEx: "{{ $attr.regEx }}"
+        {{ $attr.name }}.regExFailedMsg: "{{ $attr.regExFailedMsg }}"
+        {{ $attr.name }}.minChars: "{{ $attr.minChars }}"
+        {{ $attr.name }}.maxChars: "{{ $attr.maxChars }}"
+        {{ $attr.name }}.unique: "{{ $attr.unique }}"
+        {{ $attr.name }}.type: "{{ $attr.type }}"
+        {{ if $attr.dynamicValueSource }}
+        {{ $attr.name }}.dynamicValueSource.className: "{{ $attr.dynamicValueSource.className }}"
+        {{ $attr.name }}.dynamicValueSource.config:
+            {{ range $key,$value := $attr.dynamicValueSource.config }}
+            - "{{ $key }}={{ $value }}"
+            {{ end }}
+
+        {{ end }}
+        {{ if $attr.values }}
+        {{ $attr.name }}.values:
+        {{ range $key,$value := $attr.values }}
+        - "{{ $key }}={{ $value }}"
+        {{ end }}
+        {{ end }}
+
+        {{ end }}
+
+
 
         {{ if .Values.openunison.naas.groups.external.enabled }}
 

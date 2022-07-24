@@ -29,6 +29,9 @@ spec:
                - enableInternal
                {{ end }}
                {{ end }}
+               {{ range $attr := .Values.openunison.naas.forms.new_namespace.additional_attributes }}
+               - {{ $attr.name }}
+               {{ end }}
                keepInUser: "false"
 
            - taskType: customTask
@@ -52,6 +55,11 @@ spec:
              value: disabled
              addToRequest: true
           {{ end }}
+          {{ end }}
+
+          {{ if .Values.openunison.naas.workflows.new_namespaces.pre_run_workflow }}
+           - taskType: callWorkflow
+             name: {{ .Values.openunison.naas.workflows.new_namespaces.pre_run_workflow }}
           {{ end }}
 
            - taskType: customTask
@@ -218,6 +226,11 @@ spec:
                  attributes: ["uid"]
               {{ end }}
 
+            {{ if .Values.openunison.naas.workflows.new_namespaces.pre_run_workflow }}
+             - taskType: callWorkflow
+               name: {{ .Values.openunison.naas.workflows.new_namespaces.pre_provision_workflow }}
+            {{ end }}
+
              # GitOps - Create SSH Key for Namespace
              - taskType: ifAttrHasValue
                name: useGit
@@ -255,6 +268,9 @@ spec:
                       labels:
                         name: "$nameSpace$"
                         tremolo.io/request-access: $enableInternal$
+                        {{ range $key,$value := .Values.openunison.naas.workflows.new_namespaces.namespace_request_labels }}
+                        {{ $key }}: "${{ $value }}$"
+                        {{ end }}
                       annotations:
                         tremolo.io/managedByGit: "$useGit$"
                         $gitUrlAnnotation$
@@ -264,6 +280,12 @@ spec:
                  writeToRequest: "$useGit$"
                  requestAttribute: git-secret-cluster-$cluster$-$nameSpace$
                  path: /yaml/ns/$nameSpace$/$nameSpace$.yaml
+
+             {{ if .Values.openunison.naas.workflows.new_namespaces.post_namespace_create_workflow }}
+             - taskType: callWorkflow
+               name: {{ .Values.openunison.naas.workflows.new_namespaces.post_namespace_create_workflow }}
+            {{ end }}
+
 
 
              # For GitOps, create a service account and a rolebinding that allow the gitops

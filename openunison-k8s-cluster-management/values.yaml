@@ -9,6 +9,7 @@ openunison:
     forms:
       new_namespace:
         use_default: true
+        additional_attributes: []
     workflows:
       new_namespace:
         use_default: true
