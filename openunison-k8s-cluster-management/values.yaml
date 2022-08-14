@@ -13,6 +13,11 @@ openunison:
     workflows:
       new_namespace:
         use_default: true
+        namespace_request_labels: {}
+        notification:
+          subject: Your namespace has been created
+          msg: |-
+            The namespace $nameSpace$ has been created
     groups:
       roles: []
       default:
