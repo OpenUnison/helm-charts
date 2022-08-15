@@ -1,0 +1,22 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: vcluster-onboard-create-obj-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+rules:
+- apiGroups:
+  - openunison.tremolo.io
+  resources:
+  - applications
+  - groupmetadatas
+  - orgs
+  - targets
+  - portalurls
+  - workflows
+  verbs:
+  - 'get'
+  - 'create'
+  - 'update'
+  - 'delete'
+  - 'patch'

@@ -1,0 +1,43 @@
+---
+kind: Job
+apiVersion: batch/v1
+metadata:
+  name: onboard-vcluster-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  parallelism: 1
+  completions: 1
+  backoffLimit: 3
+  selector:
+    matchLabels:
+      job-name: onboard-vcluster-{{ .Release.Name }}
+  template:
+    metadata:
+      name: vcluster-onboard-{{ .Release.Name }}
+      namespace: {{ .Release.Namespace }}
+      labels:
+        job-name: onboard-vcluster-{{ .Release.Name }}
+    spec:
+        containers:
+        - args:
+            - /usr/local/openunison/onboard-cluster.sh
+          image: docker.io/mlbiam/vcluster-onboard
+          imagePullPolicy: Always
+          name: vcluster-onboard
+          resources: {}
+          volumeMounts:
+            - mountPath: /etc/openunison
+              name: vcluster-helm-values
+          env:
+          - name: VCLUSTER_NAME
+            value: {{ .Values.vcluster.name }}
+          - name: VCLUSTER_NAMESPACE
+            value: {{ .Values.vcluster.namespace }}
+        dnsPolicy: ClusterFirst
+        serviceAccount: vcluster-onboard-{{ .Release.Name }}
+        serviceAccountName: vcluster-onboard-{{ .Release.Name }}
+        restartPolicy: OnFailure
+        volumes:
+        - name: vcluster-helm-values
+          configMap:
+            name: vcluster-helm-values-{{ .Release.Name }}
