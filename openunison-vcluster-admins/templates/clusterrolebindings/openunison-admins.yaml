@@ -1,6 +1,6 @@
 {{- $root := . -}}
-{{ $num := 0}}
-{{ range $az_group := .Values.openunison.az_groups }}
+
+{{ range $num, $az_group := .Values.openunison.az_groups }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -13,5 +13,4 @@ roleRef:
 subjects:
 - kind: Group
   name: {{ $az_group }}
-{{ $num := add 1 $num }}
 {{ end }}

@@ -1,0 +1,6 @@
+vcluster:
+  replicas: 1
+  job_image: docker.io/tremolosecurity/vcluster-onboard
+  openunison_k8s_image: docker.io/tremolosecurity/openunison-k8s
+  kube_oidc_proxy_image: docker.io/tremolosecurity/kube-oidc-proxy:latest
+  openunison_k8s_html_image: docker.io/tremolosecurity/openunison-k8s-html
