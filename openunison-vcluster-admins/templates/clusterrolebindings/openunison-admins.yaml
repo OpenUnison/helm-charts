@@ -1,10 +1,11 @@
+{{- $root := . -}}
 {{ $num := 0}}
 {{ range $az_group := .Values.openunison.az_groups }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: openunison-admins-{{ $num }}-{{ .Release.Name }}
+  name: openunison-admins-{{ $num }}-{{ $root.Release.Name }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
