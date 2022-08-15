@@ -21,7 +21,7 @@ spec:
         containers:
         - args:
             - /usr/local/openunison/onboard-cluster.sh
-          image: docker.io/mlbiam/vcluster-onboard
+          image: {{ .Values.vcluster.jib_image }}
           imagePullPolicy: Always
           name: vcluster-onboard
           resources: {}

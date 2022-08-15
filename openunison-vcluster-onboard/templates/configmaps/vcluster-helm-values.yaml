@@ -20,10 +20,10 @@ data:
         require_session: true
         service_name: kubernetes-dashboard
     enable_impersonation: true
-    image: docker.io/tremolosecurity/openunison-k8s
+    image: {{ .Values.vcluster.openunison_k8s_image }}
     impersonation:
         explicit_certificate_trust: true
-        jetstack_oidc_proxy_image: docker.io/tremolosecurity/kube-oidc-proxy:latest
+        jetstack_oidc_proxy_image: {{ .Values.vcluster.kube_oidc_proxy_image }}
         use_jetstack: true
     k8s_cluster_name: {{ .Values.vcluster.label }}
     monitoring:
@@ -56,7 +56,7 @@ data:
     openunison:
         enable_provisioning: false
         html:
-            image: docker.io/tremolosecurity/openunison-k8s-html
+            image: {{ .Values.vcluster.openunison_k8s_html_image }}
         non_secret_data:
             K8S_DB_SSO: oidc
             PROMETHEUS_SERVICE_ACCOUNT: system:serviceaccount:monitoring:prometheus-k8s
