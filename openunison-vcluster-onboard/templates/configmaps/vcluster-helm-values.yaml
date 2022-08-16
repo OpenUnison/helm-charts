@@ -15,7 +15,7 @@ data:
         use_k8s_cm: false
     dashboard:
         cert_name: kubernetes-dashboard-certs
-        label: k8s-app=kubernetes-dashboard
+        label: app.kubernetes.io/name=kubernetes-dashboard
         namespace: kubernetes-dashboard
         require_session: true
         service_name: kubernetes-dashboard

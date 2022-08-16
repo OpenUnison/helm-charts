@@ -21,7 +21,7 @@ spec:
         containers:
         - args:
             - /usr/local/openunison/onboard-cluster.sh
-          image: {{ .Values.vcluster.jib_image }}
+          image: {{ .Values.vcluster.job_image }}
           imagePullPolicy: Always
           name: vcluster-onboard
           resources: {}
@@ -33,6 +33,12 @@ spec:
             value: {{ .Values.vcluster.name }}
           - name: VCLUSTER_NAMESPACE
             value: {{ .Values.vcluster.namespace }}
+          - name: TREMOLO_HELM_REPO
+            value: {{ .Values.vcluster.helm_repo_url }}
+          - name: K8S_DASHBOARD_HELM_REPO
+            value: {{ .Values.vcluster.kubernetes_dashboard_helm_repo_url }}
+          - name: VCLUSTER_LABEL
+            value: {{ .Values.vcluster.label }}
         dnsPolicy: ClusterFirst
         serviceAccount: vcluster-onboard-{{ .Release.Name }}
         serviceAccountName: vcluster-onboard-{{ .Release.Name }}
