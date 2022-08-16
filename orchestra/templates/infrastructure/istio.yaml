@@ -9,6 +9,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: ingress-istio
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
 spec:
   selector:
     {{ range $key,$value := .Values.network.istio.selectors }}

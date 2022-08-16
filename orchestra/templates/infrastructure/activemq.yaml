@@ -11,6 +11,8 @@ metadata:
     app.kubernetes.io/part-of: openunison
   name: amq-{{ .Release.Name  }}
   namespace: {{ .Release.Namespace  }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
 spec:
   strategy:
     type: Recreate

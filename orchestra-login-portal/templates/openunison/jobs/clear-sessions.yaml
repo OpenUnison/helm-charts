@@ -3,6 +3,8 @@ kind: OUJob
 metadata:
   name: clear-sessions
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   cronSchedule:
     seconds: "0"

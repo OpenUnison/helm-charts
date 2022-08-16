@@ -5,6 +5,8 @@ kind: Org
 metadata:
   name: openunison-management
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   label: OpenUnison Management
   azRules:

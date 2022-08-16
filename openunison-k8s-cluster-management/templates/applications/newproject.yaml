@@ -1,4 +1,5 @@
 {{ if .Values.openunison.naas.forms.new_namespace.use_default }}
+{{ $root := . }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Application
@@ -63,9 +64,17 @@ spec:
         attributeNames:
         - cluster
         - nameSpace
+        {{ range $attr := .Values.openunison.naas.forms.new_namespace.additional_attributes }}
+        - {{ $attr.name }}
+        {{ end }}
         {{ if .Values.openunison.naas.groups.external.enabled }}
-        - adminGroup
-        - viewerGroup
+        {{ range $role := .Values.openunison.naas.groups.default }}
+        - {{ $role.external.fieldName }}
+        {{ end }}
+        {{ range $role := .Values.openunison.naas.groups.roles }}
+        - {{ $role.external.fieldName }}
+        {{ end }}
+        
         {{ if .Values.openunison.naas.groups.internal.enabled }}
         - enableInternal
         {{ end }}
@@ -96,6 +105,35 @@ spec:
         nameSpace.unique: "false"
         nameSpace.type: "text"
 
+        {{ range $attr := .Values.openunison.naas.forms.new_namespace.additional_attributes }}
+        {{ $attr.name }}.displayName: "{{ $attr.displayName }}"
+        {{ $attr.name }}.readOnly: "false"
+        {{ $attr.name }}.required: "false"
+        {{ $attr.name }}.regEx: "{{ $attr.regEx }}"
+        {{ $attr.name }}.regExFailedMsg: "{{ $attr.regExFailedMsg }}"
+        {{ $attr.name }}.minChars: "{{ $attr.minChars }}"
+        {{ $attr.name }}.maxChars: "{{ $attr.maxChars }}"
+        {{ $attr.name }}.unique: "{{ $attr.unique }}"
+        {{ $attr.name }}.type: "{{ $attr.type }}"
+        {{ if $attr.dynamicValueSource }}
+        {{ $attr.name }}.dynamicValueSource.className: "{{ $attr.dynamicValueSource.className }}"
+        {{ $attr.name }}.dynamicValueSource.config:
+            {{ range $key,$value := $attr.dynamicValueSource.config }}
+            - "{{ $key }}={{ $value }}"
+            {{ end }}
+
+        {{ end }}
+        {{ if $attr.values }}
+        {{ $attr.name }}.values:
+        {{ range $key,$value := $attr.values }}
+        - "{{ $key }}={{ $value }}"
+        {{ end }}
+        {{ end }}
+
+        {{ end }}
+
+
+
         {{ if .Values.openunison.naas.groups.external.enabled }}
 
         {{ if .Values.openunison.naas.groups.internal.enabled }}
@@ -111,23 +149,27 @@ spec:
         - "Enabled=enabled"
         - "Disabled=disabled"
         {{ end }}
-        adminGroup.displayName: "Administrator Group"
-        adminGroup.realOnly: "false"
-        adminGroup.required: "true"
-        adminGroup.regEx: ".*"
-        adminGroup.redExFailedMsg: "Invalid administrator group"
-        adminGroup.minChars: "0"
-        adminGroup.maxChars: "255"
-        adminGroup.unique: "false"
-        {{ if .Values.active_directory }}
-        adminGroup.type: "text-list"
-        adminGroup.dynamicValueSource.className: "com.tremolosecurity.scalejs.register.dynamicSource.LoadFromLDAP"
-        adminGroup.dynamicValueSource.config: 
+        
+        
+        {{ range $role := .Values.openunison.naas.groups.default }}
+        
+        {{ $role.external.fieldName }}.displayName: {{ $role.external.label }}
+        {{ $role.external.fieldName }}.realOnly: "false"
+        {{ $role.external.fieldName }}.required: "true"
+        {{ $role.external.fieldName }}.regEx: ".*"
+        {{ $role.external.fieldName }}.redExFailedMsg: {{ $role.external.errorMessage }}
+        {{ $role.external.fieldName }}.minChars: "0"
+        {{ $role.external.fieldName }}.maxChars: "255"
+        {{ $role.external.fieldName }}.unique: "false"
+        {{ if $root.Values.active_directory }}
+        {{ $role.external.fieldName }}.type: "text-list-box"
+        {{ $role.external.fieldName }}.dynamicValueSource.className: "com.tremolosecurity.scalejs.register.dynamicSource.LoadFromLDAP"
+        {{ $role.external.fieldName }}.dynamicValueSource.config: 
         - "nameField=distinguishedName"
         - "valueField=distinguishedName"
         - "searchField=cn"
         - "maxEntries=10"
-        {{ if .Values.active_directory.group_search_base }}
+        {{ if $root.Values.active_directory.group_search_base }}
         - "searchBase={{ .Values.active_directory.group_search_base }},ou=activedirectory,o=Data"
         {{ else }}
         - "searchBase=ou=activedirectory,o=Data"
@@ -135,57 +177,148 @@ spec:
         - "errorMessage=Invalid group name"
         - "objectClass=groupofnames"
         - "sort=true"
-        {{ else if .Values.oidc}}
-        {{ if eq .Values.oidc.type "okta" }}
-        adminGroup.type: "text-list"
-        adminGroup.dynamicValueSource.className: "com.tremolosecurity.scalejs.register.dynamicSource.LoadGroupsFromOkta"
-        adminGroup.dynamicValueSource.config: 
+        {{ else if $root.Values.oidc}}
+        {{ if eq $root.Values.oidc.type "okta" }}
+        {{ $role.external.fieldName }}.type: "text-list"
+        {{ $role.external.fieldName }}.dynamicValueSource.className: "com.tremolosecurity.scalejs.register.dynamicSource.LoadGroupsFromOkta"
+        {{ $role.external.fieldName }}.dynamicValueSource.config: 
         - "targetName=okta"
         - "maxEntries=10"
         - "errorMessage=Invalid group name"
         {{ end }}
         {{ else }}
-        adminGroup.type: "text"
+        {{ $role.external.fieldName }}.type: "text"
         {{ end }}
 
-        viewerGroup.displayName: "Viewer Group"
-        viewerGroup.realOnly: "false"
-        viewerGroup.required: "true"
-        viewerGroup.regEx: ".*"
-        viewerGroup.redExFailedMsg: "Invalid viewer group"
-        viewerGroup.minChars: "0"
-        viewerGroup.maxChars: "255"
-        viewerGroup.unique: "false"
-        {{ if .Values.active_directory }}
-        viewerGroup.type: "text-list"
-        viewerGroup.dynamicValueSource.className: "com.tremolosecurity.scalejs.register.dynamicSource.LoadFromLDAP"
-        viewerGroup.dynamicValueSource.config: 
+
+        {{ end }}
+
+        {{ range $role := .Values.openunison.naas.groups.roles }}
+        
+        {{ $role.external.fieldName }}.displayName: {{ $role.external.label }}
+        {{ $role.external.fieldName }}.realOnly: "false"
+        {{ $role.external.fieldName }}.required: "true"
+        {{ $role.external.fieldName }}.regEx: ".*"
+        {{ $role.external.fieldName }}.redExFailedMsg: {{ $role.external.errorMessage }}
+        {{ $role.external.fieldName }}.minChars: "0"
+        {{ $role.external.fieldName }}.maxChars: "255"
+        {{ $role.external.fieldName }}.unique: "false"
+        {{ if $root.Values.active_directory }}
+        {{ $role.external.fieldName }}.type: "text-list-box"
+        {{ $role.external.fieldName }}.dynamicValueSource.className: "com.tremolosecurity.scalejs.register.dynamicSource.LoadFromLDAP"
+        {{ $role.external.fieldName }}.dynamicValueSource.config: 
         - "nameField=distinguishedName"
         - "valueField=distinguishedName"
         - "searchField=cn"
         - "maxEntries=10"
-        {{ if .Values.active_directory.group_search_base }}
+        {{ if $root.Values.active_directory.group_search_base }}
         - "searchBase={{ .Values.active_directory.group_search_base }},ou=activedirectory,o=Data"
         {{ else }}
         - "searchBase=ou=activedirectory,o=Data"
         {{ end }}
-
         - "errorMessage=Invalid group name"
         - "objectClass=groupofnames"
         - "sort=true"
-        {{ else if .Values.oidc}}
-        {{ if eq .Values.oidc.type "okta" }}
-        viewerGroup.type: "text-list"
-        viewerGroup.dynamicValueSource.className: "com.tremolosecurity.scalejs.register.dynamicSource.LoadGroupsFromOkta"
-        viewerGroup.dynamicValueSource.config: 
+        {{ else if $root.Values.oidc}}
+        {{ if eq $root.Values.oidc.type "okta" }}
+        {{ $role.external.fieldName }}.type: "text-list"
+        {{ $role.external.fieldName }}.dynamicValueSource.className: "com.tremolosecurity.scalejs.register.dynamicSource.LoadGroupsFromOkta"
+        {{ $role.external.fieldName }}.dynamicValueSource.config: 
         - "targetName=okta"
         - "maxEntries=10"
         - "errorMessage=Invalid group name"
         {{ end }}
         {{ else }}
-        viewerGroup.type: "text"
+        {{ $role.external.fieldName }}.type: "text"
         {{ end }}
+
+
         {{ end }}
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        #adminGroup.displayName: "Administrator Group"
+        #adminGroup.realOnly: "false"
+        #adminGroup.required: "true"
+        #adminGroup.regEx: ".*"
+        #adminGroup.redExFailedMsg: "Invalid administrator group"
+        #adminGroup.minChars: "0"
+        #adminGroup.maxChars: "255"
+        #adminGroup.unique: "false"
+        #{{ if .Values.active_directory }}
+        #adminGroup.type: "text-list"
+        #adminGroup.dynamicValueSource.className: "com.tremolosecurity.scalejs.register.dynamicSource.LoadFromLDAP"
+        #adminGroup.dynamicValueSource.config: 
+        #- "nameField=distinguishedName"
+        #- "valueField=distinguishedName"
+        #- "searchField=cn"
+        #- "maxEntries=10"
+        #{{ if .Values.active_directory.group_search_base }}
+        #- "searchBase={{ .Values.active_directory.group_search_base }},ou=activedirectory,o=Data"
+        #{{ else }}
+        #- "searchBase=ou=activedirectory,o=Data"
+        #{{ end }}
+        #- "errorMessage=Invalid group name"
+        #- "objectClass=groupofnames"
+        #- "sort=true"
+        #{{ else if .Values.oidc}}
+        #{{ if eq .Values.oidc.type "okta" }}
+        #adminGroup.type: "text-list"
+        #adminGroup.dynamicValueSource.className: "com.tremolosecurity.scalejs.register.dynamicSource.LoadGroupsFromOkta"
+        #adminGroup.dynamicValueSource.config: 
+        #- "targetName=okta"
+        #- "maxEntries=10"
+        #- "errorMessage=Invalid group name"
+        #{{ end }}
+        #{{ else }}
+        #adminGroup.type: "text"
+        #{{ end }}
+
+        #viewerGroup.displayName: "Viewer Group"
+        #viewerGroup.realOnly: "false"
+        #viewerGroup.required: "true"
+        #viewerGroup.regEx: ".*"
+        #viewerGroup.redExFailedMsg: "Invalid viewer group"
+        #viewerGroup.minChars: "0"
+        #viewerGroup.maxChars: "255"
+        #viewerGroup.unique: "false"
+        #{{ if .Values.active_directory }}
+        #viewerGroup.type: "text-list"
+        #viewerGroup.dynamicValueSource.className: "com.tremolosecurity.scalejs.register.dynamicSource.LoadFromLDAP"
+        #viewerGroup.dynamicValueSource.config: 
+        #- "nameField=distinguishedName"
+        #- "valueField=distinguishedName"
+        #- "searchField=cn"
+        #- "maxEntries=10"
+        #{{ if .Values.active_directory.group_search_base }}
+        #- "searchBase={{ .Values.active_directory.group_search_base }},ou=activedirectory,o=Data"
+        #{{ else }}
+        #- "searchBase=ou=activedirectory,o=Data"
+        #{{ end }}
+
+        #- "errorMessage=Invalid group name"
+        #- "objectClass=groupofnames"
+        #- "sort=true"
+        #{{ else if .Values.oidc}}
+        #{{ if eq .Values.oidc.type "okta" }}
+        #viewerGroup.type: "text-list"
+        #viewerGroup.dynamicValueSource.className: "com.tremolosecurity.scalejs.register.dynamicSource.LoadGroupsFromOkta"
+        #viewerGroup.dynamicValueSource.config: 
+        #- "targetName=okta"
+        #- "maxEntries=10"
+        #- "errorMessage=Invalid group name"
+        #{{ end }}
+        #{{ else }}
+        #viewerGroup.type: "text"
+        #{{ end }}
+        #{{ end }}
 
 
         gitUrl.displayName: "Git URL"

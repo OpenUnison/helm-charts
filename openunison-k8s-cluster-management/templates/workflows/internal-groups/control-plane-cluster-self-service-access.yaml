@@ -1,15 +1,17 @@
 {{ if .Values.openunison.naas.groups.internal.enabled }}
+{{- $root := . -}}
+{{ range $role := .Values.openunison.naas.groups.default }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Workflow
 metadata:
-  name: control-plane-namespace-admins
-  namespace: {{ .Release.Namespace }}
+  name: control-plane-namespace-{{ $role.name }}
+  namespace: {{ $root.Release.Namespace }}
 spec:
   description: ClusterRole admin for the $name$ namespace
   inList: true
-  label: $name$ Administrator
-  orgId: org-cluster-control-plane-admins
+  label: {{ $role.workflow.displayLabel }}
+  orgId: org-cluster-control-plane-{{ $role.name }}
   dynamicConfiguration:
     dynamic: true
     className: com.tremolosecurity.unison.openshiftv3.wf.OpenShiftWorkflows
@@ -25,18 +27,20 @@ spec:
              remove: false
              addToRequest: true
            - taskType: callWorkflow
-             name: k8s-namespace-admin
+             name: k8s-namespace-{{ $role.name }}
+{{ end }}
+{{ range $role := .Values.openunison.naas.groups.roles }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Workflow
 metadata:
-  name: controlplane-cluster-viewer
-  namespace: {{ .Release.Namespace }}
+  name: control-plane-namespace-{{ $role.name }}
+  namespace: {{ $root.Release.Namespace }}
 spec:
-  description: ClusterRole view for the $name$ namespace
+  description: ClusterRole admin for the $name$ namespace
   inList: true
-  label: $name$ Viewer
-  orgId: org-cluster-control-plane-viewers
+  label: {{ $role.workflow.displayLabel }}
+  orgId: org-cluster-control-plane-{{ $role.name }}
   dynamicConfiguration:
     dynamic: true
     className: com.tremolosecurity.unison.openshiftv3.wf.OpenShiftWorkflows
@@ -52,7 +56,9 @@ spec:
              remove: false
              addToRequest: true
            - taskType: callWorkflow
-             name: k8s-namespace-viewer
+             name: k8s-namespace-{{ $role.name }}
+{{ end }}
+
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Workflow

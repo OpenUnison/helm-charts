@@ -5,6 +5,7 @@ metadata:
   name: {{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
   annotations:
+    argocd.argoproj.io/sync-wave: "20"
     helm-update: {{ now | date "Jan 2 15:04:05 2006 MST" }}
   labels:
     app.kubernetes.io/name: openunison
@@ -199,7 +200,11 @@ spec:
 
 {{ if .Values.openunison.enable_provisioning }}
     - name: OPENUNISON_PROVISIONING_ENABLED
+      {{ if .Values.openunison.naas.readOnly }}
+      value: "false"
+      {{ else }}
       value: "true"
+      {{ end }}
     - name: OU_HIBERNATE_DIALECT
       value: {{ .Values.database.hibernate_dialect }}
     - name: OU_QUARTZ_DIALECT
@@ -230,6 +235,10 @@ spec:
       value: "{{ .Values.openunison.naas.groups.external.suffix }}"
     - name: "openunison.naas.internal-suffix"
       value: "{{ .Values.openunison.naas.groups.internal.suffix }}"
+    - name: "openunison.naas.default-groups"
+      value: {{ .Values.openunison.naas.groups.default | toJson | b64enc | quote }}
+    - name: "openunison.naas.roles"
+      value: {{ .Values.openunison.naas.groups.roles | toJson | b64enc | quote }}
 {{ else }}
     - name: OPENUNISON_PROVISIONING_ENABLED
       value: "false"
@@ -2371,6 +2380,8 @@ kind: ConfigMap
 metadata:
   name: api-server-config
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
 data:
   oidc-api-server-flags: |-
                            --oidc-issuer-url=https://{{ .Values.network.openunison_host }}/auth/idp/k8sIdp

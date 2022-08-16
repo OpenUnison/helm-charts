@@ -10,6 +10,8 @@ metadata:
     app.kubernetes.io/part-of: openunison
   name: openunison-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
 spec:
   progressDeadlineSeconds: 600
   replicas: {{ .Values.openunison.replicas }}

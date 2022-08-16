@@ -1,0 +1,20 @@
+{{- $root := . -}}
+{{ range $role := .Values.naasRoles }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: {{ $root.Values.cluster.name }}-namespace-{{ $role.name }}
+  namespace: {{ $root.Release.Namespace }}
+spec:
+  label: {{ $role.workflow.org.label }}
+  azRules:
+  - constraint: o=Tremolo
+    scope: dn
+  description: {{ $role.workflow.org.description }}
+  parent: org-cluster-{{ $root.Values.cluster.name }}
+  showInPortal: false
+  showInReports: false
+  showInRequestAccess: true
+  uuid: org-cluster-{{ $root.Values.cluster.name }}-{{ $role.name }}
+{{ end }}

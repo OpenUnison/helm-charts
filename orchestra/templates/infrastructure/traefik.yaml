@@ -4,6 +4,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
+    argocd.argoproj.io/sync-wave: "20"
     kubernetes.io/ingress.class: traefik
     traefik.ingress.kubernetes.io/router.entrypoints: "{{ .Values.network.traefik.entrypoints.tls }}"
     traefik.ingress.kubernetes.io/router.tls: "true"

@@ -9,6 +9,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: openunison-authmechs
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   className: com.tremolosecurity.proxy.auth.FormLoginAuthMech
   uri: "/auth/formlogin"
@@ -25,6 +27,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: openunison-authmechs
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   className: com.tremolosecurity.provisioning.auth.JITAuthMech
   uri: "/auth/jit"
@@ -41,6 +45,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: openunison-authmechs
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   className: com.tremolosecurity.proxy.auth.GenerateOIDCTokens
   uri: "/auth/oidctoken"
@@ -57,6 +63,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: openunison-authmechs
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   className: com.tremolosecurity.proxy.auth.LoginService
   uri: "/auth/loginservice"
@@ -73,6 +81,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: openunison-authmechs
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   className: com.tremolosecurity.unison.proxy.auth.openidconnect.OpenIDConnectAuthMech
   uri: "/auth/oidc"
@@ -89,6 +99,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: openunison-authmechs
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   className: com.tremolosecurity.proxy.auth.SAML2Auth
   uri: "/auth/saml2"
@@ -105,6 +117,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: openunison-authmechs
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   className: com.tremolosecurity.proxy.auth.oauth2.OAuth2JWT
   uri: "/auth/oauth2jwt"
@@ -121,6 +135,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: openunison-authmechs
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   className: com.tremolosecurity.proxy.auth.OAuth2K8sServiceAccount
   uri: "/auth/oauth2k8s"
@@ -137,6 +153,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: openunison-authmechs
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   className: com.tremolosecurity.proxy.auth.FullMappingAuthMech
   uri: "/auth/map"
@@ -153,6 +171,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: openunison-authmechs
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   className: com.tremolosecurity.unison.proxy.auth.github.GithubAuthMech
   uri: "/auth/github"
@@ -169,6 +189,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: openunison-authmechs
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   className: com.tremolosecurity.proxy.auth.AuthorizationAuthMech
   uri: "/auth/az"
@@ -185,6 +207,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: openunison-authmechs
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   className: com.tremolosecurity.proxy.auth.JavaScriptAuth
   init: {}
@@ -201,6 +225,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: openunison-authmechs
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   className: com.tremolosecurity.proxy.auth.IncludeChain
   init: {}

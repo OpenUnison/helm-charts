@@ -9,6 +9,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: openunison-applications
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   azTimeoutMillis: 3000
   isApp: true
@@ -98,7 +100,15 @@ spec:
         showPortalOrgs: "{{ .Values.openunison.non_secret_data.SHOW_PORTAL_ORGS | default "false"  }}"
         logoutURL: "/logout"
         
-        enableApprovals: {{ .Values.openunison.enable_provisioning | quote }}
+        {{ if .Values.openunison.enable_provisioning }}
+        {{ if .Values.openunison.naas.readOnly }}
+        enableApprovals: "false"
+        {{ else }}
+        enableApprovals: "true"
+        {{ end  }}
+        {{ else }}
+        enableApprovals: "false"
+        {{ end }}
     uri: /scale/main
     azRules:
     - scope: dn

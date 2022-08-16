@@ -1,0 +1,75 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: vcluster-helm-values-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+data:
+  satelite.yaml: |
+    cert_template:
+        c: MyCountry
+        l: My Cluster
+        o: MyOrg
+        ou: Kubernetes
+        st: State of Cluster
+    certs:
+        use_k8s_cm: false
+    dashboard:
+        cert_name: kubernetes-dashboard-certs
+        label: app.kubernetes.io/name=kubernetes-dashboard
+        namespace: kubernetes-dashboard
+        require_session: true
+        service_name: kubernetes-dashboard
+    enable_impersonation: true
+    image: {{ .Values.vcluster.openunison_k8s_image }}
+    impersonation:
+        explicit_certificate_trust: true
+        jetstack_oidc_proxy_image: {{ .Values.vcluster.kube_oidc_proxy_image }}
+        use_jetstack: true
+    k8s_cluster_name: {{ .Values.vcluster.label }}
+    monitoring:
+        prometheus_service_account: system:serviceaccount:monitoring:prometheus-k8s
+    myvd_config_path: WEB-INF/myvd.conf
+    network:
+        api_server_host: {{ .Values.vcluster.api_server_host }}
+        createIngressCertificate: true
+        dashboard_host: {{ .Values.vcluster.dashboard_host }}
+        force_redirect_to_tls: false
+        ingress_annotations: {}
+        ingress_type: nginx
+        k8s_url: https://192.168.2.130:6443
+        openunison_host: {{ .Values.vcluster.openunison_host }}
+        session_inactivity_timeout_seconds: 900
+    network_policies:
+        apiserver:
+            enabled: false
+            labels:
+                app.kubernetes.io/name: kube-system
+        enabled: false
+        ingress:
+            enabled: true
+            labels:
+                app.kubernetes.io/name: ingress-nginx
+        monitoring:
+            enabled: true
+            labels:
+                app.kubernetes.io/name: monitoring
+    openunison:
+        enable_provisioning: false
+        html:
+            image: {{ .Values.vcluster.openunison_k8s_html_image }}
+        non_secret_data:
+            K8S_DB_SSO: oidc
+            PROMETHEUS_SERVICE_ACCOUNT: system:serviceaccount:monitoring:prometheus-k8s
+            SHOW_PORTAL_ORGS: "false"
+        replicas: {{ .Values.vcluster.replicas | default 1 }}
+        secrets: []
+        az_groups:
+        {{ range $az_group := .Values.vcluster.az_groups }}
+        - {{ $az_group }}
+        {{ end }}
+    services:
+        enable_tokenrequest: false
+        node_selectors: []
+        token_request_audience: api
+        token_request_expiration_seconds: 600
+    trusted_certs: []

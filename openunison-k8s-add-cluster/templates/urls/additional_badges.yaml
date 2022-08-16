@@ -1,0 +1,27 @@
+{{ if .Values.cluster.additional_badges }}
+{{- $root := . -}}
+{{ range $badge := .Values.cluster.additional_badges }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: PortalUrl
+metadata:
+  name: cluster-{{  $root.Values.cluster.name }}-{{ lower $badge.name }}
+  namespace: {{ $root.Release.Namespace }}
+spec:
+  label: {{  $root.Values.cluster.label }} {{ $badge.description }}
+  org: org-cluster-{{  $root.Values.cluster.name }}
+  url: {{ $badge.url }}
+  icon: {{ $badge.icon }}
+  azRules:
+  {{ $length := len  $root.Values.cluster.az_groups }}
+  {{ if eq $length 0 }}
+  - scope: dn
+    constraint: o=Tremolo
+  {{ else }}
+  {{ range $az_group :=  $root.Values.cluster.az_groups }}
+  - scope: filter
+    constraint: (groups={{ $az_group }})
+  {{ end }}
+  {{ end }}
+{{ end }}
+{{ end }}

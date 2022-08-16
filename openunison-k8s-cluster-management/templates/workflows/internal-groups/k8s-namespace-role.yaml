@@ -1,0 +1,319 @@
+{{ if .Values.openunison.naas.groups.internal.enabled }}
+{{- $root := . -}}
+{{ range $role := $root.Values.openunison.naas.groups.default }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: k8s-namespace-{{ $role.name }}
+  namespace: {{ $root.Release.Namespace }}
+  annotations:
+    oldorg: "04901973-5f4c-46d9-9e22-55e88e168776"
+spec:
+  description: k8s-namespace-{{ $role.name }}
+  inList: false
+  label: {{ $role.workflow.label }}
+  orgId: 04901973-5f4c-46d9-9e22-55e88e168776
+  tasks: |-
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.tasks.DoesGroupExist
+             params:
+               target: jitdb
+               groupName: approvers-k8s-$cluster$-$name$
+               attributeName: tremolo.approval.group.exists
+           - taskType: ifAttrHasValue
+             name: tremolo.approval.group.exists
+             value: "false"
+             onSuccess:
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
+               params:
+                 target: jitdb
+                 name: approvers-k8s-$cluster$-$name$
+                 attributes:
+                 - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
+                 - unison.group.create.param.2=Approve access to $cluster$ $name$
+                 
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.tasks.CopyGroupMembers
+               params:
+                 copyWorkflow: add-approver-user
+                 copyTo: approvers-k8s-$cluster$-$name$
+                 copyFrom: cn=k8s-cluster-$cluster$-administrators,ou=groups,ou=shadow,o=Tremolo
+                 uidAttributeName: uid
+                 requestor: system
+
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.tasks.CopyGroupMembers
+               params:
+                 copyWorkflow: add-approver-user
+                 copyTo: approvers-k8s-$cluster$-$name$
+                 copyFrom: cn=k8s-cluster-$cluster$-administrators{{ $root.Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
+                 uidAttributeName: uid
+                 requestor: system
+               
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.LoadAttributes
+             params:
+               nameAttr: uid
+               name: 
+               - givenName
+               - sn
+               - mail
+
+           - taskType: approval
+             emailTemplate: {{ $role.workflow.emailTemplate }}
+             mailAttr: mail
+             failureEmailSubject: Request denied
+             failureEmailMsg: |-
+               Because:
+               ${reason}
+             label: {{ $role.workflow.approvalLabel }}
+             approvers:
+             - scope: group
+               constraint: cn=approvers-k8s-$cluster$-$name$,ou=groups,ou=shadow,o=Tremolo
+             onSuccess:
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
+               params:
+                 target: jitdb
+                 name: k8s-namespace-{{ $role.name }}-$cluster$-$name${{ $root.Values.openunison.naas.groups.internal.suffix }}
+                 attributes:
+                 - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
+                 - unison.group.create.param.2={{ $role.description }}
+                 
+             - taskType: mapping
+               strict: true
+               map:
+                 - targetAttributeName: uid
+                   targetAttributeSource: uid
+                   sourceType: user
+                 - targetAttributeName: mail
+                   targetAttributeSource: mail
+                   sourceType: user
+               onSuccess:
+               - taskType: addGroup
+                 name: k8s-namespace-{{ $role.name }}-$cluster$-$name${{ $root.Values.openunison.naas.groups.internal.suffix }}
+                 remove: false
+               - taskType: provision
+                 sync: false
+                 target: jitdb
+                 setPassword: false
+                 onlyPassedInAttributes: false
+                 attributes: ["uid"]
+               {{ range $bind := $role.bindings }}
+               - taskType: customTask
+                 className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
+                 params:
+                   targetName: $cluster$
+                   template: |-
+                    kind: RoleBinding
+                    apiVersion: rbac.authorization.k8s.io/v1
+                    metadata:
+                      name: {{ $bind.binding }}-binding{{ $root.Values.openunison.naas.groups.internal.suffix }}
+                      namespace: "$name$"
+                    subjects:
+                    - kind: Group
+                      name: k8s-namespace-{{ $role.name }}-$cluster$-$name${{ $root.Values.openunison.naas.groups.internal.suffix }}
+                      apiGroup: rbac.authorization.k8s.io
+                    roleRef:
+                      kind: {{ $bind.type }}
+                      name: {{ $bind.name }}
+                      apiGroup: rbac.authorization.k8s.io
+                   kind: RoleBinding 
+                   url: /apis/rbac.authorization.k8s.io/v1/namespaces/$name$/rolebindings
+                   srcType: yaml
+
+               {{ end }} 
+
+               - taskType: notifyUser
+                 subject: {{ $role.workflow.userNotification.subject }}
+                 mailAttrib: mail
+                 msg:  {{ $role.workflow.userNotification.message }}
+             onFailure:
+             - taskType: mapping
+               strict: true
+               map:
+                 - targetAttributeName: sub
+                   targetAttributeSource: uid
+                   sourceType: user
+                 - targetAttributeName: mail
+                   targetAttributeSource: mail
+                   sourceType: user
+               onSuccess:
+                - taskType: customTask
+                  className: com.tremolosecurity.provisioning.customTasks.LoadGroupsFromTarget
+                  params:
+                    target: jitdb
+                    nameAttr: sub
+                  
+                - taskType: addGroup
+                  name: k8s-namespace-{{ $role.name }}-$cluster$-$name${{ $root.Values.openunison.naas.groups.internal.suffix }}
+                  remove: true
+                - taskType: provision
+                  sync: true
+                  target: jitdb
+                  setPassword: false
+                  onlyPassedInAttributes: false
+                  attributes: ["uid"]
+
+{{ end }}
+{{ range $role := $root.Values.openunison.naas.groups.roles }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: k8s-namespace-{{ $role.name }}
+  namespace: {{ $root.Release.Namespace }}
+  annotations:
+    oldorg: "04901973-5f4c-46d9-9e22-55e88e168776"
+spec:
+  description: k8s-namespace-{{ $role.name }}
+  inList: false
+  label: {{ $role.workflow.label }}
+  orgId: 04901973-5f4c-46d9-9e22-55e88e168776
+  tasks: |-
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.tasks.DoesGroupExist
+             params:
+               target: jitdb
+               groupName: approvers-k8s-$cluster$-$name$
+               attributeName: tremolo.approval.group.exists
+           - taskType: ifAttrHasValue
+             name: tremolo.approval.group.exists
+             value: "false"
+             onSuccess:
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
+               params:
+                 target: jitdb
+                 name: approvers-k8s-$cluster$-$name$
+                 attributes:
+                 - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
+                 - unison.group.create.param.2=Approve access to $cluster$ $name$
+                 
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.tasks.CopyGroupMembers
+               params:
+                 copyWorkflow: add-approver-user
+                 copyTo: approvers-k8s-$cluster$-$name$
+                 copyFrom: cn=k8s-cluster-$cluster$-administrators,ou=groups,ou=shadow,o=Tremolo
+                 uidAttributeName: uid
+                 requestor: system
+
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.tasks.CopyGroupMembers
+               params:
+                 copyWorkflow: add-approver-user
+                 copyTo: approvers-k8s-$cluster$-$name$
+                 copyFrom: cn=k8s-cluster-$cluster$-administrators{{ $root.Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
+                 uidAttributeName: uid
+                 requestor: system
+               
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.LoadAttributes
+             params:
+               nameAttr: uid
+               name: 
+               - givenName
+               - sn
+               - mail
+
+           - taskType: approval
+             emailTemplate: {{ $role.workflow.emailTemplate }}
+             mailAttr: mail
+             failureEmailSubject: Request denied
+             failureEmailMsg: |-
+               Because:
+               ${reason}
+             label: {{ $role.workflow.approvalLabel }}
+             approvers:
+             - scope: group
+               constraint: cn=approvers-k8s-$cluster$-$name$,ou=groups,ou=shadow,o=Tremolo
+             onSuccess:
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
+               params:
+                 target: jitdb
+                 name: k8s-namespace-{{ $role.name }}-$cluster$-$name${{ $root.Values.openunison.naas.groups.internal.suffix }}
+                 attributes:
+                 - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
+                 - unison.group.create.param.2={{ $role.description }}
+                 
+             - taskType: mapping
+               strict: true
+               map:
+                 - targetAttributeName: uid
+                   targetAttributeSource: uid
+                   sourceType: user
+                 - targetAttributeName: mail
+                   targetAttributeSource: mail
+                   sourceType: user
+               onSuccess:
+               - taskType: addGroup
+                 name: k8s-namespace-{{ $role.name }}-$cluster$-$name${{ $root.Values.openunison.naas.groups.internal.suffix }}
+                 remove: false
+               - taskType: provision
+                 sync: false
+                 target: jitdb
+                 setPassword: false
+                 onlyPassedInAttributes: false
+                 attributes: ["uid"]
+
+               {{ range $bind := $role.bindings }}
+               - taskType: customTask
+                 className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
+                 params:
+                   targetName: $cluster$
+                   template: |-
+                    kind: RoleBinding
+                    apiVersion: rbac.authorization.k8s.io/v1
+                    metadata:
+                      name: {{ $bind.binding }}-binding{{ $root.Values.openunison.naas.groups.internal.suffix }}
+                      namespace: "$name$"
+                    subjects:
+                    - kind: Group
+                      name: k8s-namespace-{{ $role.name }}-$cluster$-$name${{ $root.Values.openunison.naas.groups.internal.suffix }}
+                      apiGroup: rbac.authorization.k8s.io
+                    roleRef:
+                      kind: {{ $bind.type }}
+                      name: {{ $bind.name }}
+                      apiGroup: rbac.authorization.k8s.io
+                   kind: RoleBinding 
+                   url: /apis/rbac.authorization.k8s.io/v1/namespaces/$name$/rolebindings
+                   srcType: yaml
+               {{ end }}
+
+               - taskType: notifyUser
+                 subject: {{ $role.workflow.userNotification.subject }}
+                 mailAttrib: mail
+                 msg:  {{ $role.workflow.userNotification.message }}
+             onFailure:
+             - taskType: mapping
+               strict: true
+               map:
+                 - targetAttributeName: sub
+                   targetAttributeSource: uid
+                   sourceType: user
+                 - targetAttributeName: mail
+                   targetAttributeSource: mail
+                   sourceType: user
+               onSuccess:
+                - taskType: customTask
+                  className: com.tremolosecurity.provisioning.customTasks.LoadGroupsFromTarget
+                  params:
+                    target: jitdb
+                    nameAttr: sub
+                  
+                - taskType: addGroup
+                  name: k8s-namespace-{{ $role.name }}-$cluster$-$name${{ $root.Values.openunison.naas.groups.internal.suffix }}
+                  remove: true
+                - taskType: provision
+                  sync: true
+                  target: jitdb
+                  setPassword: false
+                  onlyPassedInAttributes: false
+                  attributes: ["uid"]
+
+{{ end }}
+{{ end }}

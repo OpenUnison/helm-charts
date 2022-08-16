@@ -9,6 +9,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: openunison-authchains
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   level: 20
   root: o=Data
@@ -68,7 +70,7 @@ spec:
       {{ end }}
     secretParams:
     - name: secretid
-      secretName: orchestra-secrets-source
+      secretName: orchestra-secrets-source#[openunison.static-secret.suffix]
       secretKey: OIDC_CLIENT_SECRET
     {{ if .Values.oidc.client_id_is_secret }}
     - name: clientid
@@ -187,6 +189,8 @@ kind: AuthenticationChain
 metadata:
   name: login-service
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   level: 20
   root: o=Tremolo
@@ -206,6 +210,8 @@ kind: AuthenticationChain
 metadata:
   name: oauth2jwt
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   level: 20
   root: o=Tremolo
@@ -232,6 +238,8 @@ kind: AuthenticationChain
 metadata:
   name: oauth2k8s
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   level: 20
   root: o=Tremolo
@@ -254,6 +262,8 @@ kind: AuthenticationChain
 metadata:
   name: oauth2jwt-login
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   level: 20
   root: o=Tremolo

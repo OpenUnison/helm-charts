@@ -5,6 +5,8 @@ kind: ConfigMap
 metadata:
   name: activemq-config-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
 data:
   activemq.xml: |-
         <!--
@@ -110,10 +112,10 @@ data:
                             <memoryUsage percentOfJvmHeap="70" />
                         </memoryUsage>
                         <storeUsage>
-                            <storeUsage limit="256 mb"/>
+                            <storeUsage limit="{{ .Values.openunison.activemq_pvc_size | default "1G" }}"/>
                         </storeUsage>
                         <tempUsage>
-                            <tempUsage limit="256 mb"/>
+                            <tempUsage limit="{{ .Values.openunison.activemq_pvc_size | default "1G" }}"/>
                         </tempUsage>
                     </systemUsage>
                 </systemUsage>
