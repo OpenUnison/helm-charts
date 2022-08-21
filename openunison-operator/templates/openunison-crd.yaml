@@ -3656,6 +3656,9 @@ spec:
                 uuid:
                   type: string
                   description: The unique id of the workflow task that is waiting for this object
+                target:
+                  type: string
+                  description: The name of the target to check against
                 statuses:
                   type: array
                   description: List of JSON requirements for this WaitForState to be completed
