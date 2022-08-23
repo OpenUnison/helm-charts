@@ -57,6 +57,11 @@ spec:
            {{ end }}
            {{ end }}
 
+            - taskType: customTask
+              className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
+              params:
+                message: pre-approval
+
            - taskType: approval
              emailTemplate: A new namespace has been requested
              mailAttr: mail
