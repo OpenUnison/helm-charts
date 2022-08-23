@@ -32,7 +32,7 @@ spec:
                {{ range $attr := .Values.openunison.naas.forms.new_namespace.additional_attributes }}
                - {{ $attr.name }}
                {{ end }}
-               keepInUser: "false"
+               keepInUser: "true"
 
            - taskType: customTask
              className: com.tremolosecurity.provisioning.customTasks.LoadAttributes
