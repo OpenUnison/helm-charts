@@ -3621,4 +3621,40 @@ spec:
     kind: JavaScriptMapping
     shortNames:
     - jsm
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: waitforstates.openunison.tremolo.io
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: crd
+    app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  group: openunison.tremolo.io
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          description: Stores the state of a workflow waiting for an object to reach a certain status
+          properties:
+            spec:
+              type: object
+              properties:
+                state:
+                  type: string
+                  description: The encrypted state of the workflow waiting for the expected status before continuing
+  scope: Namespaced
+  names:
+    plural: waitforstates
+    singular: waitforstate
+    kind: WaitForState
+    shortNames:
+    - wfs
 {{ end }}

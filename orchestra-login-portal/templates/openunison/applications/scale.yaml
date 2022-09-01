@@ -54,6 +54,12 @@ spec:
         - sn
         - mail
 
+        - cluster
+        - nameSpace
+        {{ range $attr := .Values.openunison.naas.forms.new_namespace.additional_attributes }}
+        - {{ $attr.name }}
+        {{ end }}
+
         
         givenName.displayName: "First Name"
         givenName.readOnly: "true"
@@ -66,11 +72,26 @@ spec:
         mail.displayName: "Email Address"
         mail.readOnly: "true"
 
+        cluster.displayName: "Cluster"
+        cluster.readOnly: "true"
+
+        nameSpace.displayName: "Namespace"
+        nameSpace.readOnly: "true"
+        
+        {{ range $attr := .Values.openunison.naas.forms.new_namespace.additional_attributes }}
+        {{ $attr.name }}.displayName: "{{ $attr.displayName }}"
+        {{ $attr.name }}.readOnly: "true"
+        {{ end }}
         
 
         approvalAttributeNames: 
         - uid
         - mail
+        - cluster
+        - nameSpace
+        {{ range $attr := .Values.openunison.naas.forms.new_namespace.additional_attributes }}
+        - {{ $attr.name }}
+        {{ end }}
 
         approvals.uid: Login ID
         approvals.mail: Email Address
