@@ -20,6 +20,20 @@ spec:
     className: ""
     params: []
   tasks: |-
+           
+
+           - taskType: ifAttrExists
+             name: githubTeams
+             onSuccess:
+             - taskType: customTask
+               className: com.tremolosecurity.unison.proxy.auth.github.MergeGithubGroups
+               params: {}
+           
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
+             params:
+               message: pre-load-groups
+
            {{ if .Values.openunison.naas.groups.internal.enabled }}
            - taskType: customTask
              className: com.tremolosecurity.provisioning.customTasks.LoadGroups
@@ -58,9 +72,21 @@ spec:
                    var internalGroups = new ArrayList();
 
                    if (hasInternal) {
+
+                     // need to load all internal groups
+                     var knownInternalGroups = new Set();
+                     sql = task.getConfigManager().getProvisioningEngine().getTarget("jitdb").getProvider().getDS().getConnection();
+                     try {
+                       rs = sql.createStatement().executeQuery("select name from localGroups where name like '%{{ .Values.openunison.naas.groups.internal.suffix }}'");
+                       while (rs.next()) {
+                        knownInternalGroups.add(rs.getString("name"));
+                       }
+                     } finally {
+                       sql.close();
+                     }
                      for (var i=0;i<user.getGroups().size();i++) {
                        var groupName = user.getGroups().get(i);
-                       if (groupName.endsWith("{{ .Values.openunison.naas.groups.internal.suffix }}") || groupName.startsWith("approvers-")) {
+                       if ((groupName.endsWith("{{ .Values.openunison.naas.groups.internal.suffix }}") || groupName.startsWith("approvers-")) && knownInternalGroups.has(groupName)) {
                          internalGroups.add(groupName);
                        }
                      }
@@ -75,7 +101,12 @@ spec:
 
 
                    jitDb = task.getConfigManager().getProvisioningEngine().getTarget("jitdb").getProvider();
-                   memberOf = user.getAttribs().get("memberOf");
+                   
+                   if (user.getAttribs().get("githubTeams") != null) {
+                    memberOf = user.getAttribs().get("githubTeams"); 
+                   } else {
+                    memberOf = user.getAttribs().get("memberOf");
+                  }
                    
                    request.put("WORKFLOW",task.getWorkflow());
                    if (memberOf != null) {
