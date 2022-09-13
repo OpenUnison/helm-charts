@@ -34,7 +34,6 @@ data:
         createIngressCertificate: {{ .Values.vcluster.createIngressCertificate | default true }}
         dashboard_host: {{ .Values.vcluster.dashboard_host }}
         force_redirect_to_tls: false
-        ingress_annotations: {}
         ingress_type: nginx
         k8s_url: ""
         openunison_host: {{ .Values.vcluster.openunison_host }}
