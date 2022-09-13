@@ -31,7 +31,7 @@ data:
     myvd_config_path: WEB-INF/myvd.conf
     network:
         api_server_host: {{ .Values.vcluster.api_server_host }}
-        createIngressCertificate: {{ .Values.vcluster.createIngressCertificate | default true }}
+        createIngressCertificate: {{ .Values.vcluster.createIngressCertificate }}
         dashboard_host: {{ .Values.vcluster.dashboard_host }}
         force_redirect_to_tls: false
         ingress_type: nginx
