@@ -28,11 +28,6 @@ spec:
              - taskType: customTask
                className: com.tremolosecurity.unison.proxy.auth.github.MergeGithubGroups
                params: {}
-           
-           - taskType: customTask
-             className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
-             params:
-               message: pre-load-groups
 
            {{ if .Values.openunison.naas.groups.internal.enabled }}
            - taskType: customTask

@@ -31,14 +31,20 @@ data:
     myvd_config_path: WEB-INF/myvd.conf
     network:
         api_server_host: {{ .Values.vcluster.api_server_host }}
-        createIngressCertificate: true
+        createIngressCertificate: {{ .Values.vcluster.createIngressCertificate | default true }}
         dashboard_host: {{ .Values.vcluster.dashboard_host }}
         force_redirect_to_tls: false
         ingress_annotations: {}
         ingress_type: nginx
-        k8s_url: https://192.168.2.130:6443
+        k8s_url: ""
         openunison_host: {{ .Values.vcluster.openunison_host }}
         session_inactivity_timeout_seconds: 900
+        {{ if .Values.vcluster.ingress_annotations }}
+        ingress_annotations:
+            {{ range $key,$value := .Values.vcluster.ingress_annotations }}
+            {{ $key }}: {{ quote $value }}
+            {{ end }}
+        {{ end }}
     network_policies:
         apiserver:
             enabled: false
