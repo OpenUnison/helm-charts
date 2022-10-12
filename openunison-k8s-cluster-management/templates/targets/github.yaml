@@ -1,0 +1,26 @@
+{{ if .Values.openunison.naas.groups.external.enabled }}
+{{ if .Values.github }}
+{{ if .Values.github.naas }}
+apiVersion: openunison.tremolo.io/v1
+kind: Target
+metadata:
+  name: github
+  namespace: openunison
+spec:
+  className: com.tremolosecurity.provisioning.core.providers.GitHubProvider
+  params:
+  - name: appid
+    value: "{{ .Values.github.naas.appid }}"
+  - name: org
+    value: "{{ .Values.github.naas.org }}"
+  secretParams:
+  - name: githubAppKey
+    secretName: {{ .Values.github.naas.secret.name }}
+    secretKey: {{ .Values.github.naas.secret.key }}
+  targetAttributes:
+  - name: sub
+    source: sub
+    sourceType: user
+{{ end }}
+{{ end }}
+{{ end }}

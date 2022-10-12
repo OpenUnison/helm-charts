@@ -39,5 +39,9 @@ spec:
              - scope: group
                constraint: cn=administrators{{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
              onSuccess:
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
+               params:
+                 message: post-approval
              - taskType: callWorkflow
-               name: call-delete-namespace
+               name: k8s-delete-namespace

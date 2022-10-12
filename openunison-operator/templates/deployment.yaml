@@ -49,11 +49,19 @@ spec:
         - name: EXTRA_JS
           value: /usr/local/openunison/js-external
         - name: JAVA_OPTS
-          value: -Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom -Dsun.net.inetaddr.ttl=0
+          value: -Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom -Dsun.net.inetaddr.ttl=0 -Djava.security.krb5.conf=/etc/krb5-local/krb5.conf -Djava.security.krb5.debug=true
         - name: NAMESPACE
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+        {{ if and .Values.kerberos .Values.kerberos.enabled }}
+        - name: KRB5_CONFIG
+          value: /etc/krb5-local/krb5.conf
+        - name: KRB5RCACHEDIR
+          value: /dev/shm
+        - name: KRB5CCNAME
+          value: /dev/shm/ccache
+        {{ end }}
         {{ if .Values.operator }}
         image: {{ .Values.operator.image | default "docker.io/tremolosecurity/openunison-k8s-operator" }}
         {{ else }}
@@ -61,6 +69,11 @@ spec:
         {{ end }}
         command:
         - java
+        {{ if and .Values.kerberos .Values.kerberos.enabled }}
+        - -Djava.security.krb5.conf=/etc/krb5-local/krb5.conf
+        - -Djava.security.krb5.debug=true
+        - -Djava.security.auth.login.config=/etc/krb5-local/SQLJDBCDriver.conf
+        {{ end }}
         - -jar
         - /usr/local/openunison/javascript-operator.jar
         - -tokenPath
@@ -88,6 +101,11 @@ spec:
         - mountPath: /etc/extraMaps
           name: extra-maps
           readOnly: true
+        {{ if and .Values.kerberos .Values.kerberos.enabled }}
+        - mountPath: /etc/krb5-local
+          name: krb
+          readOnly: true
+        {{ end }}
         {{ if and .Values.services .Values.services.resources }}
         resources:
           {{ if .Values.services.resources.requests }}
@@ -114,6 +132,38 @@ spec:
           
           {{ end }}
         {{ end }}
+      {{ if and .Values.kerberos .Values.kerberos.enabled }}
+      - image: docker.io/mlbiam/kerberos-sidecar
+        name: krb-sidecar
+        {{ if not .Values.kerberos.keytab }}
+        command:
+          - /reinit-pwd.sh
+        {{ end }}
+        env:
+        - name: KRB5CCNAME
+          value: /dev/shm/ccache
+        - name: KRB5_CONFIG
+          value: /etc/krb5-local/krb5.conf
+        - name: REKINIT_PERIOD
+          value: "3600"
+        - name: SECRETS
+          value: /etc/krb5-keytabs
+        {{ if .Values.kerberos.keytab }}
+        - name: KEYTAB
+          value: {{ .Values.kerberos.keytab }}
+        {{ end }}
+        - name: PRINCIPAL
+          value: {{ .Values.kerberos.principal }}
+        - name: KRB5RCACHEDIR
+          value: /dev/shm
+        volumeMounts:
+          - mountPath: /etc/krb5-local
+            name: krb
+            readOnly: true
+          - mountPath: /etc/krb5-keytabs
+            name: krb-keytab
+            readOnly: true
+      {{ end }}  
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
@@ -121,6 +171,14 @@ spec:
       volumes:
         - name: extra-maps
           emptyDir: {}
+        {{ if and .Values.kerberos .Values.kerberos.enabled }}
+        - name: krb
+          configMap:
+            name: kerb-config
+        - name: krb-keytab
+          secret:
+            secretName: kerb-keytab
+        {{ end }}
       {{ $length := len .Values.services.node_selectors }}
       {{ if eq $length 0  }}
       nodeSelector: {}

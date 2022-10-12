@@ -34,6 +34,10 @@ spec:
       - env:
         - name: ACTIVEMQ_DEBUG_OPTS
           value: "-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom"
+        {{ if and .Values.kerberos .Values.kerberos.enabled }}
+        - name: JAVA_OPTS
+          value: "-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom -DunisonEnvironmentFile=/etc/openunison/ou.env -Djavax.net.ssl.trustStore=/etc/openunison/cacerts.jks -Dpolyglot.engine.WarnInterpreterOnly=false -Djava.security.krb5.conf=/etc/krb5-local/krb5.conf -Djava.security.krb5.debug=true -Djava.security.auth.login.config=/etc/krb5-local/SQLJDBCDriver.conf"
+        {{ end }}
         - name: JDBC_DRIVER
           valueFrom:
             secretKeyRef:
@@ -59,6 +63,14 @@ spec:
             secretKeyRef:
               name: amq-env-secrets-{{ .Release.Name  }}
               key: TLS_KS_PWD
+        {{ if and .Values.kerberos .Values.kerberos.enabled }}
+        - name: KRB5_CONFIG
+          value: /etc/krb5-local/krb5.conf
+        - name: KRB5RCACHEDIR
+          value: /dev/shm
+        - name: KRB5CCNAME
+          value: /dev/shm/ccache
+        {{ end }}
         image: {{ .Values.amq_image }}
         imagePullPolicy: Always
         livenessProbe:
@@ -105,6 +117,12 @@ spec:
         - name: kahadb
           mountPath: /activemq-data
         {{ end }}
+        {{ if and .Values.kerberos .Values.kerberos.enabled }}
+        - mountPath: /etc/krb5-local
+          name: krb
+          readOnly: true
+        {{ end }}
+
         {{ if .Values.amq }}
         {{ if .Values.amq.resources }}
         resources:
@@ -133,9 +151,42 @@ spec:
           {{ end }}
         {{ end }}
         {{ end }}
+      {{ if and .Values.kerberos .Values.kerberos.enabled }}
+      - image: docker.io/mlbiam/kerberos-sidecar
+        name: krb-sidecar
+        {{ if not .Values.kerberos.keytab }}
+        command:
+          - /reinit-pwd.sh
+        {{ end }}
+        env:
+        - name: KRB5CCNAME
+          value: /dev/shm/ccache
+        - name: KRB5_CONFIG
+          value: /etc/krb5-local/krb5.conf
+        - name: REKINIT_PERIOD
+          value: "3600"
+        - name: SECRETS
+          value: /etc/krb5-keytabs
+        {{ if .Values.kerberos.keytab }}
+        - name: KEYTAB
+          value: {{ .Values.kerberos.keytab }}
+        {{ end }}
+        - name: PRINCIPAL
+          value: {{ .Values.kerberos.principal }}
+        - name: KRB5RCACHEDIR
+          value: /dev/shm
+        volumeMounts:
+          - mountPath: /etc/krb5-local
+            name: krb
+            readOnly: true
+          - mountPath: /etc/krb5-keytabs
+            name: krb-keytab
+            readOnly: true
+      {{ end }}
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
+      
       volumes:
       - name: secret-volume
         secret:
@@ -152,6 +203,14 @@ spec:
       - name: kahadb
         persistentVolumeClaim:
           claimName: activemq-kahadb
+      {{ end }}
+      {{ if and .Values.kerberos .Values.kerberos.enabled }}
+      - name: krb
+        configMap:
+          name: kerb-config
+      - name: krb-keytab
+        secret:
+          secretName: kerb-keytab
       {{ end }}
       {{ $length := len .Values.services.node_selectors }}
       {{ if eq $length 0  }}

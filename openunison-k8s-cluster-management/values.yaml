@@ -42,6 +42,7 @@ openunison:
           fieldName: adminGroup
           label: "Administrator Group"
           errorMessage: "Invalid administrator group"
+          required: true
       - name: viewer
         description: View kubernetes namespace $cluster$ $nameSpace$
         bindings:
@@ -52,6 +53,7 @@ openunison:
           fieldName: viewerGroup
           label: "Viewer Group"
           errorMessage: "Invalid viewer group"
+          required: true
         workflow:
           label: "namespace viewer"
           displayLabel: $name$ Administrator

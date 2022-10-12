@@ -87,10 +87,18 @@ spec:
         approvalAttributeNames: 
         - uid
         - mail
-        - cluster
+        
+        approvalRequestAttributeNames:
+        - clusterLabel
         - nameSpace
         {{ range $attr := .Values.openunison.naas.forms.new_namespace.additional_attributes }}
         - {{ $attr.name }}
+        {{ end }}
+
+        approvals.clusterLabel: "Cluster"
+        approvals.nameSpace: "Namespace"
+        {{ range $attr := .Values.openunison.naas.forms.new_namespace.additional_attributes }}
+        approvals.{{ $attr.name }}: "{{ $attr.displayName }}"
         {{ end }}
 
         approvals.uid: Login ID
