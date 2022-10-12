@@ -22,6 +22,8 @@ spec:
       value: "false"
     - name: groupPrefix
       value: approvers-k8s-
+    - name: groupSuffix
+      value: ""
   tasks: |-
            - taskType: addAttribute
              name: cluster
@@ -31,7 +33,8 @@ spec:
            - taskType: callWorkflow
              name: k8s-delete-workflow
 {{ end }}
-{{ if .Values.openunison.naas.groups.external.enabled }}
+{{ if .Values.openunison.naas.groups.external.enabled    }}
+{{ if not .Values.openunison.naas.groups.internal.enabled }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Workflow
@@ -55,6 +58,8 @@ spec:
       value: "false"
     - name: groupPrefix
       value: k8s-namespace-administrators-
+    - name: groupSuffix
+      value: "{{ .Values.openunison.naas.groups.external.suffix }}"
   tasks: |-
            - taskType: addAttribute
              name: cluster
@@ -63,4 +68,5 @@ spec:
              addToRequest: true
            - taskType: callWorkflow
              name: k8s-delete-workflow
+{{ end }}
 {{ end }}

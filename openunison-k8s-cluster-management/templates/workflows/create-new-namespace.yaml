@@ -63,81 +63,133 @@ spec:
 
            {{ range $role := .Values.openunison.naas.groups.default }}
            - taskType: customTask
-             className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
+             className: com.tremolosecurity.provisioning.customTasks.JavaScriptTask
              params:
-               target: jitdb
-               name: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.external.suffix }}
-               attributes:
-               - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
-               - unison.group.create.param.2={{ $role.description }}
+               javaScript: |-
+                 Attribute = Java.type("com.tremolosecurity.saml.Attribute");
 
-           # create group mapping
-           - taskType: customTask
-             className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
-             params:
-               targetName: k8s
-               template: |-
+                 function init(task,params) {
+                   // nothing to do
+                 }
+ 
+                 function reInit(task) {
+                   // do nothing
+                 }
+ 
+                 function doTask(user,request) {
+                   if (! user.getAttribs().get("{{ $role.external.fieldName }}")) {
+                     user.getAttribs().put("{{$role.external.fieldName}}",new Attribute("{{$role.external.fieldName}}",""));
+                   }
+                   
+                   return true;
+                 }
+
+           - taskType: ifAttrHasValue
+             name: {{ $role.external.fieldName }}
+             value: ""
+             onFailure:
+              - taskType: customTask
+                className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
+                params:
+                  target: jitdb
+                  name: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.external.suffix }}
+                  attributes:
+                  - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
+                  - unison.group.create.param.2={{ $role.description }}
+
+              # create group mapping
+              - taskType: customTask
+                className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
+                params:
+                  targetName: k8s
+                  template: |-
+                      kind: GroupMetaData
+                      apiVersion: openunison.tremolo.io/v1
+                      metadata:
+                        name: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace$
+                        namespace: {{ $root.Release.Namespace }}
+                        labels:
+                          name: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace$
+                          app.kubernetes.io/name: openunison
+                          app.kubernetes.io/instance: openunison-{{ $root.Release.Name }}
+                          app.kubernetes.io/component: openunison-groupmetadata
+                          app.kubernetes.io/part-of: openunison
+                        annotations:
+                          tremolo.io/managedByGit: "$useGit$"
+                      spec:
+                        groupName: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.external.suffix }}
+                        externalName: "${{ $role.external.fieldName }}$"
                   kind: GroupMetaData
-                  apiVersion: openunison.tremolo.io/v1
-                  metadata:
-                    name: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace$
-                    namespace: {{ $root.Release.Namespace }}
-                    labels:
-                      name: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace$
-                      app.kubernetes.io/name: openunison
-                      app.kubernetes.io/instance: openunison-{{ $root.Release.Name }}
-                      app.kubernetes.io/component: openunison-groupmetadata
-                      app.kubernetes.io/part-of: openunison
-                    annotations:
-                      tremolo.io/managedByGit: "$useGit$"
-                  spec:
-                    groupName: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.external.suffix }}
-                    externalName: "${{ $role.external.fieldName }}$"
-               kind: GroupMetaData
-               url: /apis/openunison.tremolo.io/v1/namespaces/{{ $root.Release.Namespace }}/groupmetadatas
-               srcType: yaml
-               writeToRequest: "$useGit$"
-               requestAttribute: git-secret-cluster-k8s-$nameSpace$
-               path: /yaml/ns/$nameSpace$/groupmetadatas/k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace$.yaml
+                  url: /apis/openunison.tremolo.io/v1/namespaces/{{ $root.Release.Namespace }}/groupmetadatas
+                  srcType: yaml
+                  writeToRequest: "$useGit$"
+                  requestAttribute: git-secret-cluster-k8s-$nameSpace$
+                  path: /yaml/ns/$nameSpace$/groupmetadatas/k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace$.yaml
            {{ end }}
            {{ range $role := .Values.openunison.naas.groups.roles }}
            - taskType: customTask
-             className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
+             className: com.tremolosecurity.provisioning.customTasks.JavaScriptTask
              params:
-               target: jitdb
-               name: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.external.suffix }}
-               attributes:
-               - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
-               - unison.group.create.param.2={{ $role.description }}
+               javaScript: |-
+                 Attribute = Java.type("com.tremolosecurity.saml.Attribute");
 
-           # create group mapping
-           - taskType: customTask
-             className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
-             params:
-               targetName: k8s
-               template: |-
+                 function init(task,params) {
+                   // nothing to do
+                 }
+ 
+                 function reInit(task) {
+                   // do nothing
+                 }
+ 
+                 function doTask(user,request) {
+                   if (! user.getAttribs().get("{{ $role.external.fieldName }}")) {
+                     user.getAttribs().put("{{$role.external.fieldName}}",new Attribute("{{$role.external.fieldName}}",""));
+                   }
+                   
+                   return true;
+                 }
+           
+           - taskType: ifAttrHasValue
+             name: {{ $role.external.fieldName }}
+             value: ""
+             onFailure:
+              - taskType: customTask
+                className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
+                params:
+                  target: jitdb
+                  name: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.external.suffix }}
+                  attributes:
+                  - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
+                  - unison.group.create.param.2={{ $role.description }}
+
+              # create group mapping
+              - taskType: customTask
+                className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
+                params:
+                  targetName: k8s
+                  template: |-
+                      kind: GroupMetaData
+                      apiVersion: openunison.tremolo.io/v1
+                      metadata:
+                        name: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace$
+                        namespace: {{ $root.Release.Namespace }}
+                        labels:
+                          name: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace$
+                          app.kubernetes.io/name: openunison
+                          app.kubernetes.io/instance: openunison-{{ $root.Release.Name }}
+                          app.kubernetes.io/component: openunison-groupmetadata
+                          app.kubernetes.io/part-of: openunison
+                        annotations:
+                          tremolo.io/managedByGit: "$useGit$"
+                      spec:
+                        groupName: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.external.suffix }}
+                        externalName: "${{ $role.external.fieldName }}$"
                   kind: GroupMetaData
-                  apiVersion: openunison.tremolo.io/v1
-                  metadata:
-                    name: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace$
-                    namespace: {{ $root.Release.Namespace }}
-                    labels:
-                      name: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace$
-                      app.kubernetes.io/name: openunison
-                      app.kubernetes.io/instance: openunison-{{ $root.Release.Name }}
-                      app.kubernetes.io/component: openunison-groupmetadata
-                      app.kubernetes.io/part-of: openunison
-                    annotations:
-                      tremolo.io/managedByGit: "$useGit$"
-                  spec:
-                    groupName: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.external.suffix }}
-                    externalName: "${{ $role.external.fieldName }}$"
-               kind: GroupMetaData
-               url: /apis/openunison.tremolo.io/v1/namespaces/{{ $root.Release.Namespace }}/groupmetadatas
-               srcType: yaml
-               writeToRequest: "$useGit$"
-               requestAttribute: git-secret-cluster-k8s-$nameSpace$
-               path: /yaml/ns/$nameSpace$/groupmetadatas/k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace$.yaml
+                  url: /apis/openunison.tremolo.io/v1/namespaces/{{ $root.Release.Namespace }}/groupmetadatas
+                  srcType: yaml
+                  writeToRequest: "$useGit$"
+                  requestAttribute: git-secret-cluster-k8s-$nameSpace$
+                  path: /yaml/ns/$nameSpace$/groupmetadatas/k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace$.yaml
            {{ end }}
 
             
@@ -341,58 +393,66 @@ spec:
 
            {{ range $role := .Values.openunison.naas.groups.default }}
            {{ range $bind := $role.bindings }}
-           - taskType: customTask
-             className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
-             params:
-               targetName: $cluster$
-               template: |-
-                    kind: RoleBinding
-                    apiVersion: rbac.authorization.k8s.io/v1
-                    metadata:
-                      name: {{ $bind.binding }}-binding{{ $root.Values.openunison.naas.groups.external.suffix }}
-                      namespace: "$nameSpace$"
-                    subjects:
-                    - kind: Group
-                      name: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.external.suffix }}
-                      apiGroup: rbac.authorization.k8s.io
-                    roleRef:
-                      kind: {{ $bind.type }}
-                      name: {{ $bind.name }}
-                      apiGroup: rbac.authorization.k8s.io
-               kind: RoleBinding
-               url: /apis/rbac.authorization.k8s.io/v1/namespaces/$nameSpace$/rolebindings
-               srcType: yaml
-               writeToRequest: "$useGit$"
-               requestAttribute: git-secret-namespace-$cluster$-$nameSpace$
-               path: /yaml/ns/$nameSpace$/rolebindings/{{ $role.bindingname }}-binding{{ $root.Values.openunison.naas.groups.external.suffix }}.yaml
+           - taskType: ifAttrHasValue
+             name: {{ $role.external.fieldName }}
+             value: ""
+             onFailure:
+              - taskType: customTask
+                className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
+                params:
+                  targetName: $cluster$
+                  template: |-
+                        kind: RoleBinding
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        metadata:
+                          name: {{ $bind.binding }}-binding{{ $root.Values.openunison.naas.groups.external.suffix }}
+                          namespace: "$nameSpace$"
+                        subjects:
+                        - kind: Group
+                          name: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.external.suffix }}
+                          apiGroup: rbac.authorization.k8s.io
+                        roleRef:
+                          kind: {{ $bind.type }}
+                          name: {{ $bind.name }}
+                          apiGroup: rbac.authorization.k8s.io
+                  kind: RoleBinding
+                  url: /apis/rbac.authorization.k8s.io/v1/namespaces/$nameSpace$/rolebindings
+                  srcType: yaml
+                  writeToRequest: "$useGit$"
+                  requestAttribute: git-secret-namespace-$cluster$-$nameSpace$
+                  path: /yaml/ns/$nameSpace$/rolebindings/{{ $role.bindingname }}-binding{{ $root.Values.openunison.naas.groups.external.suffix }}.yaml
            {{ end }}
            {{ end }}
            {{ range $role := .Values.openunison.naas.groups.roles }}
            {{ range $bind := $role.bindings }}
-           - taskType: customTask
-             className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
-             params:
-               targetName: $cluster$
-               template: |-
-                    kind: RoleBinding
-                    apiVersion: rbac.authorization.k8s.io/v1
-                    metadata:
-                      name: {{ $bind.binding }}-binding{{ $root.Values.openunison.naas.groups.external.suffix }}
-                      namespace: "$nameSpace$"
-                    subjects:
-                    - kind: Group
-                      name: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.external.suffix }}
-                      apiGroup: rbac.authorization.k8s.io
-                    roleRef:
-                      kind: {{ $bind.type }}
-                      name: {{ $bind.name }}
-                      apiGroup: rbac.authorization.k8s.io
-               kind: RoleBinding
-               url: /apis/rbac.authorization.k8s.io/v1/namespaces/$nameSpace$/rolebindings
-               srcType: yaml
-               writeToRequest: "$useGit$"
-               requestAttribute: git-secret-namespace-$cluster$-$nameSpace$
-               path: /yaml/ns/$nameSpace$/rolebindings/{{ $role.bindingname }}-binding{{ $root.Values.openunison.naas.groups.external.suffix }}.yaml
+           - taskType: ifAttrHasValue
+             name: {{ $role.external.fieldName }}
+             value: ""
+             onFailure:
+              - taskType: customTask
+                className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
+                params:
+                  targetName: $cluster$
+                  template: |-
+                        kind: RoleBinding
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        metadata:
+                          name: {{ $bind.binding }}-binding{{ $root.Values.openunison.naas.groups.external.suffix }}
+                          namespace: "$nameSpace$"
+                        subjects:
+                        - kind: Group
+                          name: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.external.suffix }}
+                          apiGroup: rbac.authorization.k8s.io
+                        roleRef:
+                          kind: {{ $bind.type }}
+                          name: {{ $bind.name }}
+                          apiGroup: rbac.authorization.k8s.io
+                  kind: RoleBinding
+                  url: /apis/rbac.authorization.k8s.io/v1/namespaces/$nameSpace$/rolebindings
+                  srcType: yaml
+                  writeToRequest: "$useGit$"
+                  requestAttribute: git-secret-namespace-$cluster$-$nameSpace$
+                  path: /yaml/ns/$nameSpace$/rolebindings/{{ $role.bindingname }}-binding{{ $root.Values.openunison.naas.groups.external.suffix }}.yaml
            {{ end }}
            {{ end }}
            {{ end }}

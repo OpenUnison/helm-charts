@@ -1,3 +1,4 @@
+{{- $root := . -}}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Workflow
@@ -10,6 +11,11 @@ spec:
   label: Delete Namespace
   orgId: 04901973-5f4c-46d9-9e22-55e88e168776
   tasks: |-
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
+               params:
+                 message: in k8s-delete-namespace
+
              - taskType: customTask
                className: com.tremolosecurity.provisioning.customTasks.CopyFromUserToRequest
                params:
@@ -28,6 +34,7 @@ spec:
   
              {{ if .Values.openunison.naas.groups.internal.enabled }}
              # Remove all members from the groups
+             
              - taskType: customTask
                className: com.tremolosecurity.provisioning.customTasks.DeleteGroupMembers
                params:
@@ -36,127 +43,165 @@ spec:
                  groupToDelete: cn=approvers-k8s-$cluster$-$nameSpace$,ou=groups,ou=shadow,o=Tremolo
                  groupNameAttribute: cn
                  requestor: system
+             
+             {{ range $role := .Values.openunison.naas.groups.default }}
              - taskType: customTask
                className: com.tremolosecurity.provisioning.customTasks.DeleteGroupMembers
                params:
                  uidAttributeName: uid
                  removeWorkflow: remove-user-from-group
-                 groupToDelete: cn=k8s-namespace-administrators-$cluster$-$nameSpace${{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
+                 groupToDelete: cn=k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
                  groupNameAttribute: cn
                  requestor: system
+             {{ end }}
+
+             {{ range $role := .Values.openunison.naas.groups.roles }}
              - taskType: customTask
                className: com.tremolosecurity.provisioning.customTasks.DeleteGroupMembers
                params:
                  uidAttributeName: uid
                  removeWorkflow: remove-user-from-group
-                 groupToDelete: cn=k8s-namespace-viewer-$cluster$-$nameSpace${{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
+                 groupToDelete: cn=k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
                  groupNameAttribute: cn
                  requestor: system
+             {{ end }}
+
+             
              # Remove the groups
              - taskType: customTask
                className: com.tremolosecurity.provisioning.customTasks.RemoveGroupFromStore
                params:
                  name: 
                  - approvers-k8s-$cluster$-$nameSpace$
-                 - k8s-namespace-administrators-$cluster$-$nameSpace${{ .Values.openunison.naas.groups.internal.suffix }}
-                 - k8s-namespace-viewer-$cluster$-$nameSpace${{ .Values.openunison.naas.groups.internal.suffix }}
+                 {{ range $role := .Values.openunison.naas.groups.default }}
+                 - k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.internal.suffix }}
+                 {{ end }}
+                 {{ range $role := .Values.openunison.naas.groups.roles }}
+                 - k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.internal.suffix }}
+                 {{ end }}
                  target: jitdb
              
 
              # Delete known namespace objects
-
+             {{ range $role := .Values.openunison.naas.groups.default }}
+             {{ range $bind := $role.bindings }}
              - taskType: customTask
                className: com.tremolosecurity.provisioning.tasks.DeleteK8sObject
                params:
                  targetName: $cluster$
                  kind:  RoleBinding
-                 url: /apis/rbac.authorization.k8s.io/v1/namespaces/$nameSpace$/rolebindings/viewers-binding{{ .Values.openunison.naas.groups.internal.suffix }}
+                 url: /apis/rbac.authorization.k8s.io/v1/namespaces/$nameSpace$/rolebindings/{{ $bind.binding }}-binding{{ $root.Values.openunison.naas.groups.internal.suffix }}
                  writeToRequest: "$useGit$"
                  requestAttribute: git-secret-namespace-$cluster$-$nameSpace$
-                 path: /yaml/ns/$nameSpace$/rolebindings/viewers-binding{{ .Values.openunison.naas.groups.internal.suffix }}.yaml
+                 path: /yaml/ns/$nameSpace$/rolebindings/{{ $bind.binding }}-binding{{ $root.Values.openunison.naas.groups.internal.suffix }}.yaml
+             {{ end }}
+             {{ end }}
 
+             {{ range $role := .Values.openunison.naas.groups.roles }}
+             {{ range $bind := $role.bindings }}
              - taskType: customTask
                className: com.tremolosecurity.provisioning.tasks.DeleteK8sObject
                params:
                  targetName: $cluster$
-                 kind: RoleBinding
-                 url: /apis/rbac.authorization.k8s.io/v1/namespaces/$nameSpace$/rolebindings/admins-binding{{ .Values.openunison.naas.groups.internal.suffix }}
+                 kind:  RoleBinding
+                 url: /apis/rbac.authorization.k8s.io/v1/namespaces/$nameSpace$/rolebindings/{{ $bind.binding }}-binding{{ $root.Values.openunison.naas.groups.internal.suffix }}
                  writeToRequest: "$useGit$"
                  requestAttribute: git-secret-namespace-$cluster$-$nameSpace$
-                 path: /yaml/ns/$nameSpace$/rolebindings/admins-binding{{ .Values.openunison.naas.groups.internal.suffix }}.yaml
+                 path: /yaml/ns/$nameSpace$/rolebindings/{{ $bind.binding }}-binding{{ $root.Values.openunison.naas.groups.internal.suffix }}.yaml
+             {{ end }}
+             {{ end }}
+
+             
+
              {{ end }}
 
              {{ if .Values.openunison.naas.groups.external.enabled }}
              # Remove all members from the groups
-             
+             {{ range $role := .Values.openunison.naas.groups.default }}
              - taskType: customTask
                className: com.tremolosecurity.provisioning.customTasks.DeleteGroupMembers
                params:
                  uidAttributeName: uid
                  removeWorkflow: remove-user-from-group
-                 groupToDelete: cn=k8s-namespace-administrators-$cluster$-$nameSpace$,ou=groups,ou=shadow,o=Tremolo
+                 groupToDelete: cn=k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.external.suffix }},ou=groups,ou=shadow,o=Tremolo
                  groupNameAttribute: cn
                  requestor: system
+             {{ end }}
+
+             {{ range $role := .Values.openunison.naas.groups.roles }}
              - taskType: customTask
                className: com.tremolosecurity.provisioning.customTasks.DeleteGroupMembers
                params:
                  uidAttributeName: uid
                  removeWorkflow: remove-user-from-group
-                 groupToDelete: cn=k8s-namespace-viewer-$cluster$-$nameSpace$,ou=groups,ou=shadow,o=Tremolo
+                 groupToDelete: cn=k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.external.suffix }},ou=groups,ou=shadow,o=Tremolo
                  groupNameAttribute: cn
                  requestor: system
+             {{ end }}
+
+
              # Remove the groups
              - taskType: customTask
                className: com.tremolosecurity.provisioning.customTasks.RemoveGroupFromStore
                params:
                  name: 
-                 - k8s-namespace-administrators-$cluster$-$nameSpace$
-                 - k8s-namespace-viewer-$cluster$-$nameSpace$
+                 {{ range $role := .Values.openunison.naas.groups.default }}
+                 - k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.external.suffix }}
+                 {{ end }}
+                 {{ range $role := .Values.openunison.naas.groups.roles }}
+                 - k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.external.suffix }}
+                 {{ end }}
                  target: jitdb
              
 
              # Delete known namespace objects
-
+             {{ range $role := .Values.openunison.naas.groups.default }}
+             {{ range $bind := $role.bindings }}
              - taskType: customTask
                className: com.tremolosecurity.provisioning.tasks.DeleteK8sObject
                params:
                  targetName: $cluster$
                  kind:  RoleBinding
-                 url: /apis/rbac.authorization.k8s.io/v1/namespaces/$nameSpace$/rolebindings/viewers-binding
+                 url: /apis/rbac.authorization.k8s.io/v1/namespaces/$nameSpace$/rolebindings/{{ $bind.binding }}-binding
                  writeToRequest: "$useGit$"
                  requestAttribute: git-secret-namespace-$cluster$-$nameSpace$
-                 path: /yaml/ns/$nameSpace$/rolebindings/viewers-binding.yaml
+                 path: /yaml/ns/$nameSpace$/rolebindings/{{ $bind.binding }}-binding.yaml
+             {{ end }}
 
              - taskType: customTask
                className: com.tremolosecurity.provisioning.tasks.DeleteK8sObject
                params:
                  targetName: $cluster$
                  kind:  GroupMetaData
-                 url: /apis/openunison.tremolo.io/v1/namespaces/{{ .Release.Namespace }}/groupmetadatas/k8s-namespace-viewer-$cluster$-$nameSpace$
+                 url: /apis/openunison.tremolo.io/v1/namespaces/{{ $root.Release.Namespace }}/groupmetadatas/k8s-namespace-viewer-$cluster$-$nameSpace$
                  writeToRequest: "$useGit$"
                  requestAttribute: git-secret-namespace-$cluster$-$nameSpace$
                  path: /yaml/ns/$nameSpace$/groupmetadatas/k8s-namespace-viewer-$cluster$-$nameSpace$.yaml
+             {{ end }}
 
-
+             {{ range $role := .Values.openunison.naas.groups.roles }}
+             {{ range $bind := $role.bindings }}
              - taskType: customTask
                className: com.tremolosecurity.provisioning.tasks.DeleteK8sObject
                params:
                  targetName: $cluster$
                  kind: RoleBinding
-                 url: /apis/rbac.authorization.k8s.io/v1/namespaces/$nameSpace$/rolebindings/admins-binding
+                 url: /apis/rbac.authorization.k8s.io/v1/namespaces/$nameSpace$/rolebindings/{{ $bind.binding }}-binding
                  writeToRequest: "$useGit$"
                  requestAttribute: git-secret-namespace-$cluster$-$nameSpace$
-                 path: /yaml/ns/$nameSpace$/rolebindings/admins-binding.yaml
+                 path: /yaml/ns/$nameSpace$/rolebindings/{{ $bind.binding }}-binding.yaml
+             {{ end }}
 
              - taskType: customTask
                className: com.tremolosecurity.provisioning.tasks.DeleteK8sObject
                params:
                  targetName: $cluster$
                  kind:  GroupMetaData
-                 url: /apis/openunison.tremolo.io/v1/namespaces/{{ .Release.Namespace }}/groupmetadatas/k8s-namespace-administrators-$cluster$-$nameSpace$
+                 url: /apis/openunison.tremolo.io/v1/namespaces/{{ $root.Release.Namespace }}/groupmetadatas/k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace$
                  writeToRequest: "$useGit$"
                  requestAttribute: git-secret-namespace-$cluster$-$nameSpace$
-                 path: /yaml/ns/$nameSpace$/groupmetadatas/k8s-namespace-administrators-$cluster$-$nameSpace$.yaml
+                 path: /yaml/ns/$nameSpace$/groupmetadatas/k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace$.yaml
+             {{ end }}
              {{ end }}
              
              - taskType: customTask

@@ -35,6 +35,27 @@ spec:
                keepInUser: "true"
 
            - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.JavaScriptTask
+             params:
+               javaScript: |-
+                 function init(task,params) {
+                   // nothing to do
+                 }
+ 
+                 function reInit(task) {
+                   // do nothing
+                 }
+ 
+                 function doTask(user,request) {
+                   var targetName = request.get("cluster");
+                   GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+                   var target = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget(targetName).getProvider();
+                   request.put("clusterLabel",target.getLabel());
+                   
+                   return true;
+                 }
+
+           - taskType: customTask
              className: com.tremolosecurity.provisioning.customTasks.LoadAttributes
              params:
                nameAttr: uid
