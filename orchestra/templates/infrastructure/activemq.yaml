@@ -152,7 +152,7 @@ spec:
         {{ end }}
         {{ end }}
       {{ if and .Values.kerberos .Values.kerberos.enabled }}
-      - image: docker.io/mlbiam/kerberos-sidecar
+      - image: {{ .Values.kerberos.sidecar_image }}
         name: krb-sidecar
         {{ if not .Values.kerberos.keytab }}
         command:
