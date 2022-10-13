@@ -1,9 +1,15 @@
-{{ $hasKerberos := false }}
 
+{{ $hasKerberos := false  }}
 {{ if .Values.kerberos  }}
-{{ if .Values.kerberos.enabled }}
-{{ $hasKerberos := true }}
+
+{{ if .Values.kerberos.enabled  }}
+{{ $hasKerberos = true }}
+{{ else }}
+{{ $hasKerberos = false }}
 {{ end }}
+
+{{ else }}
+{{ $hasKerberos = false }}
 {{ end }}
 ---
 apiVersion: apps/v1
