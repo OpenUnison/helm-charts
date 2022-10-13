@@ -1,3 +1,10 @@
+{{ $hasKerberos := false }}
+
+{{ if .Values.kerberos  }}
+{{ if .Values.kerberos.enabled }}
+{{ $hasKerberos := true }}
+{{ end }}
+{{ end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -36,7 +43,7 @@ spec:
     spec:
       containers:
       - env:
-        {{ if and .Values.kerberos .Values.kerberos.enabled }}
+        {{ if $hasKerberos }}
         - name: JAVA_OPTS
           value: "-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom -DunisonEnvironmentFile=/etc/openunison/ou.env -Djavax.net.ssl.trustStore=/etc/openunison/cacerts.jks -Dpolyglot.engine.WarnInterpreterOnly=false -Djava.security.krb5.conf=/etc/krb5-local/krb5.conf -Djava.security.krb5.debug=true -Djava.security.auth.login.config=/etc/krb5-local/SQLJDBCDriver.conf"
         {{ else }}
@@ -45,7 +52,7 @@ spec:
         {{ end }}
         - name: fortriggerupdates
           value: changeme
-        {{ if and .Values.kerberos .Values.kerberos.enabled }}
+        {{ if $hasKerberos }}
         - name: KRB5_CONFIG
           value: /etc/krb5-local/krb5.conf
         - name: KRB5RCACHEDIR
@@ -152,12 +159,12 @@ spec:
           name: custom-debug
           readOnly: true
         {{ end }}
-        {{ if and .Values.kerberos .Values.kerberos.enabled }}
+        {{ if $hasKerberos }}
         - mountPath: /etc/krb5-local
           name: krb
           readOnly: true
         {{ end }}
-      {{ if and .Values.kerberos .Values.kerberos.enabled }}
+      {{ if $hasKerberos }}
       - image: docker.io/mlbiam/kerberos-sidecar
         name: krb-sidecar
         {{ if not .Values.kerberos.keytab }}
@@ -229,7 +236,7 @@ spec:
         configMap:
           name: {{ .Values.openunison.debugConfigMap | quote }}
       {{ end }}
-      {{ if and .Values.kerberos .Values.kerberos.enabled }}
+      {{ if $hasKerberos }}
       - name: krb
         configMap:
           name: kerb-config
