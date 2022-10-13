@@ -54,13 +54,15 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        {{ if and .Values.kerberos .Values.kerberos.enabled }}
+        {{ if .Values.kerberos  }}
+        {{ if .Values.kerberos.enabled }}
         - name: KRB5_CONFIG
           value: /etc/krb5-local/krb5.conf
         - name: KRB5RCACHEDIR
           value: /dev/shm
         - name: KRB5CCNAME
           value: /dev/shm/ccache
+        {{ end }}
         {{ end }}
         {{ if .Values.operator }}
         image: {{ .Values.operator.image | default "docker.io/tremolosecurity/openunison-k8s-operator" }}
@@ -69,10 +71,12 @@ spec:
         {{ end }}
         command:
         - java
-        {{ if and .Values.kerberos .Values.kerberos.enabled }}
+        {{ if .Values.kerberos }}
+        {{ if .Values.kerberos.enabled }}
         - -Djava.security.krb5.conf=/etc/krb5-local/krb5.conf
         - -Djava.security.krb5.debug=true
         - -Djava.security.auth.login.config=/etc/krb5-local/SQLJDBCDriver.conf
+        {{ end }}
         {{ end }}
         - -jar
         - /usr/local/openunison/javascript-operator.jar
@@ -101,10 +105,12 @@ spec:
         - mountPath: /etc/extraMaps
           name: extra-maps
           readOnly: true
-        {{ if and .Values.kerberos .Values.kerberos.enabled }}
+        {{ if and .Values.kerberos  }}
+        {{ if .Values.kerberos.enabled}}
         - mountPath: /etc/krb5-local
           name: krb
           readOnly: true
+        {{ end }}
         {{ end }}
         {{ if and .Values.services .Values.services.resources }}
         resources:
@@ -132,7 +138,8 @@ spec:
           
           {{ end }}
         {{ end }}
-      {{ if and .Values.kerberos .Values.kerberos.enabled }}
+      {{ if .Values.kerberos }}
+      {{ if .Values.kerberos.enabled }}
       - image: docker.io/mlbiam/kerberos-sidecar
         name: krb-sidecar
         {{ if not .Values.kerberos.keytab }}
@@ -164,6 +171,7 @@ spec:
             name: krb-keytab
             readOnly: true
       {{ end }}  
+      {{ end }}
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
@@ -171,13 +179,15 @@ spec:
       volumes:
         - name: extra-maps
           emptyDir: {}
-        {{ if and .Values.kerberos .Values.kerberos.enabled }}
+        {{ if .Values.kerberos }}
+        {{ if .Values.kerberos.enabled}}
         - name: krb
           configMap:
             name: kerb-config
         - name: krb-keytab
           secret:
             secretName: kerb-keytab
+        {{ end }}
         {{ end }}
       {{ $length := len .Values.services.node_selectors }}
       {{ if eq $length 0  }}
