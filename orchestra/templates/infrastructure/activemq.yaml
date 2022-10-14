@@ -34,9 +34,11 @@ spec:
       - env:
         - name: ACTIVEMQ_DEBUG_OPTS
           value: "-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom"
-        {{ if and .Values.kerberos .Values.kerberos.enabled }}
+        {{ if .Values.kerberos }}
+        {{ if .Values.kerberos.enabled }}
         - name: JAVA_OPTS
           value: "-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom -DunisonEnvironmentFile=/etc/openunison/ou.env -Djavax.net.ssl.trustStore=/etc/openunison/cacerts.jks -Dpolyglot.engine.WarnInterpreterOnly=false -Djava.security.krb5.conf=/etc/krb5-local/krb5.conf -Djava.security.krb5.debug=true -Djava.security.auth.login.config=/etc/krb5-local/SQLJDBCDriver.conf"
+        {{ end }}
         {{ end }}
         - name: JDBC_DRIVER
           valueFrom:
@@ -63,13 +65,15 @@ spec:
             secretKeyRef:
               name: amq-env-secrets-{{ .Release.Name  }}
               key: TLS_KS_PWD
-        {{ if and .Values.kerberos .Values.kerberos.enabled }}
+        {{ if .Values.kerberos  }}
+        {{ if .Values.kerberos.enabled }}
         - name: KRB5_CONFIG
           value: /etc/krb5-local/krb5.conf
         - name: KRB5RCACHEDIR
           value: /dev/shm
         - name: KRB5CCNAME
           value: /dev/shm/ccache
+        {{ end }}
         {{ end }}
         image: {{ .Values.amq_image }}
         imagePullPolicy: Always
@@ -117,10 +121,12 @@ spec:
         - name: kahadb
           mountPath: /activemq-data
         {{ end }}
-        {{ if and .Values.kerberos .Values.kerberos.enabled }}
+        {{ if .Values.kerberos  }}
+        {{ if .Values.kerberos.enabled }}
         - mountPath: /etc/krb5-local
           name: krb
           readOnly: true
+        {{ end }}
         {{ end }}
 
         {{ if .Values.amq }}
@@ -151,7 +157,8 @@ spec:
           {{ end }}
         {{ end }}
         {{ end }}
-      {{ if and .Values.kerberos .Values.kerberos.enabled }}
+      {{ if and .Values.kerberos  }}
+      {{ if .Values.kerberos.enabled }}
       - image: {{ .Values.kerberos.sidecar_image }}
         name: krb-sidecar
         {{ if not .Values.kerberos.keytab }}
@@ -183,6 +190,7 @@ spec:
             name: krb-keytab
             readOnly: true
       {{ end }}
+      {{ end }}
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
@@ -204,13 +212,15 @@ spec:
         persistentVolumeClaim:
           claimName: activemq-kahadb
       {{ end }}
-      {{ if and .Values.kerberos .Values.kerberos.enabled }}
+      {{ if and .Values.kerberos  }}
+      {{ if .Values.kerberos.enabled }}
       - name: krb
         configMap:
           name: kerb-config
       - name: krb-keytab
         secret:
           secretName: kerb-keytab
+      {{ end }}
       {{ end }}
       {{ $length := len .Values.services.node_selectors }}
       {{ if eq $length 0  }}
