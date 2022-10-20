@@ -174,7 +174,7 @@ spec:
         - "searchField=cn"
         - "maxEntries=10"
         {{ if $root.Values.active_directory.group_search_base }}
-        - "searchBase={{ .Values.active_directory.group_search_base }},ou=activedirectory,o=Data"
+        - "searchBase={{ $root.Values.active_directory.group_search_base }},ou=activedirectory,o=Data"
         {{ else }}
         - "searchBase=ou=activedirectory,o=Data"
         {{ end }}
@@ -240,7 +240,7 @@ spec:
         - "searchField=cn"
         - "maxEntries=10"
         {{ if $root.Values.active_directory.group_search_base }}
-        - "searchBase={{ .Values.active_directory.group_search_base }},ou=activedirectory,o=Data"
+        - "searchBase={{ $root.Values.active_directory.group_search_base }},ou=activedirectory,o=Data"
         {{ else }}
         - "searchBase=ou=activedirectory,o=Data"
         {{ end }}
