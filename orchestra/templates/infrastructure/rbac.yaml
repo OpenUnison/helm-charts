@@ -253,6 +253,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   annotations:
+    argocd.argoproj.io/sync-wave: "20"
     audit2rbac.liggitt.net/version: v0.7.0
   labels:
     audit2rbac.liggitt.net/generated: "true"
@@ -261,8 +262,6 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: rbac
     app.kubernetes.io/part-of: openunison
-  annotations:
-    argocd.argoproj.io/sync-wave: "20"
   name: audit2rbac:system:serviceaccount:openunison:openunison-{{ .Release.Name }}
 rules:
 - apiGroups:
@@ -276,6 +275,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   annotations:
+    argocd.argoproj.io/sync-wave: "20"
     audit2rbac.liggitt.net/version: v0.7.0
   labels:
     audit2rbac.liggitt.net/generated: "true"
@@ -284,8 +284,6 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: rbac
     app.kubernetes.io/part-of: openunison
-  annotations:
-    argocd.argoproj.io/sync-wave: "20"
   name: audit2rbac:system:serviceaccount:openunison:openunison-{{ .Release.Name }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io

@@ -9,6 +9,7 @@ network:
   ingress_type: nginx
   ingress_certificate: ou-tls-certificate
   ingress_annotations: {}
+  ingressClassName: ""
   istio:
     selectors:
       istio: ingressgateway

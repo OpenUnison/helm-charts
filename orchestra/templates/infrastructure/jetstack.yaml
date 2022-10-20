@@ -10,18 +10,10 @@ metadata:
     app.kubernetes.io/part-of: openunison
   name: kube-oidc-proxy-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
-  {{ if eq .Values.network.ingress_type "traefik" }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
   {{ if .Values.network.traefik.secure }} 
-  annotations:
-    argocd.argoproj.io/sync-wave: "40"
     traefik.ingress.kubernetes.io/service.serversscheme: https
-  {{ else }}
-  annotations:
-    argocd.argoproj.io/sync-wave: "40"
-  {{ end }}
-  {{ else }}
-  annotations:
-    argocd.argoproj.io/sync-wave: "40"
   {{ end }}
 spec:
   replicas: {{ .Values.openunison.replicas }}
@@ -167,9 +159,9 @@ metadata:
     app.kubernetes.io/part-of: openunison
   name: kube-oidc-proxy-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
-  {{ if eq .Values.network.ingress_type "traefik" }}
   annotations:
     argocd.argoproj.io/sync-wave: "40"
+  {{ if eq .Values.network.ingress_type "traefik" }}
     {{ if .Values.network.traefik.secure }} 
     traefik.ingress.kubernetes.io/service.serversscheme: https
     {{ end }}
