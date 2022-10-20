@@ -16,6 +16,9 @@ metadata:
     app.kubernetes.io/component: ingress-simple
     app.kubernetes.io/part-of: openunison
 spec:
+  {{- if .Values.network.ingressClassName }}
+  ingressClassName: {{ .Values.network.ingressClassName }}
+  {{- end }}
   rules:
   - host: {{ .Values.network.openunison_host }}
     http:

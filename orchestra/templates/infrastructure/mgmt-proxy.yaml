@@ -135,12 +135,12 @@ metadata:
     app.kubernetes.io/part-of: openunison
   name: kube-management-proxy-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
-  {{ if eq .Values.network.ingress_type "traefik" }}
-  {{ if .Values.network.traefik.secure }} 
   annotations:
     argocd.argoproj.io/sync-wave: "20"
+  {{ if eq .Values.network.ingress_type "traefik" }}
+    {{ if .Values.network.traefik.secure }} 
     traefik.ingress.kubernetes.io/service.serversscheme: https
-  {{ end }}
+    {{ end }}
   {{ end }}
 spec:
   replicas: {{ .Values.openunison.replicas }}
@@ -296,19 +296,17 @@ data:
 apiVersion: v1
 kind: Service
 metadata:
-  creationTimestamp: null
   labels:
     app: kube-management-proxy-{{ .Release.Name }}
     app.kubernetes.io/name: openunison
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: kube-management-proxy
     app.kubernetes.io/part-of: openunison
-  annotations:
-    argocd.argoproj.io/sync-wave: "20"
   name: kube-management-proxy-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
-  {{ if eq .Values.network.ingress_type "traefik" }}
   annotations:
+    argocd.argoproj.io/sync-wave: "20"
+  {{ if eq .Values.network.ingress_type "traefik" }}
     {{ if .Values.network.traefik.secure }} 
     traefik.ingress.kubernetes.io/service.serversscheme: https
     {{ end }}
