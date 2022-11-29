@@ -115,6 +115,15 @@ spec:
         {{ $attr.name }}.maxChars: "{{ $attr.maxChars }}"
         {{ $attr.name }}.unique: "{{ $attr.unique }}"
         {{ $attr.name }}.type: "{{ $attr.type }}"
+        {{ if or $attr.show (not (hasKey $attr "show")) }}
+        {{ $attr.name }}.show: "true"
+        {{ else }}
+        {{ $attr.name }}.show: "false"
+        {{ end }}
+        
+        {{ if $attr.editJavaScriptFunction }}
+        {{ $attr.name }}.editJavaScriptFunction: "{{ $attr.editJavaScriptFunction }}"
+        {{ end }}
         {{ if $attr.dynamicValueSource }}
         {{ $attr.name }}.dynamicValueSource.className: "{{ $attr.dynamicValueSource.className }}"
         {{ $attr.name }}.dynamicValueSource.config:
@@ -126,7 +135,7 @@ spec:
         {{ if $attr.values }}
         {{ $attr.name }}.values:
         {{ range $key,$value := $attr.values }}
-        - "{{ $key }}={{ $value }}"
+        - "{{ $value }}"
         {{ end }}
         {{ end }}
 

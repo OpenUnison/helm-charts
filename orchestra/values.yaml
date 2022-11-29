@@ -91,6 +91,7 @@ network_policies:
     enabled: true
     labels:
       app.kubernetes.io/name: kube-system
+  namespace_label: kubernetes.io/metadata.name
 
 services:
   enable_tokenrequest: false
@@ -116,6 +117,8 @@ openunison:
   secrets: []
   html:
     image: docker.lab.tremolo.dev/nginx
+    prefix: ouhtml
+  portal_release_name: orchestra-login-portal
   enable_provisioning: false
   enable_activemq: true
   precheck:
