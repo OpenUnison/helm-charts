@@ -32,7 +32,7 @@ spec:
   - from:
     - namespaceSelector:
         matchLabels:
-          app.kubernetes.io/name: {{ .Release.Namespace }}
+          {{ .Values.network_policies.namespace_label }}: {{ .Release.Namespace }}
   podSelector:
     matchLabels:
       app: amq-{{ .Release.Name }}
