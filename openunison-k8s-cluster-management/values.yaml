@@ -2,6 +2,9 @@ primaryCluster:
   name: Control Plane Cluster
   description: Central control plane cluster used to manage other clusters
 
+dashboard:
+  enabled: true
+
 openunison:
   orchestra_release_name: orchestra
   orchestra_login_portal_name: orchestra-login-portal

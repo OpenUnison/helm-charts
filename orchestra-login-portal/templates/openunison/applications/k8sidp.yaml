@@ -105,6 +105,7 @@ spec:
           codeTokenSkewMilis: "#[K8S_TOKEN_LIFE_MILLIS:60000]"
           accessTokenTimeToLive: "#[K8S_TOKEN_LIFE_MILLIS:60000]"
           accessTokenSkewMillis: "120000"
+      {{ if .Values.dashboard.enabled }}
       {{ if eq (.Values.openunison.non_secret_data.K8S_DB_SSO | default "oidc") "oidc" }}
       - name: "https://#[K8S_DASHBOARD_HOST]"
         params:
@@ -120,6 +121,7 @@ spec:
         - name: clientSecret
           secretName: orchestra-secrets-source
           secretKey: K8S_DB_SECRET
+      {{ end }}
       {{ end }}
   cookieConfig:
     sessionCookieName: tremolosession

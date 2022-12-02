@@ -124,6 +124,7 @@ roleRef:
   kind: ClusterRole
   name: list-namespaces
   apiGroup: rbac.authorization.k8s.io
+{{ if .Values.dashboard.enabled }}
 ---
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
@@ -166,6 +167,7 @@ roleRef:
   kind: Role
   name: orchestra-dashboard-{{ .Release.Name }}
   apiGroup: rbac.authorization.k8s.io
+{{ end }}
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1

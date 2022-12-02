@@ -19,7 +19,9 @@ spec:
   servers:
   - hosts:
     - {{ .Values.network.openunison_host }}
+    {{ if .Values.dashboard.enabled }}
     - {{ .Values.network.dashboard_host }}
+    {{ end }}
     {{ if and (eq .Values.enable_impersonation true) (eq .Values.impersonation.use_jetstack false ) }}
     - {{ .Values.network.api_server_host }}
     {{ end }}
@@ -32,7 +34,9 @@ spec:
       httpsRedirect: true
   - hosts:
     - {{ .Values.network.openunison_host }}
+    {{ if .Values.dashboard.enabled }}
     - {{ .Values.network.dashboard_host }}
+    {{ end }}
     {{ if and (eq .Values.enable_impersonation true) (eq .Values.impersonation.use_jetstack false ) }}
     - {{ .Values.network.api_server_host }}
     {{ end }}
@@ -59,7 +63,9 @@ spec:
   - openunison-gateway-{{ .Release.Name }}
   hosts:
   - {{ .Values.network.openunison_host }}
+  {{ if .Values.dashboard.enabled }}
   - {{ .Values.network.dashboard_host }}
+  {{ end }}
   {{ if and (eq .Values.enable_impersonation true) (eq .Values.impersonation.use_jetstack false ) }}
   - {{ .Values.network.api_server_host }}
   {{ end }}

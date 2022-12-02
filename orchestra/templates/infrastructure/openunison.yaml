@@ -26,8 +26,10 @@ spec:
     names:
     - env_var: OU_HOST
       name: {{ .Values.network.openunison_host }}
+    {{ if .Values.dashboard.enabled }}
     - env_var: K8S_DASHBOARD_HOST
       name: {{ .Values.network.dashboard_host }}
+    {{ end }}
     {{ if eq .Values.enable_impersonation true }}
     - env_var: K8S_API_HOST
       name: {{ .Values.network.api_server_host }}
@@ -97,6 +99,7 @@ spec:
           name: unison-ca
           tls_secret_name: ou-tls-certificate
         {{ end }}
+        {{ if .Values.dashboard.enabled }}
         - create_data:
             {{ if .Values.certs.use_k8s_cm }}
             ca_cert: false
@@ -122,6 +125,7 @@ spec:
           name: kubernetes-dashboard
           tls_secret_name: {{ .Values.dashboard.cert_name }}
           replace_if_exists: true
+        {{ end }}
         - create_data:
             ca_cert: true
             key_size: 2048
@@ -191,10 +195,12 @@ spec:
       {{ end }}
     - name: SESSION_INACTIVITY_TIMEOUT_SECONDS
       value: {{ .Values.network.session_inactivity_timeout_seconds | quote }}
+    {{ if .Values.dashboard.enabled }}
     - name: K8S_DASHBOARD_NAMESPACE
       value: {{ .Values.dashboard.namespace }}
     - name: K8S_DASHBOARD_SERVICE
       value: {{ .Values.dashboard.service_name }}
+    {{ end }}
     - name: K8S_CLUSTER_NAME
       value: {{ .Values.k8s_cluster_name }}
 

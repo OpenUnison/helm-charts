@@ -1,5 +1,5 @@
 
-
+{{ if .Values.dashboard.enabled }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: AuthenticationChain
@@ -71,3 +71,4 @@ spec:
       idpName: k8sidp
       trustName: kubernetes
       overrideURL: "https://#[OU_HOST]/auth/idp/k8sIdp"
+{{ end }}
