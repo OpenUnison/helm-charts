@@ -1,3 +1,4 @@
+{{ if .Values.dashboard.enabled }}
 {{ if eq (.Values.openunison.non_secret_data.K8S_DB_SSO | default "oidc") "saml2" }}
 ---
 apiVersion: openunison.tremolo.io/v1
@@ -102,4 +103,5 @@ spec:
     timeout: {{ .Values.network.session_inactivity_timeout_seconds }}
     scope: -1
     cookiesEnabled: true
+{{ end }}
 {{ end }}

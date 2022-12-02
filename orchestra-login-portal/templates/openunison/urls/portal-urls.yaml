@@ -1,4 +1,5 @@
 {{ if not .Values.openunison.enable_provisioning }}
+{{ if .Values.dashboard.enabled }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: PortalUrl
@@ -47,6 +48,7 @@ spec:
   {{ end }}
   {{ end }}
   {{ end }}
+{{ end }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: PortalUrl

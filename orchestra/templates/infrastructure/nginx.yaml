@@ -34,6 +34,7 @@ spec:
               number: 443
         path: "/"
         pathType: Prefix
+  {{ if .Values.dashboard.enabled }}
   - host: {{ .Values.network.dashboard_host }}
     http:
       paths:
@@ -44,6 +45,7 @@ spec:
               number: 443
         path: "/"
         pathType: Prefix
+  {{ end }}
   {{ if eq .Values.enable_impersonation true }}
   - host: {{ .Values.network.api_server_host }}
     http:
@@ -75,7 +77,9 @@ spec:
   tls:
   - hosts:
     - {{ .Values.network.openunison_host }}
+    {{ if .Values.dashboard.enabled }}
     - {{ .Values.network.dashboard_host }}
+    {{ end }}
     {{ if eq .Values.enable_impersonation true }}
     - {{ .Values.network.api_server_host }}
     {{ end }}

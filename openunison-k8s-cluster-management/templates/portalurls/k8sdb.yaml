@@ -1,3 +1,4 @@
+{{ if .Values.dashboard.enabled }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: PortalUrl
@@ -33,4 +34,5 @@ spec:
     constraint: (groups={{ $az_group }})
   {{ end }}
   {{ end }}
+{{ end }}
   
