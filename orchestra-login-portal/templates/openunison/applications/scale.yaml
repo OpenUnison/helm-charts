@@ -120,6 +120,14 @@ spec:
         enableApprovals: "false"
         {{ else }}
         enableApprovals: "true"
+
+
+        {{ if or .Values.openunison.naas.requireReasons (not (hasKey .Values.openunison.naas "requireReasons" )) }}
+        requireReason: "true"
+        {{ else }}
+        requireReason: "false"
+        {{ end }}
+
         {{ end  }}
         {{ else }}
         enableApprovals: "false"
