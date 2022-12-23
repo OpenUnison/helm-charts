@@ -64,6 +64,31 @@ spec:
   versions:
     - name: v1
       served: true
+      storage: false
+      schema:
+      # openAPIV3Schema is the schema for validating custom objects.
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                session_id:
+                  type: string
+                client_id:
+                  type: string
+                encrypted_id_token:
+                  type: string
+                encrypted_access_token:
+                  type: string
+                expires:
+                  type: string
+                user_dn:
+                  type: string
+                refresh_token:
+                  type: string
+    - name: v2
+      served: true
       storage: true
       schema:
       # openAPIV3Schema is the schema for validating custom objects.
@@ -86,6 +111,8 @@ spec:
                 user_dn:
                   type: string
                 refresh_token:
+                  type: string
+                expired_tokens:
                   type: string
   scope: Namespaced
   names:
