@@ -78,6 +78,7 @@ network_policies:
   apiserver:
     enabled: true
     labels: []
+  namespace_label: kubernetes.io/metadata.name
       
 
 services:
@@ -106,6 +107,10 @@ openunison:
   replicas: 1
   non_secret_data: {}
   secrets: []
+  portal_release_name: openunison
+  authentication:
+    refresh_token:
+      grace_period: 0
   html:
     image: docker.io/tremolosecurity/openunison-k8s-html
   enable_provisioning: false
