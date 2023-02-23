@@ -110,7 +110,7 @@ openunison:
   portal_release_name: openunison
   authentication:
     refresh_token:
-      grace_period: 0
+      grace_period_millis: 0
   html:
     image: docker.io/tremolosecurity/openunison-k8s-html
   enable_provisioning: false
