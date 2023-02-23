@@ -1,0 +1,24 @@
+{{ if .Capabilities.APIVersions.Has "openunison.tremolo.io/v1/WaitForState" }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: OUJob
+metadata:
+  name: wait-for
+  namespace: {{ .Release.Namespace }}
+spec:
+  className: com.tremolosecurity.provisioning.jobs.WaitForJob
+  cronSchedule:
+    dayOfMonth: '*'
+    dayOfWeek: '?'
+    hours: '*'
+    minutes: '*'
+    month: '*'
+    seconds: '*/10'
+    year: '*'
+  group: admin
+  params:
+    - name: target
+      value: k8s
+    - name: namespace
+      value: {{ .Release.Namespace }}
+{{ end }}
