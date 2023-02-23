@@ -51,7 +51,7 @@ spec:
         logoutURL: "/logout"
         homeURL: "/"
         preSetPassword: "false"
-        requireReason: "true"
+        
         requireReCaptcha: "false"
         rcSiteKey: ""
         rcSecret: ""
@@ -360,6 +360,12 @@ spec:
         #viewerGroup.type: "text"
         #{{ end }}
         #{{ end }}
+
+        {{ if or .Values.openunison.naas.requireReasons (not (hasKey .Values.openunison.naas "requireReasons" )) }}
+        requireReason: "true"
+        {{ else }}
+        requireReason: "false"
+        {{ end }}
 
 
         gitUrl.displayName: "Git URL"

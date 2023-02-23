@@ -72,6 +72,7 @@ spec:
         trustConfigurationClassName: "com.tremolosecurity.oidc.k8s.K8sLoadTrusts"
         trusts.k8starget: "k8s"
         trusts.namespace: "#[K8S_OPENUNISON_NS:openunison]"
+        refreshTokenGraceMillis: "{{ .Values.openunison.authentication.refresh_token.grace_period_millis }}"
       mappings:
         strict: true
         map:

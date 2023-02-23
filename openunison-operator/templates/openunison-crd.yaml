@@ -64,6 +64,31 @@ spec:
   versions:
     - name: v1
       served: true
+      storage: false
+      schema:
+      # openAPIV3Schema is the schema for validating custom objects.
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                session_id:
+                  type: string
+                client_id:
+                  type: string
+                encrypted_id_token:
+                  type: string
+                encrypted_access_token:
+                  type: string
+                expires:
+                  type: string
+                user_dn:
+                  type: string
+                refresh_token:
+                  type: string
+    - name: v2
+      served: true
       storage: true
       schema:
       # openAPIV3Schema is the schema for validating custom objects.
@@ -86,6 +111,8 @@ spec:
                 user_dn:
                   type: string
                 refresh_token:
+                  type: string
+                expired_tokens:
                   type: string
   scope: Namespaced
   names:
@@ -3657,4 +3684,67 @@ spec:
     kind: WaitForState
     shortNames:
     - wfs
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: notifiers.openunison.tremolo.io
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: crd
+    app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  group: openunison.tremolo.io
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              description: Represents a notification system
+              properties:
+                className:
+                  type: string
+                  description: Implementation of `com.tremolosecurity.openunison.notifications.NotificationSystem`
+                params:
+                  type: array
+                  description: Set of configuration parameters
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        description: Configuration parameter name, may be listed multiple times
+                      value:
+                        type: string
+                        description: Value
+                secretParams:
+                  type: array
+                  items:
+                    type: object
+                    description: Load parameters directly from Kubernetes `Secret` objects
+                    properties:
+                      name:
+                        type: string
+                        description: The name of the configuration parameter
+                      secretName:
+                        type: string
+                        description: The name of the Kubernetes `Secret`
+                      secretKey:
+                        type: string
+                        description: The name of the key in the `Secret` to pull the data from
+  scope: Namespaced
+  names:
+    plural: notifiers
+    singular: notifier
+    kind: Notifier
+    shortNames:
+    - ntfr
 {{ end }}

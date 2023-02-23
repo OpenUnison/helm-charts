@@ -353,7 +353,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "20"
 rules:
 - apiGroups: ["openunison.tremolo.io"]
-  resources: ["trusts","portalurls","orgs","authmechs","authchains","resultgroups","applications","customazs","targets","workflows","oujobs","reports","groupmetadatas","messagelisteners","javascriptmappings"]
+  resources: ["trusts","portalurls","orgs","authmechs","authchains","resultgroups","applications","customazs","targets","workflows","oujobs","reports","groupmetadatas","messagelisteners","javascriptmappings","notifiers"]
   verbs:
   - get
   - list

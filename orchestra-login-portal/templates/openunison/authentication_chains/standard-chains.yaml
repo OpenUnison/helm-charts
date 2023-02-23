@@ -113,10 +113,10 @@ spec:
     params:
       map: 
       - "uid|user|login"
-      - "mail|static|na"
+      - "mail|composite|${mail}"
       - "givenName|static|na"
       - "sn|static|na"
-      - "displayName|static|na"
+      - "displayName|composite|${name}"
       - "memberOf|user|groups"
 {{ end }}
 {{ if .Values.saml }}

@@ -102,6 +102,9 @@ services:
   - "alive"
 
 openunison:
+  authentication:
+    refresh_token:
+      grace_period_millis: 0
   replicas: 1
   non_secret_data: {}
   secrets: []
