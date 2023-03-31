@@ -9,6 +9,7 @@ openunison:
   orchestra_release_name: orchestra
   orchestra_login_portal_name: orchestra-login-portal
   naas:
+    orgs: []
     forms:
       new_namespace:
         use_default: true
@@ -59,7 +60,7 @@ openunison:
           required: true
         workflow:
           label: "namespace viewer"
-          displayLabel: $name$ Administrator
+          displayLabel: $name$ Viewers
           emailTemplate: Approve viewer access to $cluster$ $name$
           approvalLabel: Approve viewer access for $cluster$ - $name$
           userNotification:

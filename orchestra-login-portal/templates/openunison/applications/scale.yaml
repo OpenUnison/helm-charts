@@ -47,6 +47,9 @@ spec:
         warnMinutesLeft: "5"
         sub.displayName: "Login ID"
         sub.readOnly: "true"
+        {{ if .Values.openunison.naas.jit_workflow }}
+        jitWorkflow: "{{ .Values.openunison.naas.jit_workflow }}"
+        {{ end }}
         {{ if .Values.openunison.enable_provisioning }}
         attributeNames: 
         - givenName

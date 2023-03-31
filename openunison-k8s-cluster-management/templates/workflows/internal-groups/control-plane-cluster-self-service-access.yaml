@@ -8,7 +8,7 @@ metadata:
   name: control-plane-namespace-{{ $role.name }}
   namespace: {{ $root.Release.Namespace }}
 spec:
-  description: ClusterRole admin for the $name$ namespace
+  description: {{ $role.workflow.label }} for the $name$ namespace
   inList: true
   label: {{ $role.workflow.displayLabel }}
   orgId: org-cluster-control-plane-{{ $role.name }}
@@ -37,7 +37,7 @@ metadata:
   name: control-plane-namespace-{{ $role.name }}
   namespace: {{ $root.Release.Namespace }}
 spec:
-  description: ClusterRole admin for the $name$ namespace
+  description: {{ $role.workflow.label }} for the $name$ namespace
   inList: true
   label: {{ $role.workflow.displayLabel }}
   orgId: org-cluster-control-plane-{{ $role.name }}
