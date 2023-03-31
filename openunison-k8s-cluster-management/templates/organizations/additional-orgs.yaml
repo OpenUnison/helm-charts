@@ -1,0 +1,22 @@
+{{- $root := . -}}
+{{ range $org := .Values.openunison.naas.orgs }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: {{ $org.name }}
+  namespace: {{ $root.Release.Namespace }}
+  labels:
+    tremolo.io/org-type: added-org
+spec:
+  label: {{ $org.label }}
+  azRules:
+  - scope: filter
+    constraint: (objectClass=*)
+  description: {{ $org.description }}
+  parent: B158BD40-0C1B-11E3-8FFD-0800200C9A66
+  showInPortal: true
+  showInReports: false
+  showInRequestAccess: true
+  uuid: added-org-{{ $org.name }}
+{{ end }}
