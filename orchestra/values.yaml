@@ -112,6 +112,7 @@ services:
 openunison:
   replicas: 1
   non_secret_data: {}
+  env: {}
   secrets: []
   html:
     image: docker.lab.tremolo.dev/nginx
