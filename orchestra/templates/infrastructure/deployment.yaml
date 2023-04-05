@@ -66,6 +66,10 @@ spec:
         - name: KRB5CCNAME
           value: /dev/shm/ccache
         {{ end }}
+        {{ range $k,$v := .Values.openunison.env }}
+        - name: {{ $k }}
+          value: "{{ $v }}"
+        {{ end }}
         image: {{ .Values.image }}
         imagePullPolicy: Always
         livenessProbe:

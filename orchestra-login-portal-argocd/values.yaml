@@ -107,6 +107,7 @@ openunison:
   replicas: 1
   non_secret_data: {}
   secrets: []
+  env: {}
   portal_release_name: openunison
   authentication:
     refresh_token:
