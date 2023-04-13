@@ -39,7 +39,7 @@ spec:
     filterChain:
     - className: com.tremolosecurity.scalejs.ws.ScaleMain
       params:
-        displayNameAttribute: "sub"
+        displayNameAttribute: "{{ .Values.openunison.display_name_attribute | default "sub" }}"
         frontPage.title: "Kubernetes Access Portal"
         frontPage.text: "Use this portal to create and access namespaces in Kubernetes"
         canEditUser: "false"
