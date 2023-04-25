@@ -3747,4 +3747,5 @@ spec:
     kind: Notifier
     shortNames:
     - ntfr
+    
 {{ end }}
