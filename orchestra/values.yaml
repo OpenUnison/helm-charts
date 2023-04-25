@@ -45,6 +45,8 @@ certs:
 
 trusted_certs: []
 
+operator:
+  legacy: false
 
 
 #active_directory:
