@@ -1,4 +1,4 @@
-{{ if not .Values.operator.legacy }}
+{{ if .Values.operator.legacy }}
 {{ if .Capabilities.APIVersions.Has "batch/v1/CronJob" }}
 apiVersion: batch/v1
 {{ else }}
@@ -39,28 +39,37 @@ spec:
           - command:
             - java
             - -jar
-            - /usr/local/ouoperator/ouoperator.jar
-            - check-certs
-            - https://kubernetes.default.svc
-            - {{ .Release.Namespace }}
-            - /var/run/secrets/kubernetes.io/serviceaccount/token
+            - /usr/local/artifactdeploy/artifact-deploy.jar
+            - -extraCertsPath
+            - /etc/extracerts
+            - -installScriptURL
+            - file:///etc/input-maps/cert-check.js
+            - -kubernetesURL
+            - https://kubernetes.default.svc.cluster.local
+            - -rootCaPath
             - /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-            - "2,3,4,5,6"
+            - -secretsPath
+            - /etc/input-maps/input.props
+            - -tokenPath
+            - /var/run/secrets/kubernetes.io/serviceaccount/token
+            - -deploymentTemplate
+            - file:///etc/input-maps/deployment.yaml
             env:
-            - name: CA_CERTS_PATH
-              value: /usr/lib/jvm/java-17-openjdk-amd64/lib/security/cacerts
-            - name: JAVA_OPTS
-              value: -Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom -Dsun.net.inetaddr.ttl=0
-            - name: NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            image: "{{ .Values.cert_update_image | default "docker.io/tremolosecurity/openunison-kubernetes-operator" }}"
-            imagePullPolicy: Always
+            - name: CERT_DAYS_EXPIRE
+              value: "10"
+            image: {{ .Values.cert_update_image | default "docker.io/tremolosecurity/kubernetes-artifact-deployment:1.1.0" }}
+            imagePullPolicy: IfNotPresent
             name: check-certs-{{ .Release.Name }}
             resources: {}
             terminationMessagePath: /dev/termination-log
             terminationMessagePolicy: File
+            volumeMounts:
+            - mountPath: /etc/extracerts
+              name: extra-certs-dir
+              readOnly: true
+            - mountPath: /etc/input-maps
+              name: input-maps
+              readOnly: true
             {{ if .Values.services.resources }}
             resources:
               {{ if .Values.services.resources.requests }}
@@ -94,6 +103,15 @@ spec:
           serviceAccount: openunison-operator
           serviceAccountName: openunison-operator
           terminationGracePeriodSeconds: 30
+          volumes:
+          - configMap:
+              defaultMode: 420
+              name: cert-controller-js-{{ .Release.Name }}
+            name: extra-certs-dir
+          - configMap:
+              defaultMode: 420
+              name: cert-controller-js-{{ .Release.Name }}
+            name: input-maps
           {{ $length := len .Values.services.node_selectors }}
           {{ if eq $length 0  }}
           nodeSelector: {}
@@ -106,7 +124,7 @@ spec:
           imagePullSecrets:
           - name: {{  .Values.services.pullSecret | quote }}
           {{ end }}
-  schedule: "{{ .Values.cert_update_schedule | default "0 2 * * *" }}"
+  schedule: 0 2 * * *
   successfulJobsHistoryLimit: 3
   suspend: false
 {{ end }}

@@ -123,8 +123,7 @@ spec:
   - name: saml2
     required: required
     params:
-      idpURL: "#[IDP_POST]"
-      idpRedirURL: "#[IDP_REDIR]"
+      metadataUrl: "{{ .Values.saml.idp_url }}"
       idpSigKeyName: 
       - idp-saml2-sig
       - idp-saml2-sig-1
@@ -142,11 +141,8 @@ spec:
       forceToSSL: "false"
       dontLinkToLDAP: "true"
       logoutURL: "https://#[K8S_DASHBOARD_HOST]/logout"
-      entityID: "#[IDP_ENTITY_ID]"
       {{ if .Values.saml.logoutRedirectUrl }}
       idpRedirLogoutURL: "{{ .Values.saml.logoutRedirectUrl }}"
-      {{ else }}
-      idpRedirLogoutURL: "#[IDP_LOGOUT]"
       {{ end }}
     secretParams: []
   - name: map

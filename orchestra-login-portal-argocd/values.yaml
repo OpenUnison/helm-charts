@@ -101,7 +101,14 @@ services:
   - "alive"
 
 operator:
-  image: docker.io/tremolosecurity/openunison-k8s-operator
+  image: docker.io/tremolosecurity/openunison-kubernetes-operator:latest
+  resources:
+    requests:
+      memory: 200Mi
+      cpu: 0.3
+    limits:
+      memory: 200Mi
+      cpu: 1.0
 
 openunison:
   replicas: 1
