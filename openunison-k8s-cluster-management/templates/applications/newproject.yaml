@@ -108,7 +108,13 @@ spec:
         {{ range $attr := .Values.openunison.naas.forms.new_namespace.additional_attributes }}
         {{ $attr.name }}.displayName: "{{ $attr.displayName }}"
         {{ $attr.name }}.readOnly: "false"
+        
+        {{ if or (not (hasKey $attr "required")) (eq (coalesce $attr.required false) true) }}
+        {{ $attr.name }}.required: "true"
+        {{ else }}
         {{ $attr.name }}.required: "false"
+        {{ end }}
+
         {{ $attr.name }}.regEx: "{{ $attr.regEx }}"
         {{ $attr.name }}.regExFailedMsg: "{{ $attr.regExFailedMsg }}"
         {{ $attr.name }}.minChars: "{{ $attr.minChars }}"

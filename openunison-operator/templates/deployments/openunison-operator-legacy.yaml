@@ -1,0 +1,197 @@
+{{ if .Values.operator.legacy }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: openunison-operator
+    app.kubernetes.io/name: openunison-operator
+    app.kubernetes.io/instance: openunison-operator-{{ .Release.Name }}
+    app.kubernetes.io/version: "{{ .Release.Version }}"
+    app.kubernetes.io/component: operator
+    app.kubernetes.io/part-of: openunison
+  name: openunison-operator
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: openunison-operator
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: openunison-operator
+        app.kubernetes.io/name: openunison-operator
+        app.kubernetes.io/instance: openunison-operator-{{ .Release.Name }}
+        app.kubernetes.io/version: "{{ .Release.Version }}"
+        app.kubernetes.io/component: operator
+        app.kubernetes.io/part-of: openunison
+    spec:
+      containers:
+      - env:
+        - name: EXTRA_JS
+          value: /usr/local/openunison/js-external
+        - name: JAVA_OPTS
+          value: -Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom -Dsun.net.inetaddr.ttl=0 -Djava.security.krb5.conf=/etc/krb5-local/krb5.conf -Djava.security.krb5.debug=true
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        {{ if .Values.kerberos  }}
+        {{ if .Values.kerberos.enabled }}
+        - name: KRB5_CONFIG
+          value: /etc/krb5-local/krb5.conf
+        - name: KRB5RCACHEDIR
+          value: /dev/shm
+        - name: KRB5CCNAME
+          value: /dev/shm/ccache
+        {{ end }}
+        {{ end }}
+        {{ if .Values.operator }}
+        image: {{ .Values.operator.image | default "docker.io/tremolosecurity/openunison-k8s-operator" }}
+        {{ else }}
+        image: {{ .Values.image | default "docker.io/tremolosecurity/openunison-k8s-operator" }}
+        {{ end }}
+        command:
+        - java
+        {{ if .Values.kerberos }}
+        {{ if .Values.kerberos.enabled }}
+        - -Djava.security.krb5.conf=/etc/krb5-local/krb5.conf
+        - -Djava.security.krb5.debug=true
+        - -Djava.security.auth.login.config=/etc/krb5-local/SQLJDBCDriver.conf
+        {{ end }}
+        {{ end }}
+        - -jar
+        - /usr/local/openunison/javascript-operator.jar
+        - -tokenPath
+        - /var/run/secrets/kubernetes.io/serviceaccount/token
+        - -rootCaPath
+        - /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        - -kubernetesURL
+        - https://kubernetes.default.svc.cluster.local
+        - -namespace
+        - NAMESPACE
+        - -apiGroup
+        - openunison.tremolo.io/v6,openunison.tremolo.io/v5,openunison.tremolo.io/v4,openunison.tremolo.io/v3,openunison.tremolo.io/v2,openunison.tremolo.io/v1
+        - -objectType
+        - openunisons
+        - -jsPath
+        - /usr/local/openunison/js
+        - -configMaps
+        - /etc/extraMaps
+        imagePullPolicy: Always
+        name: openunison-operator
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /etc/extraMaps
+          name: extra-maps
+          readOnly: true
+        {{ if and .Values.kerberos  }}
+        {{ if .Values.kerberos.enabled}}
+        - mountPath: /etc/krb5-local
+          name: krb
+          readOnly: true
+        {{ end }}
+        {{ end }}
+        {{ if and .Values.services .Values.services.resources }}
+        resources:
+          {{ if .Values.services.resources.requests }}
+          requests: 
+            {{ if .Values.services.resources.requests.memory }}
+            memory: {{ .Values.services.resources.requests.memory | quote }}
+            {{ end }}
+            
+            {{ if .Values.services.resources.requests.cpu }}
+            cpu: {{ .Values.services.resources.requests.cpu | quote }}
+            {{ end }}
+          
+          {{ end }}
+
+          {{ if .Values.services.resources.limits }}
+          limits: 
+            {{ if .Values.services.resources.limits.memory }}
+            memory: {{ .Values.services.resources.limits.memory | quote }}
+            {{ end }}
+            
+            {{ if .Values.services.resources.limits.cpu }}
+            cpu: {{ .Values.services.resources.limits.cpu | quote }}
+            {{ end }}
+          
+          {{ end }}
+        {{ end }}
+      {{ if .Values.kerberos }}
+      {{ if .Values.kerberos.enabled }}
+      - image: {{ .Values.kerberos.sidecar_image }}
+        name: krb-sidecar
+        {{ if not .Values.kerberos.keytab }}
+        command:
+          - /reinit-pwd.sh
+        {{ end }}
+        env:
+        - name: KRB5CCNAME
+          value: /dev/shm/ccache
+        - name: KRB5_CONFIG
+          value: /etc/krb5-local/krb5.conf
+        - name: REKINIT_PERIOD
+          value: "3600"
+        - name: SECRETS
+          value: /etc/krb5-keytabs
+        {{ if .Values.kerberos.keytab }}
+        - name: KEYTAB
+          value: {{ .Values.kerberos.keytab }}
+        {{ end }}
+        - name: PRINCIPAL
+          value: {{ .Values.kerberos.principal }}
+        - name: KRB5RCACHEDIR
+          value: /dev/shm
+        volumeMounts:
+          - mountPath: /etc/krb5-local
+            name: krb
+            readOnly: true
+          - mountPath: /etc/krb5-keytabs
+            name: krb-keytab
+            readOnly: true
+      {{ end }}  
+      {{ end }}
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      serviceAccount: openunison-operator
+      volumes:
+        - name: extra-maps
+          emptyDir: {}
+        {{ if .Values.kerberos }}
+        {{ if .Values.kerberos.enabled}}
+        - name: krb
+          configMap:
+            name: kerb-config
+        - name: krb-keytab
+          secret:
+            secretName: kerb-keytab
+        {{ end }}
+        {{ end }}
+      {{ $length := len .Values.services.node_selectors }}
+      {{ if eq $length 0  }}
+      nodeSelector: {}
+      {{ else }}
+      nodeSelector: {{ range $key,$value := .Values.services.node_selectors }}
+        {{ $key }}: {{ $value | quote }}
+      {{ end }}
+      {{ end }}
+      {{ if .Values.services.pullSecret }}
+      imagePullSecrets:
+      - name: {{  .Values.services.pullSecret | quote }}
+      {{ end }}
+{{ end }}
