@@ -219,13 +219,13 @@ spec:
       terminationGracePeriodSeconds: 30
       serviceAccount: openunison-{{ .Release.Name }}
       securityContext:
-        fsGroup: 10001
-        supplementalGroups: [10001]
+        fsGroup: 433
+        supplementalGroups: [433]
         seccompProfile:
           type: RuntimeDefault
         runAsNonRoot: true
-        runAsUser: 10001
-        runAsGroup: 10001
+        runAsUser: 431
+        runAsGroup: 433
       volumes:
       - name: secret-volume
         secret:

@@ -28,20 +28,15 @@ spec:
         operated-by: openunison-operator
     spec:
       securityContext:
-        fsGroup: 10001
-        supplementalGroups: [10001]
+        fsGroup: 433
+        supplementalGroups: [433]
         seccompProfile:
           type: RuntimeDefault
         runAsNonRoot: true
-        runAsUser: 10001
-        runAsGroup: 10001
+        runAsUser: 431
+        runAsGroup: 433
 
       containers:
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-            - "all"
       - env:
         - name: ACTIVEMQ_DEBUG_OPTS
           value: "-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom"
@@ -86,6 +81,11 @@ spec:
           value: /dev/shm/ccache
         {{ end }}
         {{ end }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - "all"
         image: {{ .Values.amq_image }}
         imagePullPolicy: Always
         livenessProbe:
@@ -176,6 +176,11 @@ spec:
         command:
           - /reinit-pwd.sh
         {{ end }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - "all"
         env:
         - name: KRB5CCNAME
           value: /dev/shm/ccache
