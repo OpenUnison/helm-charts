@@ -28,9 +28,20 @@ spec:
         operated-by: openunison-operator
     spec:
       securityContext:
-        fsGroup: 400
+        fsGroup: 10001
+        supplementalGroups: [10001]
+        seccompProfile:
+          type: RuntimeDefault
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
 
       containers:
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - "all"
       - env:
         - name: ACTIVEMQ_DEBUG_OPTS
           value: "-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom"

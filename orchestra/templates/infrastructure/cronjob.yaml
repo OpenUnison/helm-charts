@@ -46,6 +46,11 @@ spec:
             - /var/run/secrets/kubernetes.io/serviceaccount/token
             - /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
             - "2,3,4,5,6"
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - "all"
             env:
             - name: CA_CERTS_PATH
               value: /usr/lib/jvm/java-17-openjdk-amd64/lib/security/cacerts
@@ -106,6 +111,14 @@ spec:
           imagePullSecrets:
           - name: {{  .Values.services.pullSecret | quote }}
           {{ end }}
+          securityContext:
+            fsGroup: 10001
+            supplementalGroups: [10001]
+            seccompProfile:
+              type: RuntimeDefault
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
   schedule: "{{ .Values.cert_update_schedule | default "0 2 * * *" }}"
   successfulJobsHistoryLimit: 3
   suspend: false

@@ -39,10 +39,23 @@ spec:
             value: {{ .Values.vcluster.kubernetes_dashboard_helm_repo_url }}
           - name: VCLUSTER_LABEL
             value: {{ .Values.vcluster.label }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - "all"
         dnsPolicy: ClusterFirst
         serviceAccount: vcluster-onboard-{{ .Release.Name }}
         serviceAccountName: vcluster-onboard-{{ .Release.Name }}
         restartPolicy: OnFailure
+        securityContext:
+          fsGroup: 433
+          supplementalGroups: [433]
+          seccompProfile:
+            type: RuntimeDefault
+          runAsNonRoot: true
+          runAsUser: 431
+          runAsGroup: 433
         volumes:
         - name: vcluster-helm-values
           configMap:
