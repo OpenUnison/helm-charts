@@ -1,0 +1,29 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: kube-oidc-proxy-{{ .Release.Name }}
+    app.kubernetes.io/name: cicd-proxy
+    app.kubernetes.io/instance: cicd-proxy-{{ .Release.Name }}
+    app.kubernetes.io/component: kube-oidc-proxy
+    app.kubernetes.io/part-of: cicd-proxy
+  name: kube-oidc-proxy-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  {{ if eq .Values.cicd-proxy.network.ingress_type "traefik" }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
+    {{ if .Values.cicd-proxy.network.traefik.secure }} 
+    traefik.ingress.kubernetes.io/service.serversscheme: https
+    {{ end }}
+  {{ end }}
+spec:
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 8443
+    name: https-kube-oidc-proxy
+  selector:
+    app: kube-oidc-proxy-{{ .Release.Name }}
+  type: "{{ .Values.cicd-proxy.network.service_type | default "ClusterIP" }}"

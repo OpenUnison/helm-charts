@@ -79,6 +79,11 @@ spec:
         name: openunison-operator
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - "all"
         volumeMounts:
         - mountPath: /etc/extraMaps
           name: extra-maps
@@ -124,6 +129,11 @@ spec:
         command:
           - /reinit-pwd.sh
         {{ end }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - "all"
         env:
         - name: KRB5CCNAME
           value: /dev/shm/ccache
@@ -154,6 +164,14 @@ spec:
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       serviceAccount: openunison-operator
+      securityContext:
+        fsGroup: 433
+        supplementalGroups: [433]
+        seccompProfile:
+          type: RuntimeDefault
+        runAsNonRoot: true
+        runAsUser: 431
+        runAsGroup: 433
       volumes:
         - name: extra-maps
           emptyDir: {}

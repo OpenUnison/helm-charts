@@ -72,6 +72,11 @@ spec:
           value: "{{ $v }}"
         {{ end }}
         {{ end }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - "all"
         image: {{ .Values.image }}
         imagePullPolicy: Always
         livenessProbe:
@@ -213,6 +218,14 @@ spec:
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       serviceAccount: openunison-{{ .Release.Name }}
+      securityContext:
+        fsGroup: 433
+        supplementalGroups: [433]
+        seccompProfile:
+          type: RuntimeDefault
+        runAsNonRoot: true
+        runAsUser: 431
+        runAsGroup: 433
       volumes:
       - name: secret-volume
         secret:
