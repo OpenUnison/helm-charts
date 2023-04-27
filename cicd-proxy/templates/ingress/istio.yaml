@@ -4,6 +4,13 @@ kind: Gateway
 metadata:
   name: openunison-gateway-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: ingress-istio
+    app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
 spec:
   selector:
     {{ range $key,$value := .Values.network.istio.selectors }}
@@ -12,10 +19,13 @@ spec:
   servers:
   - hosts:
     - {{ .Values.network.openunison_host }}
+    {{ if .Values.dashboard.enabled }}
     - {{ .Values.network.dashboard_host }}
+    {{ end }}
     {{ if and (eq .Values.enable_impersonation true) (eq .Values.impersonation.use_jetstack false ) }}
     - {{ .Values.network.api_server_host }}
     {{ end }}
+    
     port:
       name: http
       number: 80
@@ -24,7 +34,9 @@ spec:
       httpsRedirect: true
   - hosts:
     - {{ .Values.network.openunison_host }}
+    {{ if .Values.dashboard.enabled }}
     - {{ .Values.network.dashboard_host }}
+    {{ end }}
     {{ if and (eq .Values.enable_impersonation true) (eq .Values.impersonation.use_jetstack false ) }}
     - {{ .Values.network.api_server_host }}
     {{ end }}
@@ -41,12 +53,19 @@ kind: VirtualService
 metadata:
   name: openunison-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: ingress-istio
+    app.kubernetes.io/part-of: openunison
 spec:
   gateways:
   - openunison-gateway-{{ .Release.Name }}
   hosts:
   - {{ .Values.network.openunison_host }}
+  {{ if .Values.dashboard.enabled }}
   - {{ .Values.network.dashboard_host }}
+  {{ end }}
   {{ if and (eq .Values.enable_impersonation true) (eq .Values.impersonation.use_jetstack false ) }}
   - {{ .Values.network.api_server_host }}
   {{ end }}
@@ -66,6 +85,11 @@ kind: Gateway
 metadata:
   name: openunison-api-gateway-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: ingress-istio
+    app.kubernetes.io/part-of: openunison
 spec:
   selector:
     {{ range $key,$value := .Values.network.istio.selectors }}
@@ -94,6 +118,11 @@ kind: VirtualService
 metadata:
   name: openunison-api-{{ .Release.Name }}-jetstack
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: ingress-istio
+    app.kubernetes.io/part-of: openunison
 spec:
   gateways:
   - openunison-api-gateway-{{ .Release.Name }}
@@ -116,6 +145,11 @@ kind: DestinationRule
 metadata:
   name: openunison-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: ingress-istio
+    app.kubernetes.io/part-of: openunison
 spec:
   host: openunison-{{ .Release.Name }}
   trafficPolicy:
