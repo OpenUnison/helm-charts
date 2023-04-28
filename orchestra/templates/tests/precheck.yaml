@@ -160,12 +160,25 @@ spec:
     - name: test-values
       image: {{ .Values.openunison.precheck.image | default "docker.io/tremolosecurity/python3" }}
       command: ["python", "/scripts/check-hosts.py"]
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - "all"
       volumeMounts:
       - name: scripts
         mountPath: "/scripts"
         readOnly: true
       - name: tmp-pad
         mountPath: "/tmp-pad"
+  securityContext:
+    fsGroup: 433
+    supplementalGroups: [433]
+    seccompProfile:
+      type: RuntimeDefault
+    runAsNonRoot: true
+    runAsUser: 431
+    runAsGroup: 433
   volumes:
     - name: scripts
       configMap:
