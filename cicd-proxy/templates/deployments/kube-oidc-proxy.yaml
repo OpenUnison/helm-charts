@@ -9,8 +9,8 @@ metadata:
     app.kubernetes.io/part-of: cicd-proxy
   name: kube-oidc-proxy-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
-  {{ if eq .Values.cicd-proxy.network.ingress_type "traefik" }}
-  {{ if .Values.cicd-proxy.network.traefik.secure }} 
+  {{ if eq .Values.cicd_proxy.network.ingress_type "traefik" }}
+  {{ if .Values.cicd_proxy.network.traefik.secure }} 
   annotations:
     argocd.argoproj.io/sync-wave: "40"
     traefik.ingress.kubernetes.io/service.serversscheme: https
@@ -23,7 +23,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "40"
   {{ end }}
 spec:
-  replicas: {{ .Values.cicd-proxy.replicas }}
+  replicas: {{ .Values.cicd_proxy.replicas }}
   selector:
     matchLabels:
       app: kube-oidc-proxy-{{ .Release.Name }}
@@ -38,7 +38,7 @@ spec:
     spec:
       serviceAccountName: cicd-proxy-{{ .Release.Name }}
       containers:
-      - image: {{ .Values.cicd-proxy.jetstack_oidc_proxy_image}}
+      - image: {{ .Values.cicd_proxy.image}}
         ports:
         - containerPort: 8443
         - containerPort: 8080
@@ -54,22 +54,25 @@ spec:
           - "--secure-port=8443"
           - "--tls-cert-file=/etc/oidc/tls/crt.pem"
           - "--tls-private-key-file=/etc/oidc/tls/key.pem"
-          - "--oidc-client-id=kubernetes"
-          - "--oidc-issuer-url=https://{{ .Values.network.cicd-proxy_host }}/auth/idp/k8sIdp"
-          - "--oidc-username-claim=sub"
-          - "--oidc-groups-claim=groups"
-          {{ if .Values.cicd-proxy.explicit_certificate_trust }}
+          - "--oidc-client-id={{ .Values.cicd_proxy.oidc.audience }}"
+          - "--oidc-issuer-url=https://{{ .Values.cicd_proxy.oidc.issuer }}"
+          - "--oidc-username-claim={{ .Values.cicd_proxy.oidc.claims.user }}"
+          {{ if .Values.cicd_proxy.oidc.claims.groups }}
+          - "--oidc-groups-claim={{ .Values.cicd_proxy.oidc.claims.groups }}"
+          {{ end }}
+          {{ if .Values.cicd_proxy.explicit_certificate_trust }}
           - "--oidc-ca-file=/etc/oidc/idp-ca.pem"
           {{ else }}
           - "--oidc-ca-file=/etc/ssl/certs/ca-certificates.crt"
           {{ end }}
         imagePullPolicy: Always
         securityContext:
-          runAsUser: 10001
-          runAsGroup: 10001
           allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - "all"
         volumeMounts:
-          {{ if .Values.cicd-proxy.explicit_certificate_trust }}
+          {{ if .Values.cicd_proxy.explicit_certificate_trust }}
           - name: kube-oidc-proxy-config
             mountPath: /etc/oidc
             readOnly: true
@@ -77,54 +80,54 @@ spec:
           - name: kube-oidc-proxy-tls
             mountPath: /etc/oidc/tls
             readOnly: true
-          {{ if .Values.cicd-proxy.services.enable_tokenrequest | default false }}
+          {{ if .Values.cicd_proxy.services.enable_tokenrequest | default false }}
           - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-            name: ou-token
+            name: cicd-proxy-token
           {{ end }}
-        {{ if .Values.cicd-proxy.resources }}
+        {{ if .Values.cicd_proxy.resources }}
         resources:
-          {{ if .Values.cicd-proxy.resources.requests }}
+          {{ if .Values.cicd_proxy.resources.requests }}
           requests:
-            {{ if .Values.cicd-proxy.resources.requests.memory }}
-            memory: {{ quote .Values.cicd-proxy.resources.requests.memory }}
+            {{ if .Values.cicd_proxy.resources.requests.memory }}
+            memory: {{ quote .Values.cicd_proxy.resources.requests.memory }}
             {{ end }}
-            {{ if .Values.cicd-proxy.resources.requests.cpu }}
-            cpu: {{ quote .Values.cicd-proxy.resources.requests.cpu }}
+            {{ if .Values.cicd_proxy.resources.requests.cpu }}
+            cpu: {{ quote .Values.cicd_proxy.resources.requests.cpu }}
             {{ end }}
           {{ end }}
-          {{ if .Values.cicd-proxy.resources.limits }}
+          {{ if .Values.cicd_proxy.resources.limits }}
           limits:
-            {{ if .Values.cicd-proxy.resources.limits.memory }}
-            memory: {{ quote .Values.cicd-proxy.resources.limits.memory }}
+            {{ if .Values.cicd_proxy.resources.limits.memory }}
+            memory: {{ quote .Values.cicd_proxy.resources.limits.memory }}
             {{ end }}
-            {{ if .Values.cicd-proxy.resources.limits.cpu }}
-            cpu: {{ quote .Values.cicd-proxy.resources.limits.cpu }}
+            {{ if .Values.cicd_proxy.resources.limits.cpu }}
+            cpu: {{ quote .Values.cicd_proxy.resources.limits.cpu }}
             {{ end }}
           {{ end }}
         {{ end }}
       volumes:
-        {{ if .Values.cicd-proxy.explicit_certificate_trust }}
+        {{ if .Values.cicd_proxy.explicit_certificate_trust }}
         - name: kube-oidc-proxy-config
           secret:
-            secretName: {{ .Values.cicd-proxy.ca_secret_name }}
+            secretName: {{ .Values.cicd_proxy.ca_secret_name }}
             items:
             - key: tls.crt
               path: oidc-ca.pem
         {{ end }}
-        {{ if .Values.cicd-proxy.services.enable_tokenrequest | default false }}
-        - name: ou-token
+        {{ if .Values.cicd_proxy.services.enable_tokenrequest | default false }}
+        - name: cicd-proxy-token
           projected:
             defaultMode: 420
             sources:
             - serviceAccountToken:
-                audience: {{ .Values.cicd-proxy.services.token_request_audience | default "https://kubernetes.default.svc.cluster.local" }}
-                expirationSeconds: {{ .Values.cicd-proxy.services.token_request_expiration_seconds | default 60000 }}
+                audience: {{ .Values.cicd_proxy.services.token_request_audience | default "https://kubernetes.default.svc.cluster.local" }}
+                expirationSeconds: {{ .Values.cicd_proxy.services.token_request_expiration_seconds | default 60000 }}
                 path: "token"
             - configMap:
                 items:
                 - key: "ca.crt"
                   path: "ca.crt"
-                name: "kube-cacrt"
+                name: "kube-root-ca.crt"
             - configMap:
                 items:
                 - key: namespace
@@ -139,18 +142,26 @@ spec:
               path: crt.pem
             - key: tls.key
               path: key.pem
-      {{ $length := len .Values.cicd-proxy.services.node_selectors }}
+      {{ $length := len .Values.cicd_proxy.services.node_selectors }}
       {{ if eq $length 0  }}
       nodeSelector: {}
       {{ else }}
-      nodeSelector: {{ range $key,$value := .Values.cicd-proxy.services.node_selectors }}
+      nodeSelector: {{ range $key,$value := .Values.cicd_proxy.services.node_selectors }}
         {{ $key }}: {{ quote $value }}
       {{ end }}
       {{ end }}
 
-      {{ if .Values.cicd-proxy.services.pullSecret }}
+      {{ if .Values.cicd_proxy.services.pullSecret }}
       imagePullSecrets:
-      - name: {{ .Values.cicd-proxy.services.pullSecret }}
+      - name: {{ .Values.cicd_proxy.services.pullSecret }}
       {{ end }}
-      automountServiceAccountToken: {{ not (.Values.cicd-proxy.services.enable_tokenrequest | default false) }}
+      automountServiceAccountToken: {{ not (.Values.cicd_proxy.services.enable_tokenrequest | default false) }}
+      securityContext:
+        fsGroup: 10001
+        supplementalGroups: [10001]
+        seccompProfile:
+          type: RuntimeDefault
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
 

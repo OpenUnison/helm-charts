@@ -11,10 +11,10 @@ metadata:
     app.kubernetes.io/part-of: cicd-proxy
   name: kube-oidc-proxy-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
-  {{ if eq .Values.cicd-proxy.network.ingress_type "traefik" }}
+  {{ if eq .Values.cicd_proxy.network.ingress_type "traefik" }}
   annotations:
     argocd.argoproj.io/sync-wave: "40"
-    {{ if .Values.cicd-proxy.network.traefik.secure }} 
+    {{ if .Values.cicd_proxy.network.traefik.secure }} 
     traefik.ingress.kubernetes.io/service.serversscheme: https
     {{ end }}
   {{ end }}
@@ -26,4 +26,4 @@ spec:
     name: https-kube-oidc-proxy
   selector:
     app: kube-oidc-proxy-{{ .Release.Name }}
-  type: "{{ .Values.cicd-proxy.network.service_type | default "ClusterIP" }}"
+  type: "{{ .Values.cicd_proxy.network.service_type | default "ClusterIP" }}"

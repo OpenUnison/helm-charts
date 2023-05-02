@@ -18,6 +18,9 @@ for d in orchestra*/ ; do
     helm package $d
 done
 
+echo "cicd-proxy"
+helm package cicd-proxy
+
 aws s3 sync s3://tremolosecurity-maven/repository/helm$REPO/ /tmp/helm/ 
 
 mv *.tgz /tmp/helm

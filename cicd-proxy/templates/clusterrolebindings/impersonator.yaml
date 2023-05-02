@@ -1,0 +1,20 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: impersonator-{{ .Release.Namespace }}-{{ .Release.Name }}
+  labels:
+    app.kubernetes.io/name: cicd-proxy
+    app.kubernetes.io/instance: cicd-proxy-{{ .Release.Name }}
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: cicd-proxy
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: impersonator-{{ .Release.Namespace }}-{{ .Release.Name }}
+subjects:
+- kind: ServiceAccount
+  name: cicd-proxy-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}

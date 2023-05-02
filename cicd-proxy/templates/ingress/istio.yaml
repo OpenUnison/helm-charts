@@ -1,31 +1,23 @@
-{{ if eq .Values.network.ingress_type "istio" }}
+{{ if eq .Values.cicd_proxy.network.ingress_type "istio" }}
+---
 apiVersion: networking.istio.io/v1beta1
 kind: Gateway
 metadata:
-  name: openunison-gateway-{{ .Release.Name }}
+  name: cicd-proxy-api-gateway-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/name: cicd-proxy
+    app.kubernetes.io/instance: cicd-proxy-{{ .Release.Name }}
     app.kubernetes.io/component: ingress-istio
-    app.kubernetes.io/part-of: openunison
-  annotations:
-    argocd.argoproj.io/sync-wave: "20"
+    app.kubernetes.io/part-of: cicd-proxy
 spec:
   selector:
-    {{ range $key,$value := .Values.network.istio.selectors }}
+    {{ range $key,$value := .Values.cicd_proxy.network.istio.selectors }}
         {{ $key }}: {{ quote $value }}
     {{ end }}
   servers:
   - hosts:
-    - {{ .Values.network.openunison_host }}
-    {{ if .Values.dashboard.enabled }}
-    - {{ .Values.network.dashboard_host }}
-    {{ end }}
-    {{ if and (eq .Values.enable_impersonation true) (eq .Values.impersonation.use_jetstack false ) }}
-    - {{ .Values.network.api_server_host }}
-    {{ end }}
-    
+    - {{ .Values.cicd_proxy.network.api_server_host }}
     port:
       name: http
       number: 80
@@ -33,79 +25,7 @@ spec:
     tls:
       httpsRedirect: true
   - hosts:
-    - {{ .Values.network.openunison_host }}
-    {{ if .Values.dashboard.enabled }}
-    - {{ .Values.network.dashboard_host }}
-    {{ end }}
-    {{ if and (eq .Values.enable_impersonation true) (eq .Values.impersonation.use_jetstack false ) }}
-    - {{ .Values.network.api_server_host }}
-    {{ end }}
-    port:
-      name: https-443
-      number: 443
-      protocol: HTTPS
-    tls:
-      credentialName: {{ .Values.network.ingress_certificate }}
-      mode: SIMPLE
----
-apiVersion: networking.istio.io/v1beta1
-kind: VirtualService
-metadata:
-  name: openunison-{{ .Release.Name }}
-  namespace: {{ .Release.Namespace }}
-  labels:
-    app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
-    app.kubernetes.io/component: ingress-istio
-    app.kubernetes.io/part-of: openunison
-spec:
-  gateways:
-  - openunison-gateway-{{ .Release.Name }}
-  hosts:
-  - {{ .Values.network.openunison_host }}
-  {{ if .Values.dashboard.enabled }}
-  - {{ .Values.network.dashboard_host }}
-  {{ end }}
-  {{ if and (eq .Values.enable_impersonation true) (eq .Values.impersonation.use_jetstack false ) }}
-  - {{ .Values.network.api_server_host }}
-  {{ end }}
-  http:
-  - match:
-    - uri:
-        prefix: /
-    route:
-    - destination:
-        host: openunison-{{ .Release.Name }}
-        port:
-          number: 80
-{{ if and (eq .Values.enable_impersonation true) (eq .Values.impersonation.use_jetstack true ) }}
----
-apiVersion: networking.istio.io/v1beta1
-kind: Gateway
-metadata:
-  name: openunison-api-gateway-{{ .Release.Name }}
-  namespace: {{ .Release.Namespace }}
-  labels:
-    app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
-    app.kubernetes.io/component: ingress-istio
-    app.kubernetes.io/part-of: openunison
-spec:
-  selector:
-    {{ range $key,$value := .Values.network.istio.selectors }}
-        {{ $key }}: {{ quote $value }}
-    {{ end }}
-  servers:
-  - hosts:
-    - {{ .Values.network.api_server_host }}
-    port:
-      name: http
-      number: 80
-      protocol: HTTP
-    tls:
-      httpsRedirect: true
-  - hosts:
-    - {{ .Values.network.api_server_host }}
+    - {{ .Values.cicd_proxy.network.api_server_host }}
     port:
       name: https-443
       number: 443
@@ -116,49 +36,26 @@ spec:
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: openunison-api-{{ .Release.Name }}-jetstack
+  name: cicd-proxy-api-{{ .Release.Name }}-jetstack
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/name: cicd-proxy
+    app.kubernetes.io/instance: cicd-proxy-{{ .Release.Name }}
     app.kubernetes.io/component: ingress-istio
-    app.kubernetes.io/part-of: openunison
+    app.kubernetes.io/part-of: cicd-proxy
 spec:
   gateways:
-  - openunison-api-gateway-{{ .Release.Name }}
+  - cicd-proxy-api-gateway-{{ .Release.Name }}
   hosts:
-  - {{ .Values.network.api_server_host }}
+  - {{ .Values.cicd_proxy.network.api_server_host }}
   tls:
   - match:
     - port: 443
       sniHosts:
-      - {{ .Values.network.api_server_host }}
+      - {{ .Values.cicd_proxy.network.api_server_host }}
     route:
     - destination:
         host: kube-oidc-proxy-{{ .Release.Name }}
         port:
           number: 443
-{{ end }}
----
-apiVersion: networking.istio.io/v1beta1
-kind: DestinationRule
-metadata:
-  name: openunison-{{ .Release.Name }}
-  namespace: {{ .Release.Namespace }}
-  labels:
-    app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
-    app.kubernetes.io/component: ingress-istio
-    app.kubernetes.io/part-of: openunison
-spec:
-  host: openunison-{{ .Release.Name }}
-  trafficPolicy:
-    loadBalancer:
-      consistentHash:
-        httpCookie:
-          name: openunison-{{ .Release.Name }}
-          path: /
-          ttl: 0s
-    tls:
-      mode: ISTIO_MUTUAL
 {{ end }}
