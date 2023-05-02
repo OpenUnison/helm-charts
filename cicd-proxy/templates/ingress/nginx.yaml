@@ -1,4 +1,4 @@
-{{ if eq .Values.cicd-proxy.network.ingress_type "nginx" }}
+{{ if eq .Values.cicd_proxy.network.ingress_type "nginx" }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -9,20 +9,20 @@ metadata:
     nginx.ingress.kubernetes.io/secure-backends: 'true'
     nginx.org/ssl-services: kube-oidc-proxy-{{ .Release.Name }}
     kubernetes.io/ingress.class: nginx
-    {{ range $key,$value := .Values.cicd-proxy.network.ingress_annotations }}
+    {{ range $key,$value := .Values.cicd_proxy.network.ingress_annotations }}
     {{ $key }}: {{ quote $value }}
     {{ end }}
   name: cicdproxy-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: openunison
+    app.kubernetes.io/name: cicd-proxy
     app.kubernetes.io/instance: cicdproxy-{{ .Release.Name }}
     app.kubernetes.io/component: ingress-nginx
-    app.kubernetes.io/part-of: openunison
+    app.kubernetes.io/part-of: cicd-proxy
 spec:
   rules:
   
-  - host: {{ .Values.cicd-proxy.network.api_server_host }}
+  - host: {{ .Values.cicd_proxy.network.api_server_host }}
     http:
       paths:
       - backend:
@@ -34,8 +34,6 @@ spec:
         pathType: Prefix
   tls:
   - hosts:
-    - {{ .Values.cicd-proxy.network.api_server_host }}
+    - {{ .Values.cicd_proxy.network.api_server_host }}
     secretName: cicd-proxy-tls-certificate
-
-
 {{ end }}

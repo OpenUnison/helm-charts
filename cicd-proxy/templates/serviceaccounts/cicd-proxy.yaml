@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  creationTimestamp:
+  name: cicd-proxy-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: kube-oidc-proxy-{{ .Release.Name }}
+    app.kubernetes.io/name: cicd-proxy
+    app.kubernetes.io/instance: cicd-proxy-{{ .Release.Name }}
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: cicd-proxy
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"

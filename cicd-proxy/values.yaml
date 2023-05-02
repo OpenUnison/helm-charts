@@ -1,0 +1,25 @@
+cicd_proxy:
+  image: docker.io/tremolosecurity/kube-oidc-proxy:latest
+  replicas: 1
+  explicit_certificate_trust: false
+  oidc:
+    claims:
+      user: sub
+  network:
+    ingress_type: nginx
+    ingress_annotations: []
+    traefik:
+      secure: true
+      entrypoints:
+        plaintext: web
+        tls: websecure
+    istio:
+      selectors: {}
+    network_policies:
+      enabled: false
+      ingress:
+        labels: {}
+  services:
+    enable_tokenrequest: false
+    node_selectors: []
+  impersonation: {}

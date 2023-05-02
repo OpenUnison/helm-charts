@@ -1,0 +1,25 @@
+{{ if .Values.cicd_proxy.network.network_policies.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: oidc-proxy-allow-from-ingress
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: cicd-proxy
+    app.kubernetes.io/instance: cicd-proxy-{{ .Release.Name }}
+    app.kubernetes.io/component: network-policeis
+    app.kubernetes.io/part-of: cicd-proxy
+spec:
+  podSelector:
+    matchLabels:
+      app: kube-oidc-proxy-{{ .Release.Name }}
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels: {{ range $key,$value := .Values.cicd_proxy.network.network_policies.ingress.labels }}
+            {{ $key }}: {{ $value }}
+        {{ end }}
+  policyTypes:
+  - Ingress
+{{ end }}
