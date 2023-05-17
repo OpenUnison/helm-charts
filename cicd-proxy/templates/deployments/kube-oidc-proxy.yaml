@@ -121,7 +121,7 @@ spec:
             sources:
             - serviceAccountToken:
                 audience: {{ .Values.cicd_proxy.services.token_request_audience | default "https://kubernetes.default.svc.cluster.local" }}
-                expirationSeconds: {{ .Values.cicd_proxy.services.token_request_expiration_seconds | default 60000 }}
+                expirationSeconds: {{ .Values.cicd_proxy.services.token_request_expiration_seconds | default 600 }}
                 path: "token"
             - configMap:
                 items:
