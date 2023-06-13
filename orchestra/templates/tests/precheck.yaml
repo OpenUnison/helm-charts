@@ -159,6 +159,7 @@ spec:
   containers:
     - name: test-values
       image: {{ .Values.openunison.precheck.image | default "docker.io/tremolosecurity/python3" }}
+      imagePullPolicy: {{ .Values.openunison.imagePullPolicy }}
       command: ["python", "/scripts/check-hosts.py"]
       securityContext:
         allowPrivilegeEscalation: false
@@ -171,6 +172,12 @@ spec:
         readOnly: true
       - name: tmp-pad
         mountPath: "/tmp-pad"
+  {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+  securityContext:
+    seccompProfile:
+      type: RuntimeDefault
+    runAsNonRoot: true
+  {{ else }}
   securityContext:
     fsGroup: 433
     supplementalGroups: [433]
@@ -179,6 +186,8 @@ spec:
     runAsNonRoot: true
     runAsUser: 431
     runAsGroup: 433
+  {{ end }}
+  
   volumes:
     - name: scripts
       configMap:

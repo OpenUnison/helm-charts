@@ -64,7 +64,7 @@ spec:
           {{ else }}
           - "--oidc-ca-file=/etc/ssl/certs/ca-certificates.crt"
           {{ end }}
-        imagePullPolicy: Always
+        imagePullPolicy: {{ .Values.openunison.imagePullPolicy }}
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -155,6 +155,12 @@ spec:
       - name: {{ .Values.services.pullSecret }}
       {{ end }}
       automountServiceAccountToken: {{ not (.Values.services.enable_tokenrequest | default false) }}
+      {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+        runAsNonRoot: true
+      {{ else }}
       securityContext:
         fsGroup: 10001
         supplementalGroups: [10001]
@@ -163,6 +169,7 @@ spec:
         runAsNonRoot: true
         runAsUser: 10001
         runAsGroup: 10001
+      {{ end }}
 ---
 apiVersion: v1
 kind: Service

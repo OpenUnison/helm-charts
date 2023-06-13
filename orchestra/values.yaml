@@ -117,6 +117,7 @@ openunison:
   non_secret_data: {}
   env: {}
   secrets: []
+  imagePullPolicy: Always
   html:
     image: docker.lab.tremolo.dev/nginx
     prefix: ouhtml

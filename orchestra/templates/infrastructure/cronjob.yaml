@@ -61,7 +61,7 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
             image: "{{ .Values.cert_update_image }}"
-            imagePullPolicy: Always
+            imagePullPolicy: {{ .Values.openunison.imagePullPolicy }}
             name: check-certs-{{ .Release.Name }}
             resources: {}
             terminationMessagePath: /dev/termination-log
@@ -111,6 +111,12 @@ spec:
           imagePullSecrets:
           - name: {{  .Values.services.pullSecret | quote }}
           {{ end }}
+          {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+          securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+            runAsNonRoot: true
+          {{ else }}
           securityContext:
             fsGroup: 10001
             supplementalGroups: [10001]
@@ -119,6 +125,7 @@ spec:
             runAsNonRoot: true
             runAsUser: 10001
             runAsGroup: 10001
+          {{ end }}
   schedule: "{{ .Values.cert_update_schedule | default "0 2 * * *" }}"
   successfulJobsHistoryLimit: 3
   suspend: false

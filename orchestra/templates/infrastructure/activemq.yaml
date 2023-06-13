@@ -27,6 +27,12 @@ spec:
         app: amq-{{ .Release.Name  }}
         operated-by: openunison-operator
     spec:
+      {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+        runAsNonRoot: true
+      {{ else }}
       securityContext:
         fsGroup: 433
         supplementalGroups: [433]
@@ -35,6 +41,7 @@ spec:
         runAsNonRoot: true
         runAsUser: 431
         runAsGroup: 433
+      {{ end }}
 
       containers:
       - env:
@@ -87,7 +94,7 @@ spec:
             drop:
             - "all"
         image: {{ .Values.amq_image }}
-        imagePullPolicy: Always
+        imagePullPolicy: {{ .Values.openunison.imagePullPolicy }}
         livenessProbe:
           exec:
             command:

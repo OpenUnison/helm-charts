@@ -2,6 +2,7 @@ cicd_proxy:
   image: docker.io/tremolosecurity/kube-oidc-proxy:latest
   replicas: 1
   explicit_certificate_trust: false
+  imagePullPolicy: Always
   oidc:
     claims:
       user: sub
@@ -15,6 +16,7 @@ cicd_proxy:
         tls: websecure
     istio:
       selectors: {}
+    secure_from_ingress: true
     network_policies:
       enabled: false
       ingress:

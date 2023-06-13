@@ -26,7 +26,11 @@ spec:
     - scope: dn
       constraint: "o=Tremolo"
     results:
+      {{ if .Values.dashboard.enabled }}
       azSuccess: logout-dashboard
+      {{ else }}
+      azSuccess: logout
+      {{ end }}
   cookieConfig:
     sessionCookieName: tremolosession
     domain: "#[OU_HOST]"

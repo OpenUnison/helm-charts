@@ -44,7 +44,7 @@ spec:
     spec:
       containers:
       - image: {{ .Values.openunison.html.image }}
-        imagePullPolicy: Always
+        imagePullPolicy: {{ .Values.openunison.imagePullPolicy }}
         name: ouhtml
         resources: {}
         terminationMessagePath: /dev/termination-log
@@ -143,6 +143,12 @@ spec:
       serviceAccountName: ouhtml-{{ .Release.Name }}
       automountServiceAccountToken: false
       restartPolicy: Always
+      {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+        runAsNonRoot: true
+      {{ else }}
       securityContext:
         fsGroup: 10001
         supplementalGroups: [10001]
@@ -151,6 +157,7 @@ spec:
         runAsNonRoot: true
         runAsUser: 10001
         runAsGroup: 10001
+      {{ end }}
       terminationGracePeriodSeconds: 30
       {{ $length := len .Values.services.node_selectors }}
       {{ if eq $length 0  }}

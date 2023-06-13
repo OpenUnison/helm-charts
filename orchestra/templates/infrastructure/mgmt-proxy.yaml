@@ -183,7 +183,7 @@ spec:
           {{ else }}
           - "--oidc-ca-file=/etc/ssl/certs/ca-certificates.crt"
           {{ end }}
-        imagePullPolicy: Always
+        imagePullPolicy: {{ .Values.openunison.imagePullPolicy }}
         securityContext:
           runAsUser: 10001
           runAsGroup: 10001

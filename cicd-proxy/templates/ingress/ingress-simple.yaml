@@ -25,7 +25,11 @@ spec:
           service:
             name: kube-oidc-proxy-{{ .Release.Name }}
             port:
+              {{ if .Values.cicd_proxy.network.secure_from_ingress }}
               number: 443
+              {{ else }}
+              number: 80
+              {{ end }}
         path: "/"
         pathType: Prefix
   
