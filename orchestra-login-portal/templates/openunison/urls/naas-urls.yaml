@@ -22,6 +22,10 @@ spec:
       constraint: "cn=administrators{{ .Values.openunison.naas.groups.external.suffix }},ou=groups,ou=shadow,o=Tremolo"
     - scope: group
       constraint: "cn=administrators{{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo"
+    - scope: group
+      constraint: "cn=operations{{ .Values.openunison.naas.groups.external.suffix }},ou=groups,ou=shadow,o=Tremolo"
+    - scope: group
+      constraint: "cn=operations{{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo"
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: PortalUrl
@@ -43,4 +47,8 @@ spec:
       constraint: "cn=administrators{{ .Values.openunison.naas.groups.external.suffix }},ou=groups,ou=shadow,o=Tremolo"
     - scope: group
       constraint: "cn=administrators{{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo"
+    - scope: group
+      constraint: "cn=operations{{ .Values.openunison.naas.groups.external.suffix }},ou=groups,ou=shadow,o=Tremolo"
+    - scope: group
+      constraint: "cn=operations{{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo"
 {{ end }}

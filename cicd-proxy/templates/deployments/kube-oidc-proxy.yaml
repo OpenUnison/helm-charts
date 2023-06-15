@@ -61,11 +61,11 @@ spec:
           - "--oidc-groups-claim={{ .Values.cicd_proxy.oidc.claims.groups }}"
           {{ end }}
           {{ if .Values.cicd_proxy.explicit_certificate_trust }}
-          - "--oidc-ca-file=/etc/oidc/idp-ca.pem"
+          - "--oidc-ca-file=/etc/oidc/oidc-ca.pem"
           {{ else }}
           - "--oidc-ca-file=/etc/ssl/certs/ca-certificates.crt"
           {{ end }}
-        imagePullPolicy: Always
+        imagePullPolicy: {{ .Values.cicd_proxy.imagePullPolicy }}
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -109,7 +109,7 @@ spec:
         {{ if .Values.cicd_proxy.explicit_certificate_trust }}
         - name: kube-oidc-proxy-config
           secret:
-            secretName: {{ .Values.cicd_proxy.ca_secret_name }}
+            secretName: oidc-ca
             items:
             - key: tls.crt
               path: oidc-ca.pem
@@ -156,6 +156,12 @@ spec:
       - name: {{ .Values.cicd_proxy.services.pullSecret }}
       {{ end }}
       automountServiceAccountToken: {{ not (.Values.cicd_proxy.services.enable_tokenrequest | default false) }}
+      {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+        runAsNonRoot: true
+      {{ else }}
       securityContext:
         fsGroup: 10001
         supplementalGroups: [10001]
@@ -164,4 +170,5 @@ spec:
         runAsNonRoot: true
         runAsUser: 10001
         runAsGroup: 10001
+      {{ end }}
 

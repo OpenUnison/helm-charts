@@ -102,6 +102,7 @@ services:
   - "alive"
 
 openunison:
+  imagePullPolicy: Always
   authentication:
     refresh_token:
       grace_period_millis: 0

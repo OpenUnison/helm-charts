@@ -6,3 +6,4 @@ vcluster:
   openunison_k8s_html_image: docker.io/tremolosecurity/openunison-k8s-html
   helm_repo_url: https://nexus.tremolo.io/repository/helm/
   kubernetes_dashboard_helm_repo_url: https://kubernetes.github.io/dashboard/
+  imagePullPolicy: Always

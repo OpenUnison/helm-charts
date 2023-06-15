@@ -8,8 +8,11 @@ services:
   node_selectors: []
   pullSecret: ""
 
+
+
 operator:
-  image: docker.io/tremolosecurity/openunison-kubernetes-operator:latest
+  image: docker.io/mlbiam/openunison-kubernetes-operator:1.0.2-5a72bf
+  imagePullPolicy: Always
   resources:
     requests:
       memory: 200Mi

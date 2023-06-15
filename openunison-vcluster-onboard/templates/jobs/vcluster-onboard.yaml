@@ -22,7 +22,7 @@ spec:
         - args:
             - /usr/local/openunison/onboard-cluster.sh
           image: {{ .Values.vcluster.job_image }}
-          imagePullPolicy: Always
+          imagePullPolicy: {{ .Values.vcluster.imagePullPolicy }}
           name: vcluster-onboard
           resources: {}
           volumeMounts:
@@ -48,6 +48,12 @@ spec:
         serviceAccount: vcluster-onboard-{{ .Release.Name }}
         serviceAccountName: vcluster-onboard-{{ .Release.Name }}
         restartPolicy: OnFailure
+        {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+        securityContext:
+          seccompProfile:
+            type: RuntimeDefault
+          runAsNonRoot: true
+        {{ else }}
         securityContext:
           fsGroup: 433
           supplementalGroups: [433]
@@ -56,6 +62,7 @@ spec:
           runAsNonRoot: true
           runAsUser: 431
           runAsGroup: 433
+        {{ end }}
         volumes:
         - name: vcluster-helm-values
           configMap:

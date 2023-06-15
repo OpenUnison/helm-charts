@@ -1337,6 +1337,12 @@ spec:
     {{ if .Values.openunison.naas.groups.external.suffix }}
     INSERT INTO public.localGroups (name,description) VALUES ('administrators{{ .Values.openunison.naas.groups.external.suffix }}','System administrators with approval access for new projects and new cluster admins');
     {{ end }}
+    
+    INSERT INTO public.localGroups (name,description) VALUES ('operations{{ .Values.openunison.naas.groups.internal.suffix }}','System administrators');
+    {{ if .Values.openunison.naas.groups.external.suffix }}
+    INSERT INTO public.localGroups (name,description) VALUES ('operations{{ .Values.openunison.naas.groups.external.suffix }}','System administrators');
+    {{ end }}
+    
     INSERT INTO public.localGroups (name,description) VALUES ('k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }}','Kubernetes cluster administrators');
     {{ if .Values.openunison.naas.groups.external.suffix }}
     INSERT INTO public.localGroups (name,description) VALUES ('k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.external.suffix }}','Kubernetes cluster administrators');
@@ -2094,6 +2100,12 @@ spec:
     {{ if .Values.openunison.naas.groups.external.suffix }}
     INSERT INTO localGroups (name,description) VALUES ('administrators{{ .Values.openunison.naas.groups.external.suffix }}','System administrators with approval access for new projects and new cluster admins');
     {{ end }}
+
+    INSERT INTO public.localGroups (name,description) VALUES ('operations{{ .Values.openunison.naas.groups.internal.suffix }}','System administrators');
+    {{ if .Values.openunison.naas.groups.external.suffix }}
+    INSERT INTO public.localGroups (name,description) VALUES ('operations{{ .Values.openunison.naas.groups.external.suffix }}','System administrators');
+    {{ end }}
+
     INSERT INTO localGroups (name,description) VALUES ('k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }}','Kubernetes cluster administrators');
     {{ if .Values.openunison.naas.groups.external.suffix }}
     INSERT INTO localGroups (name,description) VALUES ('k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.external.suffix }}','Kubernetes cluster administrators');
@@ -2365,6 +2377,12 @@ spec:
               {{ if .Values.openunison.naas.groups.external.suffix }}
               INSERT INTO localGroups (name,description) VALUES ('administrators{{ .Values.openunison.naas.groups.external.suffix }}','System administrators with approval access for new projects and new cluster admins');
               {{ end }}
+
+              INSERT INTO public.localGroups (name,description) VALUES ('operations{{ .Values.openunison.naas.groups.internal.suffix }}','System administrators');
+              {{ if .Values.openunison.naas.groups.external.suffix }}
+              INSERT INTO public.localGroups (name,description) VALUES ('operations{{ .Values.openunison.naas.groups.external.suffix }}','System administrators');
+              {{ end }}
+
               INSERT INTO localGroups (name,description) VALUES ('k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }}','Kubernetes cluster administrators');
               {{ if .Values.openunison.naas.groups.external.suffix }}
               INSERT INTO localGroups (name,description) VALUES ('k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.external.suffix }}','Kubernetes cluster administrators');

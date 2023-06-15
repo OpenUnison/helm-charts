@@ -14,6 +14,10 @@ spec:
     scope: group
   - scope: group
     constraint: cn=administrators{{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
+  - constraint: cn=operations{{ .Values.openunison.naas.groups.external.suffix }},ou=groups,ou=shadow,o=Tremolo
+    scope: group
+  - scope: group
+    constraint: cn=operations{{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
   description: Control Plane Cluster
   parent: B158BD40-0C1B-11E3-8FFD-0800200C9A66
   showInPortal: true

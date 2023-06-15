@@ -78,7 +78,7 @@ spec:
             drop:
             - "all"
         image: {{ .Values.image }}
-        imagePullPolicy: Always
+        imagePullPolicy: {{ .Values.openunison.imagePullPolicy }}
         livenessProbe:
           exec:
             command:
@@ -218,6 +218,12 @@ spec:
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       serviceAccount: openunison-{{ .Release.Name }}
+      {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+        runAsNonRoot: true
+      {{ else }}
       securityContext:
         fsGroup: 433
         supplementalGroups: [433]
@@ -226,6 +232,7 @@ spec:
         runAsNonRoot: true
         runAsUser: 431
         runAsGroup: 433
+      {{ end }}
       volumes:
       - name: secret-volume
         secret:
