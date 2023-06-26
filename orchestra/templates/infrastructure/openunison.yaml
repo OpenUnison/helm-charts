@@ -2101,9 +2101,9 @@ spec:
     INSERT INTO localGroups (name,description) VALUES ('administrators{{ .Values.openunison.naas.groups.external.suffix }}','System administrators with approval access for new projects and new cluster admins');
     {{ end }}
 
-    INSERT INTO public.localGroups (name,description) VALUES ('operations{{ .Values.openunison.naas.groups.internal.suffix }}','System administrators');
+    INSERT INTO localGroups (name,description) VALUES ('operations{{ .Values.openunison.naas.groups.internal.suffix }}','System administrators');
     {{ if .Values.openunison.naas.groups.external.suffix }}
-    INSERT INTO public.localGroups (name,description) VALUES ('operations{{ .Values.openunison.naas.groups.external.suffix }}','System administrators');
+    INSERT INTO localGroups (name,description) VALUES ('operations{{ .Values.openunison.naas.groups.external.suffix }}','System administrators');
     {{ end }}
 
     INSERT INTO localGroups (name,description) VALUES ('k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }}','Kubernetes cluster administrators');
@@ -2378,9 +2378,286 @@ spec:
               INSERT INTO localGroups (name,description) VALUES ('administrators{{ .Values.openunison.naas.groups.external.suffix }}','System administrators with approval access for new projects and new cluster admins');
               {{ end }}
 
-              INSERT INTO public.localGroups (name,description) VALUES ('operations{{ .Values.openunison.naas.groups.internal.suffix }}','System administrators');
+              INSERT INTO localGroups (name,description) VALUES ('operations{{ .Values.openunison.naas.groups.internal.suffix }}','System administrators');
               {{ if .Values.openunison.naas.groups.external.suffix }}
-              INSERT INTO public.localGroups (name,description) VALUES ('operations{{ .Values.openunison.naas.groups.external.suffix }}','System administrators');
+              INSERT INTO localGroups (name,description) VALUES ('operations{{ .Values.openunison.naas.groups.external.suffix }}','System administrators');
+              {{ end }}
+
+              INSERT INTO localGroups (name,description) VALUES ('k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }}','Kubernetes cluster administrators');
+              {{ if .Values.openunison.naas.groups.external.suffix }}
+              INSERT INTO localGroups (name,description) VALUES ('k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.external.suffix }}','Kubernetes cluster administrators');
+              {{ end }}
+              INSERT INTO localGroups (name,description) VALUES ('System','System level groups not assigned to local users');
+              INSERT INTO localGroups (name,description) VALUES ('users','All users are members');
+
+              INSERT INTO localUsers (mail,sub) VALUES ('','system');
+
+              INSERT INTO userGroups (userId,groupId) VALUES (1,5);
+
+
+              commit; 
+{{ end }}
+{{ if eq (substr 0 12 .Values.database.url)  "jdbc:mariadb"}}
+  sql_check_query: "show tables like 'QRTZ_TRIGGERS'"
+  run_sql: |-
+              CREATE TABLE `localUsers` (
+                `userId` int(11) NOT NULL AUTO_INCREMENT,
+                `firstName` varchar(255) DEFAULT NULL,
+                `lastName` varchar(255) DEFAULT NULL,
+                `mail` varchar(255) DEFAULT NULL,
+                `sub` varchar(255) NOT NULL,
+                PRIMARY KEY (`userId`)
+              ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+
+
+              # By: Ron Cordell - roncordell
+              #  I didn't see this anywhere, so I thought I'd post it here. This is the script from Quartz to create the tables in a MySQL database, modified to use INNODB instead of MYISAM.
+
+
+
+              # make sure you have UTF-8 collaction for best .NET interoperability
+              # CREATE DATABASE quartznet CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+              DROP TABLE IF EXISTS QRTZ_FIRED_TRIGGERS;
+              DROP TABLE IF EXISTS QRTZ_PAUSED_TRIGGER_GRPS;
+              DROP TABLE IF EXISTS QRTZ_SCHEDULER_STATE;
+              DROP TABLE IF EXISTS QRTZ_LOCKS;
+              DROP TABLE IF EXISTS QRTZ_SIMPLE_TRIGGERS;
+              DROP TABLE IF EXISTS QRTZ_SIMPROP_TRIGGERS;
+              DROP TABLE IF EXISTS QRTZ_CRON_TRIGGERS;
+              DROP TABLE IF EXISTS QRTZ_BLOB_TRIGGERS;
+              DROP TABLE IF EXISTS QRTZ_TRIGGERS;
+              DROP TABLE IF EXISTS QRTZ_JOB_DETAILS;
+              DROP TABLE IF EXISTS QRTZ_CALENDARS;
+
+              CREATE TABLE QRTZ_JOB_DETAILS(
+              SCHED_NAME VARCHAR(120) NOT NULL,
+              JOB_NAME VARCHAR(200) NOT NULL,
+              JOB_GROUP VARCHAR(200) NOT NULL,
+              DESCRIPTION VARCHAR(250) NULL,
+              JOB_CLASS_NAME VARCHAR(250) NOT NULL,
+              IS_DURABLE BOOLEAN NOT NULL,
+              IS_NONCONCURRENT BOOLEAN NOT NULL,
+              IS_UPDATE_DATA BOOLEAN NOT NULL,
+              REQUESTS_RECOVERY BOOLEAN NOT NULL,
+              JOB_DATA BLOB NULL,
+              PRIMARY KEY (SCHED_NAME,JOB_NAME,JOB_GROUP))
+              ENGINE=InnoDB;
+
+              CREATE TABLE QRTZ_TRIGGERS (
+              SCHED_NAME VARCHAR(120) NOT NULL,
+              TRIGGER_NAME VARCHAR(200) NOT NULL,
+              TRIGGER_GROUP VARCHAR(200) NOT NULL,
+              JOB_NAME VARCHAR(200) NOT NULL,
+              JOB_GROUP VARCHAR(200) NOT NULL,
+              DESCRIPTION VARCHAR(250) NULL,
+              NEXT_FIRE_TIME BIGINT(19) NULL,
+              PREV_FIRE_TIME BIGINT(19) NULL,
+              PRIORITY INTEGER NULL,
+              TRIGGER_STATE VARCHAR(16) NOT NULL,
+              TRIGGER_TYPE VARCHAR(8) NOT NULL,
+              START_TIME BIGINT(19) NOT NULL,
+              END_TIME BIGINT(19) NULL,
+              CALENDAR_NAME VARCHAR(200) NULL,
+              MISFIRE_INSTR SMALLINT(2) NULL,
+              JOB_DATA BLOB NULL,
+              PRIMARY KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP),
+              FOREIGN KEY (SCHED_NAME,JOB_NAME,JOB_GROUP)
+              REFERENCES QRTZ_JOB_DETAILS(SCHED_NAME,JOB_NAME,JOB_GROUP))
+              ENGINE=InnoDB;
+
+              CREATE TABLE QRTZ_SIMPLE_TRIGGERS (
+              SCHED_NAME VARCHAR(120) NOT NULL,
+              TRIGGER_NAME VARCHAR(200) NOT NULL,
+              TRIGGER_GROUP VARCHAR(200) NOT NULL,
+              REPEAT_COUNT BIGINT(7) NOT NULL,
+              REPEAT_INTERVAL BIGINT(12) NOT NULL,
+              TIMES_TRIGGERED BIGINT(10) NOT NULL,
+              PRIMARY KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP),
+              FOREIGN KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP)
+              REFERENCES QRTZ_TRIGGERS(SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP))
+              ENGINE=InnoDB;
+
+              CREATE TABLE QRTZ_CRON_TRIGGERS (
+              SCHED_NAME VARCHAR(120) NOT NULL,
+              TRIGGER_NAME VARCHAR(200) NOT NULL,
+              TRIGGER_GROUP VARCHAR(200) NOT NULL,
+              CRON_EXPRESSION VARCHAR(120) NOT NULL,
+              TIME_ZONE_ID VARCHAR(80),
+              PRIMARY KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP),
+              FOREIGN KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP)
+              REFERENCES QRTZ_TRIGGERS(SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP))
+              ENGINE=InnoDB;
+
+              CREATE TABLE QRTZ_SIMPROP_TRIGGERS
+                (          
+                  SCHED_NAME VARCHAR(120) NOT NULL,
+                  TRIGGER_NAME VARCHAR(200) NOT NULL,
+                  TRIGGER_GROUP VARCHAR(200) NOT NULL,
+                  STR_PROP_1 VARCHAR(512) NULL,
+                  STR_PROP_2 VARCHAR(512) NULL,
+                  STR_PROP_3 VARCHAR(512) NULL,
+                  INT_PROP_1 INT NULL,
+                  INT_PROP_2 INT NULL,
+                  LONG_PROP_1 BIGINT NULL,
+                  LONG_PROP_2 BIGINT NULL,
+                  DEC_PROP_1 NUMERIC(13,4) NULL,
+                  DEC_PROP_2 NUMERIC(13,4) NULL,
+                  BOOL_PROP_1 BOOLEAN NULL,
+                  BOOL_PROP_2 BOOLEAN NULL,
+                  TIME_ZONE_ID VARCHAR(80) NULL,
+                  PRIMARY KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP),
+                  FOREIGN KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP) 
+                  REFERENCES QRTZ_TRIGGERS(SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP))
+              ENGINE=InnoDB;
+
+              CREATE TABLE QRTZ_BLOB_TRIGGERS (
+              SCHED_NAME VARCHAR(120) NOT NULL,
+              TRIGGER_NAME VARCHAR(200) NOT NULL,
+              TRIGGER_GROUP VARCHAR(200) NOT NULL,
+              BLOB_DATA BLOB NULL,
+              PRIMARY KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP),
+              INDEX (SCHED_NAME,TRIGGER_NAME, TRIGGER_GROUP),
+              FOREIGN KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP)
+              REFERENCES QRTZ_TRIGGERS(SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP))
+              ENGINE=InnoDB;
+
+              CREATE TABLE QRTZ_CALENDARS (
+              SCHED_NAME VARCHAR(120) NOT NULL,
+              CALENDAR_NAME VARCHAR(200) NOT NULL,
+              CALENDAR BLOB NOT NULL,
+              PRIMARY KEY (SCHED_NAME,CALENDAR_NAME))
+              ENGINE=InnoDB;
+
+              CREATE TABLE QRTZ_PAUSED_TRIGGER_GRPS (
+              SCHED_NAME VARCHAR(120) NOT NULL,
+              TRIGGER_GROUP VARCHAR(200) NOT NULL,
+              PRIMARY KEY (SCHED_NAME,TRIGGER_GROUP))
+              ENGINE=InnoDB;
+
+              CREATE TABLE QRTZ_FIRED_TRIGGERS (
+              SCHED_NAME VARCHAR(120) NOT NULL,
+              ENTRY_ID VARCHAR(140) NOT NULL,
+              TRIGGER_NAME VARCHAR(200) NOT NULL,
+              TRIGGER_GROUP VARCHAR(200) NOT NULL,
+              INSTANCE_NAME VARCHAR(200) NOT NULL,
+              FIRED_TIME BIGINT(19) NOT NULL,
+              SCHED_TIME BIGINT(19) NOT NULL,
+              PRIORITY INTEGER NOT NULL,
+              STATE VARCHAR(16) NOT NULL,
+              JOB_NAME VARCHAR(200) NULL,
+              JOB_GROUP VARCHAR(200) NULL,
+              IS_NONCONCURRENT BOOLEAN NULL,
+              REQUESTS_RECOVERY BOOLEAN NULL,
+              PRIMARY KEY (SCHED_NAME,ENTRY_ID))
+              ENGINE=InnoDB;
+
+              CREATE TABLE QRTZ_SCHEDULER_STATE (
+              SCHED_NAME VARCHAR(120) NOT NULL,
+              INSTANCE_NAME VARCHAR(200) NOT NULL,
+              LAST_CHECKIN_TIME BIGINT(19) NOT NULL,
+              CHECKIN_INTERVAL BIGINT(19) NOT NULL,
+              PRIMARY KEY (SCHED_NAME,INSTANCE_NAME))
+              ENGINE=InnoDB;
+
+              CREATE TABLE QRTZ_LOCKS (
+              SCHED_NAME VARCHAR(120) NOT NULL,
+              LOCK_NAME VARCHAR(40) NOT NULL,
+              PRIMARY KEY (SCHED_NAME,LOCK_NAME))
+              ENGINE=InnoDB;
+
+              CREATE TABLE `localGroups` (
+                `groupId` int(11) NOT NULL AUTO_INCREMENT,
+                `description` text DEFAULT NULL,
+                `name` varchar(255) NOT NULL,
+                `extra1` text DEFAULT NULL,
+                PRIMARY KEY (`groupId`)
+              ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+
+              CREATE INDEX IDX_QRTZ_J_REQ_RECOVERY ON QRTZ_JOB_DETAILS(SCHED_NAME,REQUESTS_RECOVERY);
+              CREATE INDEX IDX_QRTZ_J_GRP ON QRTZ_JOB_DETAILS(SCHED_NAME,JOB_GROUP);
+
+              CREATE INDEX IDX_QRTZ_T_J ON QRTZ_TRIGGERS(SCHED_NAME,JOB_NAME,JOB_GROUP);
+              CREATE INDEX IDX_QRTZ_T_JG ON QRTZ_TRIGGERS(SCHED_NAME,JOB_GROUP);
+              CREATE INDEX IDX_QRTZ_T_C ON QRTZ_TRIGGERS(SCHED_NAME,CALENDAR_NAME);
+              CREATE INDEX IDX_QRTZ_T_G ON QRTZ_TRIGGERS(SCHED_NAME,TRIGGER_GROUP);
+              CREATE INDEX IDX_QRTZ_T_STATE ON QRTZ_TRIGGERS(SCHED_NAME,TRIGGER_STATE);
+              CREATE INDEX IDX_QRTZ_T_N_STATE ON QRTZ_TRIGGERS(SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP,TRIGGER_STATE);
+              CREATE INDEX IDX_QRTZ_T_N_G_STATE ON QRTZ_TRIGGERS(SCHED_NAME,TRIGGER_GROUP,TRIGGER_STATE);
+              CREATE INDEX IDX_QRTZ_T_NEXT_FIRE_TIME ON QRTZ_TRIGGERS(SCHED_NAME,NEXT_FIRE_TIME);
+              CREATE INDEX IDX_QRTZ_T_NFT_ST ON QRTZ_TRIGGERS(SCHED_NAME,TRIGGER_STATE,NEXT_FIRE_TIME);
+              CREATE INDEX IDX_QRTZ_T_NFT_MISFIRE ON QRTZ_TRIGGERS(SCHED_NAME,MISFIRE_INSTR,NEXT_FIRE_TIME);
+              CREATE INDEX IDX_QRTZ_T_NFT_ST_MISFIRE ON QRTZ_TRIGGERS(SCHED_NAME,MISFIRE_INSTR,NEXT_FIRE_TIME,TRIGGER_STATE);
+              CREATE INDEX IDX_QRTZ_T_NFT_ST_MISFIRE_GRP ON QRTZ_TRIGGERS(SCHED_NAME,MISFIRE_INSTR,NEXT_FIRE_TIME,TRIGGER_GROUP,TRIGGER_STATE);
+
+              CREATE INDEX IDX_QRTZ_FT_TRIG_INST_NAME ON QRTZ_FIRED_TRIGGERS(SCHED_NAME,INSTANCE_NAME);
+              CREATE INDEX IDX_QRTZ_FT_INST_JOB_REQ_RCVRY ON QRTZ_FIRED_TRIGGERS(SCHED_NAME,INSTANCE_NAME,REQUESTS_RECOVERY);
+              CREATE INDEX IDX_QRTZ_FT_J_G ON QRTZ_FIRED_TRIGGERS(SCHED_NAME,JOB_NAME,JOB_GROUP);
+              CREATE INDEX IDX_QRTZ_FT_JG ON QRTZ_FIRED_TRIGGERS(SCHED_NAME,JOB_GROUP);
+              CREATE INDEX IDX_QRTZ_FT_T_G ON QRTZ_FIRED_TRIGGERS(SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP);
+              CREATE INDEX IDX_QRTZ_FT_TG ON QRTZ_FIRED_TRIGGERS(SCHED_NAME,TRIGGER_GROUP);
+
+              DROP TABLE IF EXISTS ACTIVEMQ_ACKS;
+              DROP TABLE IF EXISTS ACTIVEMQ_LOCK;
+              DROP TABLE IF EXISTS ACTIVEMQ_MSGS;
+
+
+              CREATE TABLE `ACTIVEMQ_ACKS` (
+                `CONTAINER` varchar(250) NOT NULL,
+                `SUB_DEST` varchar(250) DEFAULT NULL,
+                `CLIENT_ID` varchar(250) NOT NULL,
+                `SUB_NAME` varchar(250) NOT NULL,
+                `SELECTOR` varchar(250) DEFAULT NULL,
+                `LAST_ACKED_ID` bigint(20) DEFAULT NULL,
+                `PRIORITY` bigint(20) NOT NULL DEFAULT '5',
+                `XID` varchar(250) DEFAULT NULL,
+                PRIMARY KEY (`CONTAINER`,`CLIENT_ID`,`SUB_NAME`,`PRIORITY`),
+                KEY `ACTIVEMQ_ACKS_XIDX` (`XID`)
+              );
+
+              CREATE TABLE `ACTIVEMQ_LOCK` (
+                `ID` bigint(20) NOT NULL,
+                `TIME` bigint(20) DEFAULT NULL,
+                `BROKER_NAME` varchar(250) DEFAULT NULL,
+                PRIMARY KEY (`ID`)
+              );
+
+              CREATE TABLE `userGroups` (
+                `groupId` int(11) NOT NULL,
+                `userId` int(11) NOT NULL,
+                KEY `FK6wef2figx9l7ncf7vc4umsdnu` (`userId`),
+                KEY `FKmkxs7vbrm1unvaa0coapv38l8` (`groupId`),
+                CONSTRAINT `FK6wef2figx9l7ncf7vc4umsdnu` FOREIGN KEY (`userId`) REFERENCES `localUsers` (`userId`),
+                CONSTRAINT `FKmkxs7vbrm1unvaa0coapv38l8` FOREIGN KEY (`groupId`) REFERENCES `localGroups` (`groupId`)
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+              CREATE TABLE `ACTIVEMQ_MSGS` (
+                `ID` bigint(20) NOT NULL,
+                `CONTAINER` varchar(250) NOT NULL,
+                `MSGID_PROD` varchar(250) DEFAULT NULL,
+                `MSGID_SEQ` bigint(20) DEFAULT NULL,
+                `EXPIRATION` bigint(20) DEFAULT NULL,
+                `MSG` mediumblob,
+                `PRIORITY` bigint(20) DEFAULT NULL,
+                `XID` varchar(250) DEFAULT NULL,
+                PRIMARY KEY (`ID`),
+                KEY `ACTIVEMQ_MSGS_MIDX` (`MSGID_PROD`,`MSGID_SEQ`),
+                KEY `ACTIVEMQ_MSGS_CIDX` (`CONTAINER`),
+                KEY `ACTIVEMQ_MSGS_EIDX` (`EXPIRATION`),
+                KEY `ACTIVEMQ_MSGS_PIDX` (`PRIORITY`),
+                KEY `ACTIVEMQ_MSGS_XIDX` (`XID`)
+              );
+
+              
+
+              INSERT INTO localGroups (name,description) VALUES ('administrators{{ .Values.openunison.naas.groups.internal.suffix }}','System administrators with approval access for new projects and new cluster admins');
+              {{ if .Values.openunison.naas.groups.external.suffix }}
+              INSERT INTO localGroups (name,description) VALUES ('administrators{{ .Values.openunison.naas.groups.external.suffix }}','System administrators with approval access for new projects and new cluster admins');
+              {{ end }}
+
+              INSERT INTO localGroups (name,description) VALUES ('operations{{ .Values.openunison.naas.groups.internal.suffix }}','System administrators');
+              {{ if .Values.openunison.naas.groups.external.suffix }}
+              INSERT INTO localGroups (name,description) VALUES ('operations{{ .Values.openunison.naas.groups.external.suffix }}','System administrators');
               {{ end }}
 
               INSERT INTO localGroups (name,description) VALUES ('k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }}','Kubernetes cluster administrators');
