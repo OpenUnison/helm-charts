@@ -92,7 +92,18 @@ spec:
 
             httpPost.setEntity(new UrlEncodedFormEntity(params));
             var resp = con.getHttp().execute(httpPost);
+
             var jsonResp = EntityUtils.toString(resp.getEntity());
+            
+            if (resp.getStatusLine().getStatusCode() != 200) {
+                System.out.println("Unable to retrieve an access token: " + resp.getStatusLine().getStatusCode() + " / " + jsonResp);
+                as.setExecuted(true);
+                as.setSuccess(false);
+                holder.getConfig().getAuthManager().nextAuth(request, response,session,false);
+                return;
+            }
+
+            
             
             var accessToken = JSON.parse(jsonResp)["access_token"];
             
@@ -105,6 +116,17 @@ spec:
             resp = con.getHttp().execute(httpGet);
 
             jsonResp = EntityUtils.toString(resp.getEntity());
+            
+            
+            if (resp.getStatusLine().getStatusCode() != 200) {
+                System.out.println("Unable to retrieve groups: " + resp.getStatusLine().getStatusCode() + " / " + jsonResp);
+                as.setExecuted(true);
+                as.setSuccess(false);
+                holder.getConfig().getAuthManager().nextAuth(request, response,session,false);
+                return;
+            }
+            
+            
             var groupData = JSON.parse(jsonResp);
 
             // remove the old groups, then add the ones from the lookup to AzureAD
