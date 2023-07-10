@@ -1,0 +1,144 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: AuthenticationChain
+metadata:
+  name: google-ws-load-groups
+  namespace: {{ .Release.Namespace }}
+spec:
+  authMechs:
+  - name: js
+    params:
+      js: |-
+        function doAuth(request,response,as) {
+          // setup classes that we can use from Java
+          Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+          ProxyConstants = Java.type("com.tremolosecurity.proxy.util.ProxyConstants");
+          GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+          HashMap = Java.type("java.util.HashMap");
+          System = Java.type("java.lang.System");
+          JwtClaims = Java.type("org.jose4j.jwt.JwtClaims");
+          JSUtils = Java.type("com.tremolosecurity.util.JSUtils");
+          JsonWebSignature = Java.type("org.jose4j.jws.JsonWebSignature");
+          PEMParser = Java.type("org.bouncycastle.openssl.PEMParser");
+          ByteArrayInputStream = Java.type("java.io.ByteArrayInputStream");
+          InputStreamReader = Java.type("java.io.InputStreamReader");
+          IOUtils = Java.type("org.apache.commons.io.IOUtils");
+          AlgorithmIdentifiers = Java.type("org.jose4j.jws.AlgorithmIdentifiers");
+          JcaPEMKeyConverter = Java.type("org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter");
+          HttpPost = Java.type("org.apache.http.client.methods.HttpPost");
+          HttpGet = Java.type("org.apache.http.client.methods.HttpGet");
+          ArrayList = Java.type("java.util.ArrayList");
+          NameValuePair = Java.type("org.apache.http.NameValuePair");
+          BasicNameValuePair = Java.type("org.apache.http.message.BasicNameValuePair");
+          UrlEncodedFormEntity = Java.type("org.apache.http.client.entity.UrlEncodedFormEntity");
+          EntityUtils = Java.type("org.apache.http.util.EntityUtils");
+          BasicHeader = Java.type("org.apache.http.message.BasicHeader");
+          
+
+          // get the session data needed
+          var session = request.getSession();
+          
+          
+          
+          var holder = request.getAttribute(ProxyConstants.AUTOIDM_CFG);
+
+          var ac = request.getSession().getAttribute(ProxyConstants.AUTH_CTL);
+          
+          
+          // Load the user from AzureAD by their UserPrincipalName (user@domain)
+          var mail = ac.getAuthInfo().getAttribs().get("mail").getValues().get(0);
+
+
+          // generate a token for google api
+          var claims = new JwtClaims();
+          claims.setIssuer("{{ .Values.google_ws.service_account_email }}"); // who creates the token and signs it
+
+          claims.setExpirationTimeMinutesInTheFuture(8); // time when the token will expire (10 minutes from now)
+          claims.setNotBeforeMinutesInThePast(1);
+          claims.setGeneratedJwtId(); // a unique identifier for the token
+          claims.setIssuedAtToNow(); // when the
+          claims.setStringClaim("scope","https://www.googleapis.com/auth/admin.directory.group.readonly");
+          claims.setStringClaim("sub","{{ .Values.google_ws.admin_email }}");
+          claims.setAudience("https://oauth2.googleapis.com/token");
+
+
+          var k8s = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget("k8s").getProvider();
+          var con = k8s.createClient();
+
+          try {
+            var secretUrl = "/api/v1/namespaces/openunison/secrets/googlews";
+            var jsonData = k8s.callWS(k8s.getAuthToken(), con, secretUrl);
+            var secret = JSON.parse(jsonData);
+            var decoded = JSUtils.base64Decode(secret.data.key);
+
+            
+
+
+            var pemParser = new PEMParser(new InputStreamReader(IOUtils.toInputStream(decoded)));
+            var converter = new JcaPEMKeyConverter();
+            var sigKey = converter.	getPrivateKey(pemParser.readObject());
+
+            var jws = new JsonWebSignature();
+            jws.setPayload(claims.toJson());
+            jws.setKey(sigKey);
+            jws.setAlgorithmHeaderValue(AlgorithmIdentifiers.RSA_USING_SHA256);
+
+            var googleJwt = jws.getCompactSerialization();
+
+            var httpPost = new HttpPost("https://oauth2.googleapis.com/token");
+            params = new ArrayList();
+            params.add(new BasicNameValuePair("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer"));
+            params.add(new BasicNameValuePair("assertion", googleJwt));
+
+            httpPost.setEntity(new UrlEncodedFormEntity(params));
+            var resp = con.getHttp().execute(httpPost);
+            var jsonResp = EntityUtils.toString(resp.getEntity());
+            
+            var accessToken = JSON.parse(jsonResp)["access_token"];
+            
+
+            var listMembersUrl = "https://admin.googleapis.com/admin/directory/v1/groups?userKey=" + mail;
+
+            httpGet = new HttpGet(listMembersUrl);
+            httpGet.addHeader(new BasicHeader("Authorization","Bearer " + accessToken));
+
+            resp = con.getHttp().execute(httpGet);
+
+            jsonResp = EntityUtils.toString(resp.getEntity());
+            var groupData = JSON.parse(jsonResp);
+
+            // remove the old groups, then add the ones from the lookup to AzureAD
+            var memberof = ac.getAuthInfo().getAttribs().get("memberOf");
+            if (memberof == null) {
+                memberof = new Attribute("memberOf");
+                ac.getAuthInfo().getAttribs().put("memberOf",memberof);
+            }
+            memberof.getValues().clear();
+
+            for (var i = 0;i<groupData.groups.length;i++) {
+              memberof.getValues().add(groupData.groups[i].name);
+            }
+
+          } finally {
+            if (con != null) {
+              con.getHttp().close();
+              con.getBcm().close()
+            }
+          }
+
+
+          
+          
+          
+          
+          
+          
+
+          as.setExecuted(true);
+          as.setSuccess(true);
+          holder.getConfig().getAuthManager().nextAuth(request, response,session,false);
+
+        }
+    required: required
+  level: 20
+  root: o=Tremolo
