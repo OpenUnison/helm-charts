@@ -11,19 +11,19 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "20"
 rules:
+{{ if and .Values.cicd_proxy.impersonation .Values.cicd_proxy.impersonation.users }}
 - apiGroups:
   - ""
   resources:
   - users
   verbs:
   - impersonate
-  {{ if and .Values.cicd_proxy.impersonation .Values.cicd_proxy.impersonation.users }}
+  
   resourceNames:
   {{ range .Values.cicd_proxy.impersonation.users }}
   - "{{ . }}"
   {{ end }}
   {{ end }}
-
 - apiGroups:
   - ""
   resources:
@@ -38,15 +38,16 @@ rules:
   {{ end }}
   {{ end }}
 {{ if and .Values.cicd_proxy.impersonation .Values.cicd_proxy.impersonation.serviceaccounts }}
+{{ range .Values.cicd_proxy.impersonation.serviceaccounts }}
 - apiGroups:
   - ""
   resources:
   - serviceaccounts
   verbs:
   - impersonate
+  namespace: .namespace
   resourceNames:
-  {{ range .Values.cicd_proxy.impersonation.serviceaccounts }}
-  - "{{ . }}"
+  - .name
   {{ end }}
 {{ end }}
 - apiGroups:
