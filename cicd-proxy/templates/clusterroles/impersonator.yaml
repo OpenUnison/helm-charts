@@ -45,9 +45,9 @@ rules:
   - serviceaccounts
   verbs:
   - impersonate
-  namespace: .namespace
+  namespace: {{ .namespace }}
   resourceNames:
-  - .name
+  - {{ .name }}
   {{ end }}
 {{ end }}
 - apiGroups:
