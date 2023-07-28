@@ -1,6 +1,6 @@
 {{ if and .Values.openunison.enable_provisioning .Values.openunison.enable_activemq }}
 {{ if not .Values.openunison.activemq_use_pvc }}
-{{ if eq (substr 0 10 .Values.database.url)  "jdbc:mysql"}}
+{{ if or (eq (substr 0 10 .Values.database.url)  "jdbc:mysql") (eq (substr 0 12 .Values.database.url)  "jdbc:mariadb")}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
