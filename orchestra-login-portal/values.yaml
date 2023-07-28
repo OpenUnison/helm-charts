@@ -16,8 +16,8 @@ cert_template:
   st: "State of Cluster"
   c: "MyCountry"
 
-image: "docker.io/tremolosecurity/openunison-k8s:latest"
-amq_image: "docker.io/tremolosecurity/activemq-docker:latest"
+image: "ghcr.io/openunison/openunison-k8s:1.0.37"
+amq_image: "ghcr.io/tremolosecurity/activemq-docker:5.0.16"
 myvd_config_path: "WEB-INF/myvd.conf"
 k8s_cluster_name: kubernetes
 enable_impersonation: true
@@ -63,7 +63,7 @@ monitoring:
 
 impersonation:
   use_jetstack: true
-  jetstack_oidc_proxy_image: docker.io/tremolosecurity/kube-oidc-proxy:latest
+  jetstack_oidc_proxy_image: ghcr.io/tremolosecurity/kube-oidc-proxy:1.0.4
   explicit_certificate_trust: true
   ca_secret_name: ou-tls-certificate
 
@@ -110,12 +110,12 @@ openunison:
   non_secret_data: {}
   secrets: []
   html:
-    image: docker.io/tremolosecurity/openunison-k8s-html
+    image: ghcr.io/openunison/openunison-k8s-html:1.0.0
   enable_provisioning: false
   enable_activemq: true
   az_groups: []
   precheck:
-    image: docker.io/tremolosecurity/python3
+    image: ghcr.io/tremolosecurity/python3:1.0.0
   use_standard_jit_workflow: true
   management_proxy:
     enabled: false

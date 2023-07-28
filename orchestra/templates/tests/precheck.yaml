@@ -158,7 +158,7 @@ spec:
   restartPolicy: Never
   containers:
     - name: test-values
-      image: {{ .Values.openunison.precheck.image | default "docker.io/tremolosecurity/python3" }}
+      image: {{ .Values.openunison.precheck.image | default "ghcr.io/tremolosecurity/python3:1.0.0" }}
       imagePullPolicy: {{ .Values.openunison.imagePullPolicy }}
       command: ["python", "/scripts/check-hosts.py"]
       securityContext:
