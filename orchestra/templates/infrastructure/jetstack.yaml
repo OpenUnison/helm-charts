@@ -157,8 +157,6 @@ spec:
       automountServiceAccountToken: {{ not (.Values.services.enable_tokenrequest | default false) }}
       {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
       securityContext:
-        seccompProfile:
-          type: RuntimeDefault
         runAsNonRoot: true
       {{ else }}
       securityContext:

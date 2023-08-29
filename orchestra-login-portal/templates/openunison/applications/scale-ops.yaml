@@ -1,4 +1,5 @@
 {{ if .Values.openunison.enable_provisioning }}
+
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Application
@@ -16,6 +17,7 @@ spec:
   azTimeoutMillis: 3000
   isApp: true
   urls:
+  {{ if .Values.openunison.html.legacy }}
   - hosts:
     - "#[OU_HOST]"
     filterChain: 
@@ -37,6 +39,7 @@ spec:
     results: 
       azFail: default-login-failure
       auFail: default-login-failure
+  {{ end }}
   - hosts:
     - "#[OU_HOST]"
     filterChain:
@@ -57,16 +60,24 @@ spec:
         homeUrl: /scale/
         bases:
         - OpenUnison=o=Tremolo
+    {{ if .Values.openunison.html.legacy }}
     uri: /ops/ops
+    {{ else }}
+    uri: /scale/ops
+    {{ end }}
     azRules:
     - scope: filter
       constraint: (groups=administrators{{ .Values.openunison.naas.groups.external.suffix }})
     - scope: filter
       constraint: "(groups=administrators{{ .Values.openunison.naas.groups.internal.suffix }})"
     authChain: login-service
+    {{ if .Values.openunison.html.legacy }}
     results:
       azFail: default-login-failure
       auFail: default-login-failure
+    {{ else }}
+    results: {}
+    {{ end }}
   cookieConfig:
     sessionCookieName: tremolosession
     domain: "#[OU_HOST]"
@@ -78,4 +89,3 @@ spec:
     scope: -1
     cookiesEnabled: true
 {{ end }}
-    
