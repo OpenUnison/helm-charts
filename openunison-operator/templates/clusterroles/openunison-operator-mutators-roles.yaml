@@ -1,0 +1,29 @@
+{{ if gt (len .Values.operator.mutators) 0  }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: openunison-operator-mutators-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+rules:
+- apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - mutatingwebhookconfigurations
+  resourceNames:
+  {{ range .Values.operator.mutators }}
+  - {{ . }}
+  {{ end }}
+  verbs:
+  - 'get'
+  - 'update'
+  - 'patch'
+{{ end }}
+
