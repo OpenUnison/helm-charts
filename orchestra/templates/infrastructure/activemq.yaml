@@ -29,8 +29,6 @@ spec:
     spec:
       {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
       securityContext:
-        seccompProfile:
-          type: RuntimeDefault
         runAsNonRoot: true
       {{ else }}
       securityContext:

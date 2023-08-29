@@ -63,7 +63,7 @@ monitoring:
 
 impersonation:
   use_jetstack: true
-  jetstack_oidc_proxy_image: ghcr.io/tremolosecurity/kube-oidc-proxy:1.0.4
+  jetstack_oidc_proxy_image: ghcr.io/tremolosecurity/kube-oidc-proxy:1.0.5
   explicit_certificate_trust: true
   ca_secret_name: ou-tls-certificate
 
@@ -111,6 +111,7 @@ openunison:
   secrets: []
   html:
     image: ghcr.io/openunison/openunison-k8s-html:1.0.0
+    legacy: true
   enable_provisioning: false
   enable_activemq: true
   az_groups: []

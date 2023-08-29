@@ -75,6 +75,7 @@ spec:
         - /var/run/secrets/kubernetes.io/serviceaccount/token
         - /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
         - "2,3,4,5,6"
+        - "{{ join "," .Values.operator.validators }}/{{ join "," .Values.operator.mutators }}"
         imagePullPolicy: {{ .Values.operator.imagePullPolicy }}
         name: openunison-operator
         terminationMessagePath: /dev/termination-log
@@ -166,8 +167,6 @@ spec:
       serviceAccount: openunison-operator
       {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
       securityContext:
-        seccompProfile:
-          type: RuntimeDefault
         runAsNonRoot: true
       {{ else }}
       securityContext:
