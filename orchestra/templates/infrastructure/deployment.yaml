@@ -157,6 +157,13 @@ spec:
         - mountPath: "/etc/openunison"
           name: secret-volume
           readOnly: true
+        {{ if .Values.saml }}
+        {{ if .Values.saml.metadata_xml_b64 }}
+        - mountPath: "/etc/saml2"
+          name: "saml2-metadata"
+          readOnly: true
+        {{ end }}
+        {{ end }}
         {{ if .Values.myvd_configmap }}
         - mountPath: "/etc/myvd"
           name: "myvd-volume"
@@ -236,6 +243,13 @@ spec:
         secret:
           defaultMode: 420
           secretName: {{ .Release.Name }}
+      {{ if .Values.saml }}
+      {{ if .Values.saml.metadata_xml_b64 }}
+      - name: saml2-metadata
+        configMap:
+          name: saml2-metadata
+      {{ end }}
+      {{ end }}
       {{ if .Values.myvd_configmap }}
       - name: myvd-volume
         configMap:
