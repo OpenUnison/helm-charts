@@ -123,7 +123,11 @@ spec:
   - name: saml2
     required: required
     params:
+      {{ if .Values.saml.idp_url }}
       metadataUrl: "{{ .Values.saml.idp_url }}"
+      {{ else }}
+      metadataUrl: "/etc/saml2/metadata.xml"
+      {{ end }}
       idpSigKeyName: 
       - idp-saml2-sig
       - idp-saml2-sig-1
