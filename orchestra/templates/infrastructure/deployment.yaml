@@ -177,6 +177,9 @@ spec:
         - mountPath: /usr/local/openunison/work/webapp/auth/forms/logos
           name: custom-logos
           readOnly: true
+        - mountPath: /usr/local/openunison/work/webapp/auth/forms/images
+          name: custom-logos-2
+          readOnly: true
         {{ end }}
         {{ if .Values.openunison.debugConfigMap }}
         - mountPath: /usr/local/openunison/work/webapp/WEB-INF/classes
@@ -272,6 +275,9 @@ spec:
       {{ end }}
       {{ if .Values.openunison.html.logosConfigMap }}
       - name: custom-logos
+        configMap:
+          name: {{ .Values.openunison.html.logosConfigMap | quote }}
+      - name: custom-logos-2
         configMap:
           name: {{ .Values.openunison.html.logosConfigMap | quote }}
       {{ end }}
