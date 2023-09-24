@@ -9,6 +9,9 @@ openunison:
   orchestra_release_name: orchestra
   orchestra_login_portal_name: orchestra-login-portal
   naas:
+    jobs:
+      rebase:
+        queuename: rebase-queue
     orgs: []
     forms:
       new_namespace:
