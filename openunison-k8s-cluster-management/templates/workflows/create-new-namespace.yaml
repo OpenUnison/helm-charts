@@ -245,7 +245,7 @@ spec:
                        id_rsa: $b64sshkey$
                      type: Opaque
                    kind: Secret
-                   url: /api/v1/namespaces/openunison/secrets
+                   url: /api/v1/namespaces/{{ .Release.Namespace }}/secrets
                    srcType: yaml
                    writeToRequest: "false"
 

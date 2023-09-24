@@ -267,6 +267,8 @@ spec:
     - name: {{ $key }}
       value: {{ $value | quote }}
       {{ end }}
+    - name: K8S_OPENUNISON_NS
+      value: "{{ .Release.Namespace }}"
   openunison_network_configuration:
     activemq_dir: "/tmp/amq"
     allowed_client_names: []

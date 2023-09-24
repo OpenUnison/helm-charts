@@ -275,7 +275,7 @@ spec:
                  params:
                    targetName: k8s
                    kind: Secret
-                   url: /api/v1/namespaces/openunison/secrets/sshkey-namespace-$cluster$-$nameSpace$
+                   url: /api/v1/namespaces/{{ .Release.Namespace }}/secrets/sshkey-namespace-$cluster$-$nameSpace$
                    writeToRequest: "false"
 
                
