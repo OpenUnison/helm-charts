@@ -47,6 +47,12 @@ spec:
         app.kubernetes.io/component: application
         app.kubernetes.io/part-of: openunison
     spec:
+      {{ if .Values.network.enableHostNetwork }}
+      hostNetwork: true
+      {{ else }}
+      hostNetwork: false
+      {{ end }}
+
       containers:
       - env:
         {{ if $hasKerberos }}

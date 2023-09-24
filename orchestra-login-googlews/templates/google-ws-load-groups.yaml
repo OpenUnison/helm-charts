@@ -66,7 +66,7 @@ spec:
           var con = k8s.createClient();
 
           try {
-            var secretUrl = "/api/v1/namespaces/openunison/secrets/googlews";
+            var secretUrl = "/api/v1/namespaces/{{ .Release.Namespace }}/secrets/googlews";
             var jsonData = k8s.callWS(k8s.getAuthToken(), con, secretUrl);
             var secret = JSON.parse(jsonData);
             var decoded = JSUtils.base64Decode(secret.data.key);
