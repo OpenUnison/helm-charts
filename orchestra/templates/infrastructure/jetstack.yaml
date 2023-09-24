@@ -64,6 +64,12 @@ spec:
           {{ else }}
           - "--oidc-ca-file=/etc/ssl/certs/ca-certificates.crt"
           {{ end }}
+          {{ if .Values.impersonation.enablePassthrough }}
+          - "--token-passthrough"
+          {{ end }}
+          {{ if .Values.impersonation.passthroughAudience }}
+          - "---token-passthrough-audiences={{ .Values.impersonation.passthroughAudience }}"
+          {{ end }}
         imagePullPolicy: {{ .Values.openunison.imagePullPolicy }}
         securityContext:
           allowPrivilegeEscalation: false
