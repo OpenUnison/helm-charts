@@ -1,0 +1,24 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: PortalUrl
+metadata:
+  labels:
+    openunison.io/instance: orchestra
+  name: k8s-app-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  label: {{ .Values.app.label }}
+  org: {{ .Values.app.org }}
+  url: {{ .Values.app.badgeUrl }}
+  icon: {{ .Values.app.icon }}
+  azRules:
+  {{ $length := len .Values.app.az_groups }}
+  {{ if eq $length 0 }}
+  - scope: dn
+    constraint: o=Tremolo
+  {{ else }}
+  {{ range $az_group := .Values.app.az_groups }}
+  - scope: filter
+    constraint: (groups={{ $az_group }})
+  {{ end }}
+  {{ end }}
