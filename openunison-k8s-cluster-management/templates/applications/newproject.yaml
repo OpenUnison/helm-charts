@@ -15,6 +15,19 @@ spec:
   azTimeoutMillis: 3000
   isApp: true
   urls:
+  - authChain: login-service
+    azRules:
+    - constraint: o=Tremolo
+      scope: dn
+    filterChain:
+    - className: com.tremolosecurity.proxy.filters.CheckK8sTargetMetadata
+      params: {}
+    hosts:
+    - '#[OU_HOST]'
+    results:
+      auFail: default-login-failure
+      azFail: default-login-failure
+    uri: /newproject/target-metadata
   - hosts:
     - "#[OU_HOST]"
     filterChain: 
@@ -92,7 +105,11 @@ spec:
         cluster.maxChars: "63"
         cluster.unique: "false"
         cluster.type: "list"
+        {{ if .Values.openunison.legacy }}
         cluster.editJavaScriptFunction: "update_new_project(this,attr_cfg)"
+        {{ else }}
+        cluster.editJavaScriptFunction: "update_new_project(eventObj)"
+        {{ end }}
         cluster.dynamicValueSource.className: "com.tremolosecurity.scalejs.ListClusters"
         
         nameSpace.displayName: "Namespace Name"
@@ -400,7 +417,8 @@ spec:
         - workflowName=new-k8s-namespace
         - targetName=k8s
         - projectAttributeName=nameSpace
-
+        jsUris:
+        - js/register-functions.js
 
 
     uri: /newproject/register
