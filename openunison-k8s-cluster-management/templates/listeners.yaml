@@ -3,7 +3,7 @@
 kind: MessageListener
 apiVersion: openunison.tremolo.io/v1
 metadata:
-  name: rebase-queue
+  name: {{ .Values.openunison.naas.jobs.rebase.queuename }}
   namespace: {{ .Release.Namespace }}
 spec:
   className: com.tremolosecurity.provisioning.listeners.UpdateApprovalAZListener
