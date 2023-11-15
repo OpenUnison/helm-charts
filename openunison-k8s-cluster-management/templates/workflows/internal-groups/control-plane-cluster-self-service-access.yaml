@@ -7,6 +7,8 @@ kind: Workflow
 metadata:
   name: control-plane-namespace-{{ $role.name }}
   namespace: {{ $root.Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   description: {{ $role.workflow.label }} for the $name$ namespace
   inList: true

@@ -1,10 +1,12 @@
 {{ if .Values.openunison.naas.groups.internal.enabled }}
 ---
-apiVersion: openunison.tremolo.io/v1
+apiVersion: openunison.tremolo.io/v2
 kind: Workflow
 metadata:
   name: manage-openunison{{ .Values.openunison.naas.groups.internal.suffix }}-groups
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   description: $description$
   inList: true

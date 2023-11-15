@@ -5,6 +5,8 @@ apiVersion: openunison.tremolo.io/v1
 metadata:
   name: {{ .Values.openunison.naas.jobs.rebase.queuename }}
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   className: com.tremolosecurity.provisioning.listeners.UpdateApprovalAZListener
   params: []

@@ -4,11 +4,20 @@ kind: Org
 metadata:
   name: control-plane
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   label: "#[K8S_DEPLOYMENT_NAME:Local Deployment]"
   azRules:
+  {{ if and .Values.openunison.naas.groups.internal .Values.openunison.naas.groups.internal.azRules }}
+  {{ range .Values.openunison.naas.groups.internal.azRules }}
+  - scope: {{ .scope }}
+    constraint: {{ .constraint }}
+  {{ end }}
+  {{ else }}
   - constraint: o=Tremolo
     scope: dn
+  {{ end }}
   description: "#[K8S_DEPLOYMENT_DESC:Current Cluster]"
   parent: B158BD40-0C1B-11E3-8FFD-0800200C9A66
   showInPortal: true

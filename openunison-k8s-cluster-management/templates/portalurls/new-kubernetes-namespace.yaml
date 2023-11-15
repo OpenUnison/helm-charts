@@ -7,6 +7,8 @@ kind: PortalUrl
 metadata:
   name: new-kubernetes-namespace
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   label: New Kubernetes Namespace
   org: B158BD40-0C1B-11E3-8FFD-0800200C9A66

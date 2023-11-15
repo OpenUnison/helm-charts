@@ -5,6 +5,8 @@ kind: OUJob
 metadata:
   name: wait-for
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   className: com.tremolosecurity.provisioning.jobs.WaitForJob
   cronSchedule:

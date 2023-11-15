@@ -5,6 +5,8 @@ kind: OUJob
 metadata:
   name: reset-allowed-approvers
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   cronSchedule:
     seconds: "0"

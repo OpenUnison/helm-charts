@@ -4,11 +4,20 @@ kind: Org
 metadata:
   name: control-plan-delete
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   label: Delete Namespace
   azRules:
+  {{ if and .Values.openunison.naas.groups.internal .Values.openunison.naas.groups.internal.azRules }}
+  {{ range .Values.openunison.naas.groups.internal.azRules }}
+  - scope: {{ .scope }}
+    constraint: {{ .constraint }}
+  {{ end }}
+  {{ else }}
   - constraint: o=Tremolo
     scope: dn
+  {{ end }}
   description: Namespaces you are authorized to request deletion for
   parent: org-cluster-control-plane
   showInPortal: false

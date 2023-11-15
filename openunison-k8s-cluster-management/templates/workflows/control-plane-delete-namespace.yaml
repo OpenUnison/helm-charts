@@ -5,6 +5,8 @@ kind: Workflow
 metadata:
   name: controlplane-delete-namespace{{ .Values.openunison.naas.groups.internal.suffix }}
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   description: Request namespace deletion
   inList: true

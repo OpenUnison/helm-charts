@@ -7,11 +7,20 @@ kind: Org
 metadata:
   name: control-plane-namespace-{{ $role.name}}
   namespace: {{ $root.Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   label: {{ $role.workflow.org.label }}
   azRules:
+  {{ if $root.Values.openunison.naas.groups.internal.azRules }}
+  {{ range $root.Values.openunison.naas.groups.internal.azRules }}
+  - scope: {{ .scope }}
+    constraint: {{ .constraint }}
+  {{ end }}
+  {{ else }}
   - constraint: o=Tremolo
     scope: dn
+  {{ end }}
   description: {{ $role.workflow.org.description }}
   parent: org-cluster-control-plane
   showInPortal: false

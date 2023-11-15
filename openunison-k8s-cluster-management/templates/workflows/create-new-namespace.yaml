@@ -5,6 +5,8 @@ kind: Workflow
 metadata:
   name: create-new-namespace
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   description: functional workflow for creating namespaces
   inList: false

@@ -109,9 +109,27 @@ openunison:
   replicas: 1
   non_secret_data: {}
   secrets: []
+  role_attribute: groups
+  groups:
+    areJson: "false"
   html:
     image: ghcr.io/openunison/openunison-k8s-html:1.0.0
     legacy: true
+    theme:
+      startPage: front-page
+      hidePages: []
+      colors:
+        primary: 
+          main: "#AC1622"
+          dark: "#780f17"
+          light: "#bc444e"
+        secondary:
+          main: "#16aca0"
+          dark: "#0f7870"
+          light: "#44bcb3"
+        error: "#ff1744"
+        
+
   enable_provisioning: false
   enable_activemq: true
   az_groups: []
@@ -121,12 +139,21 @@ openunison:
   management_proxy:
     enabled: false
   naas:
+    ops:
+      searchBases: {}
+      approveChecked: false
+      showPreApprove: true
+      approvedLabel: Approved
+      deniedLabel: Denied
+      reasonApprovedLabel: Reason for approval
+      reasonDeniedLabel: Reason for denial
     forms:
       new_namespace:
         use_default: true
     workflows:
       new_namespace:
         use_default: true
+    
     groups:
       default:
       - name: administrators

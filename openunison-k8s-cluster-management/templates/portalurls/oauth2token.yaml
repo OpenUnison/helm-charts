@@ -4,6 +4,8 @@ kind: PortalUrl
 metadata:
   name: oauth2token
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   label: Kubernetes Tokens
   org: org-cluster-control-plane

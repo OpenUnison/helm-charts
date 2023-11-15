@@ -6,6 +6,8 @@ kind: Target
 metadata:
   name: github
   namespace: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   className: com.tremolosecurity.provisioning.core.providers.GitHubProvider
   params:
