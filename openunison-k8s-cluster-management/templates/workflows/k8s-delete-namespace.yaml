@@ -5,6 +5,8 @@ kind: Workflow
 metadata:
   name: k8s-delete-namespace
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   description: Delete Namespace
   inList: false

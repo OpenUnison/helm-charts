@@ -29,8 +29,15 @@ spec:
     overrideHost: true
     overrideReferer: true
     azRules:
+    {{ if .Values.openunison.naas.azRules }}
+    {{ range .Values.openunison.naas.azRules }}
+    - scope: {{ .scope }}
+      constraint: {{ .constraint }}
+    {{ end }}
+    {{ else }}
     - scope: dn
-      constraint: "o=Tremolo"
+      constraint: o=Tremolo
+    {{ end }}
     results: 
       azFail: default-login-failure
       auFail: default-login-failure
@@ -40,13 +47,33 @@ spec:
     - className: com.tremolosecurity.scalejs.ws.ScaleMain
       params:
         displayNameAttribute: "{{ .Values.openunison.display_name_attribute | default "sub" }}"
-        frontPage.title: "Kubernetes Access Portal"
-        frontPage.text: "Use this portal to create and access namespaces in Kubernetes"
+        frontPage.title: "{{ .Values.openunison.title | default "Kubernetes Access Portal" }}"
+        frontPage.text: "{{ .Values.openunison.description | default "Use this portal to create and access namespaces in Kubernetes" }}"
         canEditUser: "false"
         workflowName: ""
         warnMinutesLeft: "5"
         sub.displayName: "Login ID"
         sub.readOnly: "true"
+
+        startPage: "{{ .Values.openunison.html.theme.startPage }}"
+        hidePages:
+        {{ range .Values.openunison.html.theme.hidePages }}
+        - {{ . }}
+        {{ end }}
+        themePrimaryMain: "{{ .Values.openunison.html.theme.colors.primary.main }}"
+        themePrimaryDark: "{{ .Values.openunison.html.theme.colors.primary.dark }}"
+        themePrimaryLight: "{{ .Values.openunison.html.theme.colors.primary.light }}"
+        themeSecondaryMain: "{{ .Values.openunison.html.theme.colors.secondary.main }}"
+        themeSecondaryDark: "{{ .Values.openunison.html.theme.colors.secondary.dark }}"
+        themeSecondaryLight: "{{ .Values.openunison.html.theme.colors.secondary.light }}"
+        errorColor: "{{ .Values.openunison.html.theme.colors.error }}"
+        
+        groupFields:
+        - Cluster
+        - Namespace
+        - Binding
+        groupsAreJson: "{{ .Values.openunison.groups.areJson }}"
+
         {{ if .Values.openunison.naas.jit_workflow }}
         jitWorkflow: "{{ .Values.openunison.naas.jit_workflow }}"
         {{ end }}
@@ -113,7 +140,7 @@ spec:
         canPreApprove: "NO"
         {{ end }}
         uidAttributeName: uid
-        roleAttribute: groups
+        roleAttribute: {{ .Values.openunison.role_attribute }}
         
         showPortalOrgs: "{{ .Values.openunison.non_secret_data.SHOW_PORTAL_ORGS | default "false"  }}"
         logoutURL: "/logout"
@@ -132,13 +159,21 @@ spec:
         {{ end }}
 
         {{ end  }}
+        
         {{ else }}
         enableApprovals: "false"
         {{ end }}
     uri: /scale/main
     azRules:
+    {{ if .Values.openunison.naas.azRules }}
+    {{ range .Values.openunison.naas.azRules }}
+    - scope: {{ .scope }}
+      constraint: {{ .constraint }}
+    {{ end }}
+    {{ else }}
     - scope: dn
       constraint: o=Tremolo
+    {{ end }}
     authChain: login-service
     results:
       azFail: default-login-failure

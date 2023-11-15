@@ -11,6 +11,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: openunison-targets
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   className: com.tremolosecurity.unison.okta.provisioning.OktaTarget
   params:

@@ -10,6 +10,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: openunison-orgs
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   label: "OpenUnison Internal Groups"
   azRules:
@@ -34,11 +36,20 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: openunison-orgs
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   label: "Kubernetes Administration"
   azRules:
-  - scope: dn
-    constraint: o=Tremolo
+  {{ if .Values.openunison.naas.groups.internal.azRules }}
+  {{ range .Values.openunison.naas.groups.internal.azRules }}
+  - scope: {{ .scope }}
+    constraint: {{ .constraint }}
+  {{ end }}
+  {{ else }}
+  - constraint: o=Tremolo
+    scope: dn
+  {{ end }}
   description: "Request access for managing Kubernetes clusters"
   parent: B158BD40-0C1B-11E3-8FFD-0800200C9A66
   showInPortal: false
@@ -56,6 +67,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: openunison-orgs
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   label: "OpenUnison Internal Management Workflows"
   azRules:

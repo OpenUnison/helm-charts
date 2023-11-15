@@ -111,6 +111,18 @@ spec:
         - mountPath: /var/www/html/register/logos
           name: custom-logos-register
           readOnly: true
+        - mountPath: /var/www/html/scale/images
+          name: custom-images-scale
+          readOnly: true
+        - mountPath: /var/www/html/ops/images
+          name: custom-images-ops
+          readOnly: true
+        - mountPath: /var/www/html/token/images
+          name: custom-images-token
+          readOnly: true
+        - mountPath: /var/www/html/register/images
+          name: custom-images-register
+          readOnly: true
         {{ end }}
         {{ if .Values.openunison.html.registerFunctionsConfigMap }}
         - mountPath: /var/www/html/register/js-ext
@@ -129,6 +141,18 @@ spec:
         configMap:
           name: {{ .Values.openunison.html.logosConfigMap | quote }}
       - name: custom-logos-register
+        configMap:
+          name: {{ .Values.openunison.html.logosConfigMap | quote }}
+      - name: custom-images-scale
+        configMap:
+          name: {{ .Values.openunison.html.logosConfigMap | quote }}
+      - name: custom-images-ops
+        configMap:
+          name: {{ .Values.openunison.html.logosConfigMap | quote }}
+      - name: custom-images-token
+        configMap:
+          name: {{ .Values.openunison.html.logosConfigMap | quote }}
+      - name: custom-images-register
         configMap:
           name: {{ .Values.openunison.html.logosConfigMap | quote }}
       {{ end }}

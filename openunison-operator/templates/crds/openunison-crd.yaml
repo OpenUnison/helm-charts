@@ -2533,7 +2533,7 @@ spec:
   versions:
     - name: v1
       served: true
-      storage: true
+      storage: false
       schema:
         openAPIV3Schema:
           type: object
@@ -2578,6 +2578,66 @@ spec:
                 tasks:
                   type: string
                   description: See https://openunison.github.io/UPDATEME
+    - name: v2
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          description: Holder for a workflow object
+          properties:
+            spec:
+              type: object
+              properties:
+                label:
+                  type: string
+                  description: Descriptive name
+                description:
+                  type: string
+                  description: Descriptive text
+                inList:
+                  type: boolean
+                  description: If true, includes this workflow as requestable on the `Request Access` screen
+                orgId:
+                  type: string
+                  description: The value of an `Organization.uuid` that contains this workflow
+                dynamicConfiguration:
+                  type: object
+                  description: Used to apply a workflow to several potential objects.  Will instanciate one instance of this workflow for each object.  For instance creating one instance of a workflow for each namespace in a cluster.
+                  properties:
+                    dynamic:
+                      type: boolean
+                      description: Determines if the workflow should be loaded based on a dynamic configuration
+                    className:
+                      type: string
+                      description: Implementation of `com.tremolosecurity.provisioning.util.DynamicWorkflow`
+                    params:
+                      type: array
+                      description: List of parameters to pass to the `DynamicWorkflow` implementation.  
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            description: Can be repeated
+                          value:
+                            type: string
+                    filterAnnotations:
+                      type: array
+                      description: List of parameters to pass to the `DynamicWorkflow` implementation.  
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            description: name of the annotation filter
+                          requestObjectName:
+                            type: string
+                            description: name of the request object to get the annotation value from
+                        
+                tasks:
+                  type: string
+                  description: See https://openunison.github.io/UPDATEME              
   scope: Namespaced
   names:
     plural: workflows

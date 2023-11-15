@@ -8,6 +8,8 @@ metadata:
   namespace: {{ $root.Release.Namespace }}
   labels:
     tremolo.io/org-type: added-org
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   label: {{ $org.label }}
   azRules:

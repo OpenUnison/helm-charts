@@ -60,16 +60,37 @@ spec:
         homeUrl: /scale/
         bases:
         - OpenUnison=o=Tremolo
+        {{ range $key,$value := .Values.openunison.naas.ops.searchBases }}
+        - {{ $key }}={{ $value }}
+        {{ end }}
+        approveChecked: "{{ .Values.openunison.naas.ops.approveChecked }}"
+        showPreApprove: "{{ .Values.openunison.naas.ops.showPreApprove }}"
+        approvedLabel: "{{ .Values.openunison.naas.ops.approvedLabel }}"
+        deniedLabel: "{{ .Values.openunison.naas.ops.deniedLabel }}"
+        reasonApprovedLabel: "{{ .Values.openunison.naas.ops.reasonApprovedLabel }}"
+        reasonDeniedLabel: "{{ .Values.openunison.naas.ops.reasonDeniedLabel }}"
+        maxWidth: "{{ .Values.openunison.naas.ops.userDetailsMaxWidth | default "sm" }}"
+        attributesWidth: "{{ .Values.openunison.naas.ops.userDetailsAttributeWidth | default "6" }}"
+        rolesWith: "{{ .Values.openunison.naas.ops.userDetailsRolesWidth | default "6" }}"
     {{ if .Values.openunison.html.legacy }}
     uri: /ops/ops
     {{ else }}
     uri: /scale/ops
     {{ end }}
+    
+    {{ if .Values.openunison.naas.ops.azRules }}
+    azRules:
+    {{ range .Values.openunison.naas.ops.azRules }}
+    - scope: {{ .scope }}
+      constraint: {{ .constraint }}
+    {{ end }}
+    {{ else }}
     azRules:
     - scope: filter
       constraint: (groups=administrators{{ .Values.openunison.naas.groups.external.suffix }})
     - scope: filter
       constraint: "(groups=administrators{{ .Values.openunison.naas.groups.internal.suffix }})"
+    {{ end }}
     authChain: login-service
     {{ if .Values.openunison.html.legacy }}
     results:

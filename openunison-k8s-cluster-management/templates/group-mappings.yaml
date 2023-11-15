@@ -10,6 +10,8 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: openunison-groupmetadata
     app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   groupName: administrators{{ .Values.openunison.naas.groups.external.suffix }}
   externalName: {{ .Values.openunison.naas.groups.external.adminGroup }}

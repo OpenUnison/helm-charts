@@ -4,6 +4,8 @@ kind: Workflow
 metadata:
   name: remove-user-from-group
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   description: Remove user from group
   inList: false
