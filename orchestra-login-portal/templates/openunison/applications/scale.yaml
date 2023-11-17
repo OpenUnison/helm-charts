@@ -56,9 +56,13 @@ spec:
         sub.readOnly: "true"
 
         startPage: "{{ .Values.openunison.html.theme.startPage }}"
+        {{ if .Values.openunison.html.theme.hidePages }}
         hidePages:
         {{ range .Values.openunison.html.theme.hidePages }}
         - {{ . }}
+        {{ end }}
+        {{ else }}
+        hidePages: []
         {{ end }}
         themePrimaryMain: "{{ .Values.openunison.html.theme.colors.primary.main }}"
         themePrimaryDark: "{{ .Values.openunison.html.theme.colors.primary.dark }}"
@@ -68,10 +72,17 @@ spec:
         themeSecondaryLight: "{{ .Values.openunison.html.theme.colors.secondary.light }}"
         errorColor: "{{ .Values.openunison.html.theme.colors.error }}"
         
+
         groupFields:
+        {{ if .Values.openunison.groups.fields }}
+        {{ range .Values.openunison.groups.fields }}
+        - {{ . }}
+        {{ end }}
+        {{ else }}
         - Cluster
         - Namespace
         - Binding
+        {{ end }}
         groupsAreJson: "{{ .Values.openunison.groups.areJson }}"
 
         {{ if .Values.openunison.naas.jit_workflow }}
