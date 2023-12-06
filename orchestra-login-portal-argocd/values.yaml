@@ -116,6 +116,9 @@ openunison:
   replicas: 1
   non_secret_data: {}
   secrets: []
+  role_attribute: groups
+  groups:
+    areJson: "false"
   env: {}
   portal_release_name: openunison
   authentication:
