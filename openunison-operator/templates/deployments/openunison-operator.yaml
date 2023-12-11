@@ -201,7 +201,7 @@ spec:
       {{ end }}
       {{- if .Values.services.tolerations }}
       tolerations:
-      {{ toYaml .Values.services.tolerations | indent 8 }}
+        {{ toYaml .Values.services.tolerations | indent 8 }}
       {{- end }}
       {{ if .Values.services.pullSecret }}
       imagePullSecrets:
