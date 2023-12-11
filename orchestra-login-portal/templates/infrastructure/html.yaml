@@ -186,7 +186,10 @@ spec:
       {{- if .Values.services.tolerations }}
       tolerations:
       {{- range .Values.services.tolerations }}
-      - {{- if .effect }}
+      - {{- if .key }}
+        key: {{ .key }}
+        {{- end }}
+        {{- if .effect }}
         effect: {{ .effect }}
         {{- end }}
         {{- if .operator }}
@@ -196,7 +199,7 @@ spec:
         value: {{ .value }}
         {{- end }}
       {{- end }}
-      {{- end }} 
+      {{- end }}
       {{ $length := len .Values.services.node_selectors }}
       {{ if eq $length 0  }}
       nodeSelector: {}

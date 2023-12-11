@@ -202,7 +202,10 @@ spec:
       {{- if .Values.services.tolerations }}
       tolerations:
       {{- range .Values.services.tolerations }}
-      - {{- if .effect }}
+      - {{- if .key }}
+        key: {{ .key }}
+        {{- end }}
+        {{- if .effect }}
         effect: {{ .effect }}
         {{- end }}
         {{- if .operator }}
