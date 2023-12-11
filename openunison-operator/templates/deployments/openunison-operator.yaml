@@ -199,6 +199,10 @@ spec:
         {{ $key }}: {{ $value | quote }}
       {{ end }}
       {{ end }}
+      {{- if .Values.services.tolerations }}
+      tolerations:
+      {{ toYaml .Values.services.tolerations | indent 8 }}
+      {{- end }}
       {{ if .Values.services.pullSecret }}
       imagePullSecrets:
       - name: {{  .Values.services.pullSecret | quote }}
