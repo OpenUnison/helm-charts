@@ -98,6 +98,7 @@ services:
   enable_tokenrequest: false
   token_request_audience: api
   token_request_expiration_seconds: 600
+  tolerations: []
   node_selectors: []
   pullSecret: ""
   liveness_probe:
