@@ -259,6 +259,21 @@ spec:
               path: crt.pem
             - key: tls.key
               path: key.pem
+      tolerations:
+      {{- range .Values.services.tolerations }}
+      - {{- if .key }}
+        key: {{ .key }}
+        {{- end }}
+        {{- if .effect }}
+        effect: {{ .effect }}
+        {{- end }}
+        {{- if .operator }}
+        operator: {{ .operator }}
+        {{- end }}
+        {{- if .value }}
+        value: {{ .value }}
+        {{- end }}
+      {{- end }}
       {{ $length := len .Values.services.node_selectors }}
       {{ if eq $length 0  }}
       nodeSelector: {}
