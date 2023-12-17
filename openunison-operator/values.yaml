@@ -5,6 +5,7 @@ crd:
   webhooks: true
 
 services:
+  tolerations: []
   node_selectors: []
   pullSecret: ""
 
