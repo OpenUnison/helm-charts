@@ -50,7 +50,16 @@ spec:
               allowPrivilegeEscalation: false
               capabilities:
                 drop:
-                - "all"
+                - "ALL"
+              {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+              runAsNonRoot: true
+              {{ else }}
+              seccompProfile:
+                type: RuntimeDefault
+              runAsNonRoot: true
+              runAsUser: 431
+              runAsGroup: 433
+              {{ end }}
             env:
             - name: CA_CERTS_PATH
               value: /usr/lib/jvm/java-17-openjdk-amd64/lib/security/cacerts

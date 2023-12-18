@@ -165,7 +165,16 @@ spec:
         allowPrivilegeEscalation: false
         capabilities:
           drop:
-          - "all"
+          - "ALL"
+        {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+        runAsNonRoot: true
+        {{ else }}
+        seccompProfile:
+          type: RuntimeDefault
+        runAsNonRoot: true
+        runAsUser: 431
+        runAsGroup: 433
+        {{ end }}
       volumeMounts:
       - name: scripts
         mountPath: "/scripts"

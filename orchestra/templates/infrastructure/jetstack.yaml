@@ -75,7 +75,16 @@ spec:
           allowPrivilegeEscalation: false
           capabilities:
             drop:
-            - "all"
+            - "ALL"
+          {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+          runAsNonRoot: true
+          {{ else }}
+          seccompProfile:
+            type: RuntimeDefault
+          runAsNonRoot: true
+          runAsUser: 431
+          runAsGroup: 433
+          {{ end }}
         volumeMounts:
           {{ if .Values.impersonation.explicit_certificate_trust }}
           - name: kube-oidc-proxy-config

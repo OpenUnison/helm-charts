@@ -421,6 +421,7 @@ spec:
         - projectAttributeName=nameSpace
         jsUris:
         - js/register-functions.js
+        - js-ext/functions.js
 
 
     uri: /newproject/register

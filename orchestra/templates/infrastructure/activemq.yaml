@@ -90,7 +90,16 @@ spec:
           allowPrivilegeEscalation: false
           capabilities:
             drop:
-            - "all"
+            - "ALL"
+          {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+          runAsNonRoot: true
+          {{ else }}
+          seccompProfile:
+            type: RuntimeDefault
+          runAsNonRoot: true
+          runAsUser: 431
+          runAsGroup: 433
+          {{ end }}
         image: {{ .Values.amq_image }}
         imagePullPolicy: {{ .Values.openunison.imagePullPolicy }}
         livenessProbe:
@@ -185,7 +194,16 @@ spec:
           allowPrivilegeEscalation: false
           capabilities:
             drop:
-            - "all"
+            - "ALL"
+          {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+          runAsNonRoot: true
+          {{ else }}
+          seccompProfile:
+            type: RuntimeDefault
+          runAsNonRoot: true
+          runAsUser: 431
+          runAsGroup: 433
+          {{ end }}
         env:
         - name: KRB5CCNAME
           value: /dev/shm/ccache

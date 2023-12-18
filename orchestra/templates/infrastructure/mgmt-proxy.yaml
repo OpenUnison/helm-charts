@@ -185,9 +185,21 @@ spec:
           {{ end }}
         imagePullPolicy: {{ .Values.openunison.imagePullPolicy }}
         securityContext:
+          capabilities:
+            drop:
+            - "ALL"
+          allowPrivilegeEscalation: false
+          {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+          runAsNonRoot: true
+          {{ else }}
+          fsGroup: 10001
+          supplementalGroups: [10001]
+          seccompProfile:
+            type: RuntimeDefault
+          runAsNonRoot: true
           runAsUser: 10001
           runAsGroup: 10001
-          allowPrivilegeEscalation: false
+          {{ end }}
         volumeMounts:
           {{ if .Values.openunison.management_proxy.remote.cert_alias }}
           - name: kube-oidc-proxy-config
