@@ -53,9 +53,18 @@ spec:
           allowPrivilegeEscalation: false
           capabilities:
             drop:
-            - "all"
+            - "ALL"
             add:
             - "NET_BIND_SERVICE"
+          {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+          runAsNonRoot: true
+          {{ else }}
+          seccompProfile:
+            type: RuntimeDefault
+          runAsNonRoot: true
+          runAsUser: 431
+          runAsGroup: 433
+          {{ end }}
         livenessProbe:
           httpGet:
             path: /nginx-health

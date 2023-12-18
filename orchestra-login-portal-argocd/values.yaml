@@ -87,6 +87,7 @@ services:
   token_request_audience: api
   token_request_expiration_seconds: 600
   node_selectors: []
+  tolerations: []
   pullSecret: ""
   liveness_probe:
   - /usr/local/openunison/bin/check_alive.sh

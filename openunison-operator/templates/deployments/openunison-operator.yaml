@@ -84,7 +84,16 @@ spec:
           allowPrivilegeEscalation: false
           capabilities:
             drop:
-            - "all"
+            - "ALL"
+          {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+          runAsNonRoot: true
+          {{ else }}
+          seccompProfile:
+            type: RuntimeDefault
+          runAsNonRoot: true
+          runAsUser: 431
+          runAsGroup: 433
+          {{ end }}
         volumeMounts:
         - mountPath: /etc/extraMaps
           name: extra-maps
@@ -134,7 +143,16 @@ spec:
           allowPrivilegeEscalation: false
           capabilities:
             drop:
-            - "all"
+            - "ALL"
+          {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+          runAsNonRoot: true
+          {{ else }}
+          seccompProfile:
+            type: RuntimeDefault
+          runAsNonRoot: true
+          runAsUser: 431
+          runAsGroup: 433
+          {{ end }}
         env:
         - name: KRB5CCNAME
           value: /dev/shm/ccache
