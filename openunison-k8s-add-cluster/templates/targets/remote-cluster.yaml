@@ -5,6 +5,8 @@ kind: Target
 metadata:
   name: k8s-{{ .Values.cluster.name }}
   namespace: {{ .Release.Namespace }}
+  annotations:
+    tremolo.io/cluster-label: "{{ .Values.cluster.label }}"
 spec:
   className: com.tremolosecurity.unison.openshiftv3.OpenShiftTarget
   params:

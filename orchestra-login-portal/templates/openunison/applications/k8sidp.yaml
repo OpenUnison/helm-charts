@@ -73,6 +73,9 @@ spec:
         trusts.k8starget: "k8s"
         trusts.namespace: "#[K8S_OPENUNISON_NS:openunison]"
         refreshTokenGraceMillis: "{{ .Values.openunison.authentication.refresh_token.grace_period_millis }}"
+        {{ if .Values.openunison.enable_token_lifecyle_log }}
+        logTokenLifeCycle: "{{ .Values.openunison.enable_token_lifecyle_log }}"
+        {{ end }}
       mappings:
         strict: true
         map:
