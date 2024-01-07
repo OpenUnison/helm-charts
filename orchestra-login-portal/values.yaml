@@ -110,9 +110,9 @@ openunison:
   replicas: 1
   non_secret_data: {}
   secrets: []
-  role_attribute: portalGroups
+  role_attribute: groups
   groups:
-    areJson: "true"
+    areJson: "false"
   html:
     image: ghcr.io/openunison/openunison-k8s-react:1.0.0
     legacy: false
