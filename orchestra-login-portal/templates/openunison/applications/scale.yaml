@@ -81,7 +81,7 @@ spec:
         {{ else }}
         - Cluster
         - Namespace
-        - Binding
+        - Name
         {{ end }}
         groupsAreJson: "{{ .Values.openunison.groups.areJson }}"
 
