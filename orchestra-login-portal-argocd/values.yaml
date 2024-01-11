@@ -104,6 +104,8 @@ services:
 
 operator:
   image: ghcr.io/openunison/openunison-kubernetes-operator:1.0.4
+  validators: []
+  mutators: []
   resources:
     requests:
       memory: 200Mi
