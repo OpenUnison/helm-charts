@@ -46,6 +46,19 @@ spec:
         path: "/"
         pathType: Prefix
   {{ end }}
+  {{- $root := . -}}
+  {{ range $app := $root.Values.openunison.apps }}
+  - host: {{ (urlParse $app.badgeUrl).host }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: openunison-{{ $root.Release.Name }}
+            port:
+              number: 443
+        path: "/"
+        pathType: Prefix
+  {{ end }}
   {{ if eq .Values.enable_impersonation true }}
   - host: {{ .Values.network.api_server_host }}
     http:
@@ -85,6 +98,9 @@ spec:
     {{ end }}
     {{ if and (.Values.openunison.management_proxy) (eq .Values.openunison.management_proxy.enabled true)  }}
     - {{ .Values.openunison.management_proxy.host }}
+    {{ end }}
+    {{ range $app := $root.Values.openunison.apps }}
+    - {{ (urlParse $app.badgeUrl).host }}
     {{ end }}
     secretName: ou-tls-certificate
 

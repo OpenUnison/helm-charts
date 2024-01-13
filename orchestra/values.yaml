@@ -114,6 +114,7 @@ services:
   - "https://127.0.0.1:8443/check_alive"
   - "alive"
 openunison:
+  apps: []
   replicas: 1
   non_secret_data: {}
   env: {}

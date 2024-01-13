@@ -115,6 +115,7 @@ operator:
       cpu: 1.0
 
 openunison:
+  apps: []
   imagePullPolicy: Always
   replicas: 1
   non_secret_data: {}
