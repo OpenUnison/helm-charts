@@ -1,5 +1,6 @@
 {{- $root := . -}}
 {{ range $app := $root.Values.openunison.apps }}
+---
 apiVersion: openunison.tremolo.io/v1
 kind: Trust
 metadata:
