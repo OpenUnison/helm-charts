@@ -1,0 +1,46 @@
+{{- $root := . -}}
+{{ range $app := $root.Values.openunison.apps }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Application
+metadata:
+  name: k8s-app-{{ $app.name }}-{{ $root.Release.Name }}
+  namespace: {{ $root.Release.Namespace }}
+spec:
+  azTimeoutMillis: 3000
+  isApp: true
+  urls:
+  - hosts:
+    - "{{ (urlParse $app.badgeUrl).host }}"
+    filterChain:
+    - className: com.tremolosecurity.proxy.filters.HideCookie
+    - className: com.tremolosecurity.proxy.filters.SetNoCacheHeaders
+    uri: "/"
+    proxyTo: {{ $app.proxyTo }}
+    authChain: k8s-app-{{ $app.name }}-{{ $root.Release.Name }}
+    azRules:
+    {{ $length := len $app.az_groups }}
+    {{ if eq $length 0 }}
+    - scope: dn
+      constraint: o=Tremolo
+    {{ else }}
+    {{ range $az_group := $app.az_groups }}
+    - scope: filter
+      constraint: (groups={{ $az_group }})
+    {{ end }}
+    {{ end }}
+{{ if $app.injectToken }}
+    results:
+      azSuccess: oauth2bearer
+{{ else if $app.azSuccessResponse }}
+    results:
+      azSuccess: {{ $app.azSuccessResponse }}
+{{ end }}
+  cookieConfig:
+    sessionCookieName: tremolosession
+    domain: "{{ (urlParse $app.badgeUrl).host }}"
+    secure: true
+    httpOnly: true
+    logoutURI: "/logout"
+    keyAlias: session-unison
+{{ end }}

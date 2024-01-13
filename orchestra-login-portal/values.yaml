@@ -103,6 +103,7 @@ services:
   - "alive"
 
 openunison:
+  apps: []
   imagePullPolicy: Always
   authentication:
     refresh_token:

@@ -1,0 +1,41 @@
+{{- $root := . -}}
+{{ range $app := $root.Values.openunison.apps }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: AuthenticationChain
+metadata:
+  name: k8s-app-{{ $app.name }}-{{ $root.Release.Name }}
+  namespace: {{ $root.Release.Namespace }}
+spec:
+  authMechs:
+  - name: oidc
+    params:
+      bearerTokenName: kubeappstoken
+      clientid: k8s-app-{{ $root.Release.Name }}
+      defaultObjectClass: inetOrgPerson
+      hd: ""
+      issuer: https://#[OU_HOST]/auth/idp/k8sIdp/
+      jwtTokenAttributeName: id_token
+      linkToDirectory: "true"
+      lookupFilter: (sub=${sub})
+      noMatchOU: oidc
+      responseType: code
+      scope: openid name offline
+      uidAttr: sub
+      userLookupClassName: com.tremolosecurity.unison.proxy.auth.openidconnect.loadUser.LoadJWTFromAccessToken
+    required: required
+    secretParams:
+    - name: secretid
+      secretKey: K8S_DB_SECRET
+      secretName: orchestra-secrets-source
+{{ if $app.injectToken }}
+  - name: genoidctoken
+    params:
+      idpName: k8sidp
+      overrideURL: https://#[OU_HOST]/auth/idp/k8sIdp
+      trustName: kubernetes
+    required: required
+{{ end }}
+  level: 20
+  root: o=Tremolo
+{{ end }}
