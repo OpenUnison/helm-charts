@@ -11,7 +11,7 @@ spec:
   - name: oidc
     params:
       bearerTokenName: kubeappstoken
-      clientid: k8s-app-{{ $root.Release.Name }}
+      clientid: k8s-app-{{ $app.name }}-{{ $root.Release.Name }}
       defaultObjectClass: inetOrgPerson
       hd: ""
       issuer: https://#[OU_HOST]/auth/idp/k8sIdp/
