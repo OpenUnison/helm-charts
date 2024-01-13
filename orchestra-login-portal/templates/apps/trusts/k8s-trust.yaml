@@ -9,7 +9,7 @@ spec:
   accessTokenSkewMillis: 120000
   accessTokenTimeToLive: 120000
   authChainName: login-service
-  clientId: k8s-app-{{ $root.Release.Name }}
+  clientId: k8s-app-{{ $app.name }}-{{ $root.Release.Name }}
   codeLastMileKeyName: lastmile-oidc
   codeTokenSkewMilis: 60000
   publicEndpoint: false
