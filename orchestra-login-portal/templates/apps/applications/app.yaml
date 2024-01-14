@@ -42,5 +42,6 @@ spec:
     secure: true
     httpOnly: true
     logoutURI: "/logout"
+    timeout: {{ $root.Values.network.session_inactivity_timeout_seconds }}
     keyAlias: session-unison
 {{ end }}
