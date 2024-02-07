@@ -2031,6 +2031,12 @@ spec:
                           type: boolean
                         keep_alive_millis:
                           type: integer
+                        manual_dlq:
+                          type: boolean
+                        manual_dlq_max_attempts:
+                          type: integer
+                        manual_dlq_name:
+                          type: string
                         params:
                           type: array
                           items:
@@ -2189,6 +2195,8 @@ spec:
                 idpCertificateFingerprints:
                   type: object
                   additionalProperties: true    
+    
+  
   scope: Namespaced
   names:
     plural: openunisons

@@ -302,6 +302,11 @@ spec:
       num_queues: {{ .Values.openunison.queue.num_queues }}
       multi_task_queues: {{ .Values.openunison.queue.multi_task_queues }}
       keep_alive_millis: {{ .Values.openunison.queue.keep_alive_millis }}
+      {{ if .Values.openunison.queue.manual_dlq }}
+      manual_dlq: {{ .Values.openunison.queue.manual_dlq }}
+      manual_dlq_max_attempts: {{ .Values.openunison.queue.manual_dlq_max_attempts }}
+      manual_dlq_name: {{ .Values.openunison.queue.manual_dlq_name }}
+      {{ end }}
       params:
       {{ range $param := .Values.openunison.queue.params }}
       - name: {{ $param.name | quote }}
