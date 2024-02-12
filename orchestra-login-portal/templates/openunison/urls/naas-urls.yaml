@@ -1,4 +1,5 @@
 {{ if .Values.openunison.enable_provisioning }}
+{{ if .Values.openunison.enable_activemq }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: PortalUrl
@@ -26,6 +27,7 @@ spec:
       constraint: "cn=operations{{ .Values.openunison.naas.groups.external.suffix }},ou=groups,ou=shadow,o=Tremolo"
     - scope: group
       constraint: "cn=operations{{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo"
+{{ end }}
 {{ if .Values.openunison.html.legacy }}
 ---
 apiVersion: openunison.tremolo.io/v1
