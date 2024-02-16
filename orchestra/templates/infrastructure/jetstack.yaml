@@ -1,4 +1,11 @@
 {{ if and (eq .Values.enable_impersonation true) (eq .Values.impersonation.use_jetstack true)  }}
+{{- $root := . -}}
+{{ $foundUnisonCa := false }}
+{{ range $.Values.trusted_certs }}
+{{ if eq .name "unison-ca" }}
+{{ $foundUnisonCa = true }}
+{{ end }}
+{{ end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -59,7 +66,7 @@ spec:
           - "--oidc-issuer-url=https://{{ .Values.network.openunison_host }}/auth/idp/k8sIdp"
           - "--oidc-username-claim=sub"
           - "--oidc-groups-claim=groups"
-          {{ if .Values.impersonation.explicit_certificate_trust }}
+          {{ if or .Values.impersonation.explicit_certificate_trust $foundUnisonCa }}
           - "--oidc-ca-file=/etc/oidc/oidc-ca.pem"
           {{ else }}
           - "--oidc-ca-file=/etc/ssl/certs/ca-certificates.crt"
@@ -86,7 +93,7 @@ spec:
           runAsGroup: 433
           {{ end }}
         volumeMounts:
-          {{ if .Values.impersonation.explicit_certificate_trust }}
+          {{ if or .Values.impersonation.explicit_certificate_trust $foundUnisonCa }}
           - name: kube-oidc-proxy-config
             mountPath: /etc/oidc
             readOnly: true
@@ -120,7 +127,14 @@ spec:
           {{ end }}
         {{ end }}
       volumes:
-        {{ if .Values.impersonation.explicit_certificate_trust }}
+        {{ if $foundUnisonCa }}
+        - name: kube-oidc-proxy-config
+          secret:
+            secretName: unison-ca
+            items:
+            - key: tls.crt
+              path: oidc-ca.pem
+        {{ else if .Values.impersonation.explicit_certificate_trust }}
         - name: kube-oidc-proxy-config
           secret:
             secretName: {{ .Values.impersonation.ca_secret_name }}
