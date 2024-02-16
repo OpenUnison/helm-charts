@@ -1,0 +1,16 @@
+{{- $root := . -}}
+{{ if and (eq .Values.enable_impersonation true) (eq .Values.impersonation.use_jetstack true)  }}
+{{ range $.Values.trusted_certs }}
+{{ if eq .name "unison-ca" }}
+---
+apiVersion: v1
+data:
+  tls.crt: {{ .pem_b64 }}
+kind: Secret
+metadata:
+  name: unison-ca
+  namespace: {{ $root.Release.Namespace}}
+type: Opaque
+{{ end }}
+{{ end }}
+{{ end }}
