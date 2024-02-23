@@ -1,3 +1,10 @@
 google_ws:
   admin_email: ""
   service_account_email: ""
+  # If set to true, will also include groups that the user is transitively a member of.
+  # That is, if user is member of group A, and group A is itself a member of group B, then
+  # group B will be included in the generated groups claim only if this setting is true
+  # (and so on if B is member of further groups).
+  # Note that enabling this setting will cause more calls to the Directory API per login
+  # request (one per discovered group).
+  include_transitive_groups: false
