@@ -1,0 +1,129 @@
+{{ if .Values.enable_wait_for_job }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wait-for-{{ .Release.Name }}
+  namespace: {{.Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+data:
+  wait-for.py: |-
+    from kubernetes import client, config
+    import time
+
+    namespace = "{{ .Release.Namespace }}"
+    deploymentName = "openunison-{{ .Release.Name }}"
+    numExpected = {{ .Values.openunison.replicas }}
+
+    print("Looking for {}/{} to have {} pods".format(namespace,deploymentName,numExpected))
+
+    config.load_incluster_config()
+
+    def check_deployment(deploymentName:str, namespace:str):
+        deployment = client.AppsV1Api().read_namespaced_deployment(name=deploymentName, namespace=namespace)
+
+        if deployment:
+            print("deployment {}/{} found".format(namespace,deploymentName))
+            labels = deployment.spec.selector.match_labels
+            
+            label_selectors = ""
+
+            for attr_name, attr_value in labels.items():
+                label_selectors = label_selectors + attr_name + '=' + attr_value + ","
+
+            label_selectors = label_selectors[0:-1]
+            
+            v1 = client.CoreV1Api()
+            pods_list = v1.list_namespaced_pod(namespace=namespace,  label_selector=label_selectors)
+            
+            numPods = len(pods_list.items)
+
+            print("Total Pods: {} / Expected Pods: {}".format(numPods,deployment.spec.replicas))
+            
+            if deployment.status.ready_replicas and deployment.spec.replicas <= deployment.status.ready_replicas and numPods == deployment.spec.replicas:
+                print("deployment {}/{} running and stable".format(namespace,deploymentName))
+                return True
+            else:
+                print("deployment {}/{} not yet stable".format(namespace,deploymentName))
+                return False
+        else:
+            print("deployment {}/{} not found".format(namespace,deploymentName))
+
+    for i in range(0,200):
+        print("Try {}".format(i))
+        if check_deployment(deploymentName=deploymentName,namespace=namespace):
+            exit(0)
+        else:
+            print("Sleeping 5 seconds...")
+            time.sleep(5)
+
+    print("Deployment is not yet stable")
+    exit(1)
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app: openunison-{{ .Release.Name }}
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: wait-for
+    app.kubernetes.io/part-of: openunison
+  name: wait-for-{{ .Release.Name }}-{{ .Release.Revision }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  template:
+      spec:
+        restartPolicy: OnFailure
+        containers:
+          - name: wait-for
+            image: {{ .Values.openunison.precheck.image | default "ghcr.io/tremolosecurity/python3:1.0.0" }}
+            imagePullPolicy: {{ .Values.openunison.imagePullPolicy }}
+            command: ["python", "/scripts/wait-for.py"]
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - "ALL"
+              {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+              runAsNonRoot: true
+              {{ else }}
+              seccompProfile:
+                type: RuntimeDefault
+              runAsNonRoot: true
+              runAsUser: 431
+              runAsGroup: 433
+              {{ end }}
+            volumeMounts:
+            - name: scripts
+              mountPath: "/scripts"
+              readOnly: true
+            - name: tmp-pad
+              mountPath: "/tmp-pad"
+        {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+        securityContext:
+          seccompProfile:
+            type: RuntimeDefault
+          runAsNonRoot: true
+        {{ else }}
+        securityContext:
+          fsGroup: 433
+          supplementalGroups: [433]
+          seccompProfile:
+            type: RuntimeDefault
+          runAsNonRoot: true
+          runAsUser: 431
+          runAsGroup: 433
+        {{ end }}
+        serviceAccount: openunison-operator
+        serviceAccountName: openunison-operator
+        volumes:
+          - name: scripts
+            configMap:
+              name: wait-for-{{ .Release.Name }}
+          - name: tmp-pad
+            emptyDir: {}
+{{ end }}
