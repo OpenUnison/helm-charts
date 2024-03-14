@@ -1,6 +1,6 @@
 apiVersion: v2
-name: orchestra
-description: A Helm chart for Kubernetes
+name: orchestra-kube-oidc-proxy
+description: Deploys the kube-oidc-proxy for orchestra outside of the orchestra chart.  Used with IaC tools that do not work well without all rollouts completing
 
 # A chart can be either an 'application' or a 'library' chart.
 #
@@ -15,16 +15,10 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 2.10.47
+version: 0.1.0
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
 # follow Semantic Versioning. They should reflect the version the application is using.
-appVersion: 1.0.40
-home: https://openunison.github.io.
-icon: https://nexus.tremolo.io/repository/images/shield.png
-sources:
-  - https://github.com/OpenUnison/openunison-k8s
-  - https://github.com/OpenUnison/helm-charts
-maintainers:
-  - name: mlbiam 
+# It is recommended to use it with quotes.
+appVersion: "1.0.40"
