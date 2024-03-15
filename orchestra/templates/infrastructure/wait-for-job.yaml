@@ -20,6 +20,8 @@ data:
 
     config.load_incluster_config()
 
+    
+
     def check_deployment(deploymentName:str, namespace:str):
         deployment = client.AppsV1Api().read_namespaced_deployment(name=deploymentName, namespace=namespace)
 
@@ -53,6 +55,9 @@ data:
     for i in range(0,200):
         print("Try {}".format(i))
         if check_deployment(deploymentName=deploymentName,namespace=namespace):
+            print("Waiting 30 seconds for validating webhooks to settle")
+            time.sleep(30)
+            print("Ending wait for job")
             exit(0)
         else:
             print("Sleeping 5 seconds...")
