@@ -18,6 +18,13 @@ spec:
   - hosts:
     - "#[OU_HOST]"
     filterChain: 
+    {{ if .Values.dashboard.require_session }}
+    - className: com.tremolosecurity.proxy.filters.AzFilter
+      params:
+        rules:
+        - "custom;require-session"
+        azFail: "force-logout"
+    {{ end }}
     - className: com.tremolosecurity.proxy.filters.XForward
       params:
         createHeaders: "false"
@@ -66,6 +73,13 @@ spec:
   - hosts:
     - "#[OU_HOST]"
     filterChain:
+    {{ if .Values.dashboard.require_session }}
+    - className: com.tremolosecurity.proxy.filters.AzFilter
+      params:
+        rules:
+        - "custom;require-session"
+        azFail: "force-logout"
+    {{ end }}
     - className: com.tremolosecurity.scalejs.token.ws.ScaleToken
       params:
         displayNameAttribute: "sub"

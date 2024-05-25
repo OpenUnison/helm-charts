@@ -176,7 +176,7 @@ spec:
     required: required
     params: 
       nameAttr: uid
-      workflowName: {{ .Values.openunison.post_jit_workflow }}
+      workflowName: "{{ .Values.openunison.post_jit_workflow }}"
 {{ end }}
   - name: genoidctoken
     required: required
