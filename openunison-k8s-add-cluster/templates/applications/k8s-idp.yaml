@@ -65,7 +65,7 @@ spec:
           accessTokenSkewMillis: "120000"
         secretParams:
         - name: clientSecret
-          secretName: orchestra-secrets-source
+          secretName: {{ .Values.cluster.sso.client_secret | default "orchestra-secrets-source" }}
           secretKey: cluster-idp-{{ .Values.cluster.name }}
   cookieConfig:
     sessionCookieName: tremolosession
