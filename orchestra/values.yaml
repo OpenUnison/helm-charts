@@ -151,6 +151,7 @@ openunison:
       - name: trustAlias
         source_type: static
         value: "amq-server"
+  keys: []
   naas:
     forms:
       new_namespace:
