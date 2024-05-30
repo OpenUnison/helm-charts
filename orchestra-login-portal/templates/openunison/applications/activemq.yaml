@@ -19,10 +19,13 @@ spec:
   - hosts:
     - "#[OU_HOST]"
     filterChain: 
+    - className: com.tremolosecurity.activemq.ChooseAmq
+      params:
+        namespace: {{ .Release.Namespace }}
     - className: com.tremolosecurity.proxy.filters.HideCookie
       params: {}
     uri: "/admin"
-    proxyTo: https://amq.{{ .Release.Namespace }}.svc:8162${fullURI}
+    proxyTo: https://${amq.server}:8162${fullURI}
     authChain: login-service
     overrideHost: true
     overrideReferer: true

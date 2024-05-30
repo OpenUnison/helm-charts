@@ -197,7 +197,17 @@ spec:
             key_size: 2048
             server_name: amq.openunison.svc
             sign_by_k8s_ca: {{ .Values.certs.use_k8s_cm }}
+            {{ if .Values.openunison.activemq_ha }}
+            subject_alternative_names:
+            - amq-backup.openunison.svc
+            {{ if .Values.openunison.activemq_cert_hosts }}
+            {{ range $host := .Values.openunison.activemq_cert_hosts }}
+            - {{ $host }}
+            {{ end }}
+            {{ end }}
+            {{ else }}
             subject_alternative_names: []
+            {{ end }}
           {{ if .Values.certs.use_k8s_cm  }}
           import_into_ks: "none"
           {{ else }}

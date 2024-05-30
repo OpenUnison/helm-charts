@@ -147,7 +147,23 @@ data:
             <shutdownHooks>
                 <bean xmlns="http://www.springframework.org/schema/beans" class="org.apache.activemq.hooks.SpringContextHook" />
             </shutdownHooks>
-
+                <networkConnectors>
+{{ if .Values.openunison.activemq_remote }}
+{{ $remote_queue_num := 0 }}
+{{ $remote_queues := splitList "," .Values.openunison.non_secret_data.K8S_DR_QUEUES }}
+{{ range $host := .Values.openunison.activemq_remote}}
+                    <networkConnector  uri="static:(ssl://{{ $host }})" >
+                        <dynamicallyIncludedDestinations>
+                            <queue physicalName="{{ index $remote_queues $remote_queue_num }}" />
+                            {{ $remote_queue_num := add1 $remote_queue_num }}
+                        </dynamicallyIncludedDestinations>
+                        <excludedDestinations>
+                            <queue physicalName="ActiveMQ.DLQ" />
+                        </excludedDestinations>
+                    </networkConnector>
+{{ end }}
+{{ end }}
+                </networkConnectors>
         </broker>
 
         <!--
