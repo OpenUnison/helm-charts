@@ -1,0 +1,159 @@
+{{ if eq .Values.network.ingress_type "cilium" }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+    ingress.cilium.io/websocket: "enabled"
+    {{ range $key,$value := .Values.network.ingress_annotations }}
+    {{ $key }}: {{ quote $value }}
+    {{ end }}
+  name: openunison-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: ingress-simple
+    app.kubernetes.io/part-of: openunison
+spec:
+  ingressClassName: cilium
+  rules:
+  - host: {{ .Values.network.openunison_host }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: openunison-{{ .Release.Name }}
+            port: 
+              number: 80
+        path: "/"
+        pathType: Prefix
+  {{ if .Values.dashboard.enabled }}
+  - host: {{ .Values.network.dashboard_host }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: openunison-{{ .Release.Name }}
+            port:
+              number: 80
+        path: "/"
+        pathType: Prefix
+  {{ end }}
+  {{- $root := . -}}
+  {{ range $app := $root.Values.openunison.apps }}
+  - host: {{ (urlParse $app.badgeUrl).host }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: openunison-{{ $root.Release.Name }}
+            port:
+              number: 443
+        path: "/"
+        pathType: Prefix
+  {{ end }}
+  # {{ if eq .Values.enable_impersonation true }}
+  # - host: {{ .Values.network.api_server_host }}
+  #   http:
+  #     paths:
+  #     - backend:
+  #         service:
+  #           {{ if eq .Values.impersonation.use_jetstack true }}
+  #           name: kube-oidc-proxy-{{ .Release.Name }}
+  #           {{ else }}
+  #           name: openunison-{{ .Release.Name }}
+  #           {{ end }}
+  #           port:
+  #             number: 443
+  #       path: "/"
+  #       pathType: Prefix
+  # {{ end }}
+  # {{ if and (.Values.openunison.management_proxy) (eq .Values.openunison.management_proxy.enabled true)  }}
+  # - host: {{ .Values.openunison.management_proxy.host }}
+  #   http:
+  #     paths:
+  #     - backend:
+  #         service:
+  #           name: kube-management-proxy-{{ .Release.Name }}
+  #           port:
+  #             number: 443
+  #       path: "/"
+  #       pathType: Prefix
+  # {{ end }}
+  tls:
+  - hosts:
+    - {{ .Values.network.openunison_host }}
+    {{ if .Values.dashboard.enabled }}
+    - {{ .Values.network.dashboard_host }}
+    {{ end }}
+    # {{ if eq .Values.enable_impersonation true }}
+    # - {{ .Values.network.api_server_host }}
+    # {{ end }}
+    # {{ if and (.Values.openunison.management_proxy) (eq .Values.openunison.management_proxy.enabled true)  }}
+    # - {{ .Values.openunison.management_proxy.host }}
+    # {{ end }}
+    {{ range $app := $root.Values.openunison.apps }}
+    - {{ (urlParse $app.badgeUrl).host }}
+    {{ end }}
+    secretName: ou-tls-certificate
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+    ingress.cilium.io/websocket: "enabled"
+    ingress.cilium.io/tls-passthrough: "enabled"
+    {{ range $key,$value := .Values.network.ingress_annotations }}
+    {{ $key }}: {{ quote $value }}
+    {{ end }}
+  name: openunison-{{ .Release.Name }}-passthrough
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: ingress-simple
+    app.kubernetes.io/part-of: openunison
+spec:
+  ingressClassName: cilium
+  rules:
+  {{ if eq .Values.enable_impersonation true }}
+  - host: {{ .Values.network.api_server_host }}
+    http:
+      paths:
+      - backend:
+          service:
+            {{ if eq .Values.impersonation.use_jetstack true }}
+            name: kube-oidc-proxy-{{ .Release.Name }}
+            {{ else }}
+            name: openunison-{{ .Release.Name }}
+            {{ end }}
+            port:
+              number: 443
+        path: "/"
+        pathType: Prefix
+  {{ end }}
+  {{ if and (.Values.openunison.management_proxy) (eq .Values.openunison.management_proxy.enabled true)  }}
+  - host: {{ .Values.openunison.management_proxy.host }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: kube-management-proxy-{{ .Release.Name }}
+            port:
+              number: 443
+        path: "/"
+        pathType: Prefix
+  {{ end }}
+  tls:
+  - hosts:
+    {{ if eq .Values.enable_impersonation true }}
+    - {{ .Values.network.api_server_host }}
+    {{ end }}
+    {{ if and (.Values.openunison.management_proxy) (eq .Values.openunison.management_proxy.enabled true)  }}
+    - {{ .Values.openunison.management_proxy.host }}
+    {{ end }}
+    secretName: ou-tls-certificate
+{{ end }}

@@ -26,6 +26,7 @@ spec:
       labels:
         app: amq-{{ .Release.Name  }}
         operated-by: openunison-operator
+        tremolo.io/system: amq
     spec:
       {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
       securityContext:
@@ -289,6 +290,7 @@ spec:
       imagePullSecrets:
       - name: {{ .Values.services.pullSecret }}
       {{ end }}
+      
 ---
 apiVersion: v1
 kind: Service
@@ -317,5 +319,328 @@ spec:
   sessionAffinityConfig:
     clientIP:
       timeoutSeconds: 10800
-  type: ClusterIP
+  type: {{ .Values.openunison.activemq_service_type | default "ClusterIP" }}
+{{ if .Values.openunison.activemq_ha }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: openunison-{{ .Release.Name }}
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: amq-backup
+    app.kubernetes.io/part-of: openunison
+  name: amq-{{ .Release.Name  }}-backup
+  namespace: {{ .Release.Namespace  }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: amq-{{ .Release.Name  }}-backup
+  template:
+    metadata:
+      creationTimestamp:
+      labels:
+        app: amq-{{ .Release.Name  }}-backup
+        operated-by: openunison-operator
+        tremolo.io/system: amq
+    spec:
+      {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+      securityContext:
+        runAsNonRoot: true
+      {{ else }}
+      securityContext:
+        fsGroup: 433
+        supplementalGroups: [433]
+        seccompProfile:
+          type: RuntimeDefault
+        runAsNonRoot: true
+        runAsUser: 431
+        runAsGroup: 433
+      {{ end }}
+
+      containers:
+      - env:
+        - name: ACTIVEMQ_DEBUG_OPTS
+          value: "-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom"
+        {{ if .Values.kerberos }}
+        {{ if .Values.kerberos.enabled }}
+        - name: JAVA_OPTS
+          value: "-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom -DunisonEnvironmentFile=/etc/openunison/ou.env -Djavax.net.ssl.trustStore=/etc/openunison/cacerts.jks -Dpolyglot.engine.WarnInterpreterOnly=false -Djava.security.krb5.conf=/etc/krb5-local/krb5.conf -Djava.security.krb5.debug=true -Djava.security.auth.login.config=/etc/krb5-local/SQLJDBCDriver.conf"
+        {{ end }}
+        {{ end }}
+        - name: JDBC_DRIVER
+          valueFrom:
+            secretKeyRef:
+              name: amq-env-secrets-{{ .Release.Name  }}
+              key: JDBC_DRIVER
+        - name: JDBC_URL
+          valueFrom:
+            secretKeyRef:
+              name: amq-env-secrets-{{ .Release.Name  }}
+              key: JDBC_URL
+        - name: JDBC_USER
+          valueFrom:
+            secretKeyRef:
+              name: amq-env-secrets-{{ .Release.Name  }}
+              key: JDBC_USER
+        - name: JDBC_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: amq-env-secrets-{{ .Release.Name  }}
+              key: JDBC_PASSWORD
+        - name: TLS_KS_PWD
+          valueFrom:
+            secretKeyRef:
+              name: amq-env-secrets-{{ .Release.Name  }}
+              key: TLS_KS_PWD
+        {{ if .Values.kerberos  }}
+        {{ if .Values.kerberos.enabled }}
+        - name: KRB5_CONFIG
+          value: /etc/krb5-local/krb5.conf
+        - name: KRB5RCACHEDIR
+          value: /dev/shm
+        - name: KRB5CCNAME
+          value: /dev/shm/ccache
+        {{ end }}
+        {{ end }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - "ALL"
+          {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+          runAsNonRoot: true
+          {{ else }}
+          seccompProfile:
+            type: RuntimeDefault
+          runAsNonRoot: true
+          runAsUser: 431
+          runAsGroup: 433
+          {{ end }}
+        image: {{ .Values.amq_image }}
+        imagePullPolicy: {{ .Values.openunison.imagePullPolicy }}
+        livenessProbe:
+          exec:
+            command:
+            - "/usr/bin/health_check.sh"
+          failureThreshold: 10
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 10
+        name: amq-{{ .Release.Name  }}
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        - containerPort: 8443
+          name: https
+          protocol: TCP
+        readinessProbe:
+          exec:
+            command:
+            - "/usr/bin/health_check.sh"
+          failureThreshold: 3
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 10
+        resources: {}
+        terminationMessagePath: "/dev/termination-log"
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: "/etc/activemq-secrets"
+          name: secret-volume
+          readOnly: true
+        - mountPath: "/etc/activemq"
+          name: config-volume
+          readOnly: true
+        - name: local-data
+          mountPath: "/usr/local/activemq/data"
+        - name: jetty-tmp
+          mountPath: "/usr/local/activemq/tmp"
+        {{ if  .Values.openunison.activemq_use_pvc }}
+        - name: kahadb
+          mountPath: /activemq-data
+        {{ end }}
+        {{ if .Values.kerberos  }}
+        {{ if .Values.kerberos.enabled }}
+        - mountPath: /etc/krb5-local
+          name: krb
+          readOnly: true
+        {{ end }}
+        {{ end }}
+
+        {{ if .Values.amq }}
+        {{ if .Values.amq.resources }}
+        resources:
+          {{ if .Values.amq.resources.requests }}
+          requests: 
+            {{ if .Values.amq.resources.requests.memory }}
+            memory: {{ .Values.amq.resources.requests.memory | quote }}
+            {{ end }}
+            
+            {{ if .Values.amq.resources.requests.cpu }}
+            cpu: {{ .Values.amq.resources.requests.cpu | quote }}
+            {{ end }}
+          
+          {{ end }}
+
+          {{ if .Values.amq.resources.limits }}
+          limits: 
+            {{ if .Values.amq.resources.limits.memory }}
+            memory: {{ .Values.amq.resources.limits.memory | quote }}
+            {{ end }}
+            
+            {{ if .Values.amq.resources.limits.cpu }}
+            cpu: {{ .Values.amq.resources.limits.cpu | quote }}
+            {{ end }}
+          
+          {{ end }}
+        {{ end }}
+        {{ end }}
+      {{ if and .Values.kerberos  }}
+      {{ if .Values.kerberos.enabled }}
+      - image: {{ .Values.kerberos.sidecar_image }}
+        name: krb-sidecar
+        {{ if not .Values.kerberos.keytab }}
+        command:
+          - /reinit-pwd.sh
+        {{ end }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - "ALL"
+          {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+          runAsNonRoot: true
+          {{ else }}
+          seccompProfile:
+            type: RuntimeDefault
+          runAsNonRoot: true
+          runAsUser: 431
+          runAsGroup: 433
+          {{ end }}
+        env:
+        - name: KRB5CCNAME
+          value: /dev/shm/ccache
+        - name: KRB5_CONFIG
+          value: /etc/krb5-local/krb5.conf
+        - name: REKINIT_PERIOD
+          value: "3600"
+        - name: SECRETS
+          value: /etc/krb5-keytabs
+        {{ if .Values.kerberos.keytab }}
+        - name: KEYTAB
+          value: {{ .Values.kerberos.keytab }}
+        {{ end }}
+        - name: PRINCIPAL
+          value: {{ .Values.kerberos.principal }}
+        - name: KRB5RCACHEDIR
+          value: /dev/shm
+        volumeMounts:
+          - mountPath: /etc/krb5-local
+            name: krb
+            readOnly: true
+          - mountPath: /etc/krb5-keytabs
+            name: krb-keytab
+            readOnly: true
+      {{ end }}
+      {{ end }}
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      
+      volumes:
+      - name: secret-volume
+        secret:
+          defaultMode: 420
+          secretName: amq-secrets-{{ .Release.Name  }}
+      - name: local-data
+        emptyDir: {}
+      - name: jetty-tmp
+        emptyDir: {}
+      - name: config-volume
+        configMap:
+          name: activemq-config-{{ .Release.Name }}
+      {{ if .Values.openunison.activemq_use_pvc}}
+      - name: kahadb
+        persistentVolumeClaim:
+          claimName: activemq-kahadb
+      {{ end }}
+      {{ if and .Values.kerberos  }}
+      {{ if .Values.kerberos.enabled }}
+      - name: krb
+        configMap:
+          name: kerb-config
+      - name: krb-keytab
+        secret:
+          secretName: kerb-keytab
+      {{ end }}
+      {{ end }}
+      tolerations:
+      {{- range .Values.services.tolerations }}
+      - {{- if .key }}
+        key: {{ .key }}
+        {{- end }}
+        {{- if .effect }}
+        effect: {{ .effect }}
+        {{- end }}
+        {{- if .operator }}
+        operator: {{ .operator }}
+        {{- end }}
+        {{- if .value }}
+        value: {{ .value }}
+        {{- end }}
+      {{- end }}
+      {{ $length := len .Values.services.node_selectors }}
+      {{ if eq $length 0  }}
+      nodeSelector: {}
+      {{ else }}
+      nodeSelector: {{ range $key,$value := .Values.services.node_selectors }}
+        {{ $key }}: {{ quote $value }}
+      {{ end }}
+      {{ end }}
+
+      {{ if .Values.services.pullSecret }}
+      imagePullSecrets:
+      - name: {{ .Values.services.pullSecret }}
+      {{ end }}
+      
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: openunison-{{ .Release.Name }}
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: amq-backup
+    app.kubernetes.io/part-of: openunison
+  name: amq-backup
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - name: amq-openwire
+    port: 61616
+    protocol: TCP
+    targetPort: 61616
+  - name: amq-admin
+    port: 8162
+    protocol: TCP
+    targetPort: 8162
+  selector:
+    app: amq-{{ .Release.Name }}-backup
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+  type: {{ .Values.openunison.activemq_service_type | default "ClusterIP" }}
+{{ end }}
 {{ end }}

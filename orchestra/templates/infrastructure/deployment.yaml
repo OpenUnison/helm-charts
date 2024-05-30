@@ -169,6 +169,8 @@ spec:
         terminationMessagePath: "/dev/termination-log"
         terminationMessagePolicy: File
         volumeMounts:
+        - mountPath: "/usr/local/openunison/.config"
+          name: local-config
         - mountPath: "/etc/openunison"
           name: secret-volume
           readOnly: true
@@ -271,6 +273,8 @@ spec:
         runAsGroup: 433
       {{ end }}
       volumes:
+      - name: local-config
+        emptyDir: {}
       - name: secret-volume
         secret:
           defaultMode: 420

@@ -144,13 +144,14 @@ openunison:
     params:
       - name: brokerURL
         source_type: static
-        value: "failover:(ssl://amq.openunison.svc:61616)?initialReconnectDelay=10000"
+        value: "failover:(ssl://amq.openunison.svc:61616,ssl://amq-backup.openunison.svc:61616)?initialReconnectDelay=10000"
       - name: keyAlias
         source_type: static
         value: "amq-client"
       - name: trustAlias
         source_type: static
         value: "amq-server"
+  keys: []
   naas:
     forms:
       new_namespace:

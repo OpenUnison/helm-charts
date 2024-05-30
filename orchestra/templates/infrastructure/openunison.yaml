@@ -1,3 +1,4 @@
+{{- $root := . -}}
 ---
 apiVersion: openunison.tremolo.io/v6
 kind: OpenUnison
@@ -67,6 +68,50 @@ spec:
       - name: c
         value: {{ .Values.cert_template.c | quote }}
       keys: 
+        {{ range $keyconfig := .Values.openunison.keys}}
+        - name: {{ $keyconfig.name }}
+          import_into_ks: {{ $keyconfig.import_into_ks }}
+          tls_secret_name: {{ $keyconfig.tls_secret_name }}
+          {{ if $keyconfig.create_data }}
+          create_data:
+            ca_cert: {{$keyconfig.create_data.ca_cert}}
+            key_size: {{$keyconfig.create_data.key_size}}
+            server_name: {{$keyconfig.create_data.server_name}}
+            sign_by_k8s_ca: false
+            {{ if $keyconfig.create_data.subject_alternative_names }}
+            {{ $len_san := len $keyconfig.create_data.subject_alternative_names }}
+            {{ if eq $len_san 0}}
+            subject_alternative_names: []
+            {{ else }}
+            subject_alternative_names:
+            {{ range $keyconfig.create_data.subject_alternative_names }}
+            - {{ . }}
+            {{ end }}
+            {{ end }}
+            {{ else }}
+            subject_alternative_names: []
+            {{ end }}
+            target_namespace: {{ $keyconfig.create_data.target_namespace | default  $root.Release.Namespace }}
+            {{ if $keyconfig.create_data.secret_info }}
+            secret_info:
+              type_of_secret: {{ $keyconfig.create_data.secret_info.type_of_secret | default "kubernetes.io/tls" }}
+              cert_name: {{ $keyconfig.create_data.secret_info.type_of_secret.cert_name | default "tls.crt" }}
+              key_name: {{ $keyconfig.create_data.secret_info.type_of_secret.key_name | default "tls.key" }}
+            {{ end }}
+            {{ if $keyconfig.create_data.patch_info }}
+            patch_info:
+              annotation_name: {{$keyconfig.create_data.patch_info}}
+              url: {{$keyconfig.create_data.url}}
+            {{ end }}
+            {{ if $keyconfig.create_data.delete_pod_labels }}
+            delete_pod_labels:
+            {{ range $keyconfig.create_data.delete_pod_labels }}
+            - .
+            {{ end }}
+            {{ end }}
+          {{ end }}
+          
+        {{ end }}
         - create_data:
             ca_cert: true
             key_size: 2048
@@ -152,7 +197,17 @@ spec:
             key_size: 2048
             server_name: amq.openunison.svc
             sign_by_k8s_ca: {{ .Values.certs.use_k8s_cm }}
+            {{ if .Values.openunison.activemq_ha }}
+            subject_alternative_names:
+            - amq-backup.openunison.svc
+            {{ if .Values.openunison.activemq_cert_hosts }}
+            {{ range $host := .Values.openunison.activemq_cert_hosts }}
+            - {{ $host }}
+            {{ end }}
+            {{ end }}
+            {{ else }}
             subject_alternative_names: []
+            {{ end }}
           {{ if .Values.certs.use_k8s_cm  }}
           import_into_ks: "none"
           {{ else }}
@@ -160,7 +215,7 @@ spec:
           {{ end }}
           name: amq-server
           replace_if_exists: true
-          tls_secret_name: orchestra-amq-server
+          tls_secret_name: {{ .Release.Name }}-amq-server
         - create_data:
             ca_cert: true
             key_size: 2048
@@ -169,7 +224,7 @@ spec:
             subject_alternative_names: []
           import_into_ks: keypair
           name: amq-client
-          tls_secret_name: orchestra-amq-client
+          tls_secret_name: {{ .Release.Name }}-amq-client
         {{ end }}
     static_keys: 
     - name: session-unison

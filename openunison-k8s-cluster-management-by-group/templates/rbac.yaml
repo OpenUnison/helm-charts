@@ -8,7 +8,7 @@ subjects:
   name: k8s-cluster-administrators
   apiGroup: rbac.authorization.k8s.io
 - kind: ServiceAccount
-  name: openunison-{{ .Values.openunison.orchestra_release_name }}
+  name: openunison-{{ .Values.impersonation.orchestra_release_name }}
   namespace: {{ .Release.Namespace }}
 roleRef:
   kind: ClusterRole

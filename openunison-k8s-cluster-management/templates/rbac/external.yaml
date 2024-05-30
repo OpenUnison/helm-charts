@@ -8,13 +8,17 @@ metadata:
     argocd.argoproj.io/sync-wave: "40"
 subjects:
 - kind: Group
+  {{ if .Values.openunison.naas.groups.privilegedAccessGroup }}
+  name: {{ .Values.openunison.naas.groups.privilegedAccessGroup }}{{ .Values.openunison.naas.groups.external.suffix }}
+  {{ else }}
   name: k8s-cluster-administrators{{ .Values.openunison.naas.groups.external.suffix }}
+  {{ end }}
   apiGroup: rbac.authorization.k8s.io
 - kind: Group
   name: k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.external.suffix }}
   apiGroup: rbac.authorization.k8s.io
 - kind: ServiceAccount
-  name: openunison-{{ .Values.openunison.orchestra_release_name }}
+  name: openunison-{{ .Values.impersonation.orchestra_release_name }}
   namespace: {{ .Release.Namespace }}
 roleRef:
   kind: ClusterRole
