@@ -16,6 +16,9 @@ metadata:
     app.kubernetes.io/component: ingress-simple
     app.kubernetes.io/part-of: openunison
 spec:
+  {{ if .Values.network.ingress_class_name }}
+  ingressClassName: {{ .Values.network.ingress_class_name }}
+  {{ end }}
   rules:
   - host: {{ .Values.network.openunison_host }}
     http:
@@ -23,7 +26,7 @@ spec:
       - backend:
           service:
             name: openunison-{{ .Release.Name }}
-            port: 
+            port:
               number: 443
         path: "/"
         pathType: Prefix

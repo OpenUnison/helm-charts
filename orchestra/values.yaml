@@ -6,6 +6,7 @@ network:
   k8s_url: https://k8s-installer-master.tremolo.lan:6443
   force_redirect_to_tls: true
   createIngressCertificate: true
+  ingress_class_name: ""
   ingress_type: nginx
   ingress_certificate: ou-tls-certificate
   ingress_annotations: {}
@@ -17,7 +18,7 @@ network:
     entrypoints:
       plaintext: web
       tls: websecure
-  
+
 
 cert_template:
   ou: "Kubernetes"
@@ -211,4 +212,4 @@ openunison:
         enabled: false
         admin_group: "CN=openunison-admins,CN=Users,DC=ent2k12,DC=domain,DC=com"
         cluster_admin_group: "CN=k8s_login_ckuster_admins,CN=Users,DC=ent2k12,DC=domain,DC=com"
-      
+
