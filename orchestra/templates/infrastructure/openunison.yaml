@@ -204,17 +204,27 @@ spec:
             {{ range $host := .Values.openunison.activemq_cert_hosts }}
             - {{ $host }}
             {{ end }}
-            {{ end }}
             {{ else }}
             subject_alternative_names: []
             {{ end }}
+            {{ if .Values.openunison.activemq_external_server_cert }}
+            secret_info:
+                cert_name: tls.crt
+                key_name: tls.key
+            {{ end }}
           {{ if .Values.certs.use_k8s_cm  }}
           import_into_ks: "none"
+          {{ else if .Values.openunison.activemq_external_server_cert }}
+          import_into_ks: "certificate"
           {{ else }}
           import_into_ks: "certificate"
           {{ end }}
           name: amq-server
+          {{ if .Values.openunison.activemq_external_server_cert }}
+          replace_if_exists: false
+          {{ else }}
           replace_if_exists: true
+          {{ end }}
           tls_secret_name: {{ .Release.Name }}-amq-server
         - create_data:
             ca_cert: true
@@ -222,9 +232,19 @@ spec:
             server_name: amq-client
             sign_by_k8s_ca: false
             subject_alternative_names: []
+            {{ if .Values.openunison.activemq_external_client_cert }}
+            secret_info:
+                cert_name: tls.crt
+                key_name: tls.key
+            {{ end }}
           import_into_ks: keypair
           name: amq-client
-          tls_secret_name: {{ .Release.Name }}-amq-client
+          tls_secret_name: {{ .Release.Name }}-amq-client{{ end }}
+          {{ if .Values.openunison.activemq_external_client_cert }}
+          replace_if_exists: false
+          {{ else }}
+          replace_if_exists: true
+          {{ end }}
         {{ end }}
     static_keys: 
     - name: session-unison
