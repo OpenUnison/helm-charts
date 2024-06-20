@@ -9,7 +9,177 @@ spec:
   - name: js
     params:
       js: |-
+        const HttpPost = Java.type("org.apache.http.client.methods.HttpPost");
+        const BasicHeader = Java.type("org.apache.http.message.BasicHeader");
+
+        {{ if .Values.google_ws.include_transitive_groups }}
+
+        const BasicLineParser = Java.type("org.apache.http.message.BasicLineParser");
+        const MultipartEntityBuilder = Java.type("org.apache.http.entity.mime.MultipartEntityBuilder");
+        const FormBodyPartBuilder = Java.type("org.apache.http.entity.mime.FormBodyPartBuilder");
+        const StringBody = Java.type("org.apache.http.entity.mime.content.StringBody");
+        const ContentType = Java.type("org.apache.http.entity.ContentType");
+
+        /*
+         * Parses a single sub-response within the body of the response to a batch group fetch request.
+         *
+         * @param The raw HTTP response.
+         * @return The JSON response body. May be empty if an error was returned.
+         */
+        function parseBatchResponseItem(item) {
+
+            // Blank lines divide the major sections
+            const [itemMeta, response, ...body_lines] = item.split(/\n\s*\n/);
+            const body = body_lines.join('\n\n');
+
+            const lineParser = new BasicLineParser();
+            const statusLine = BasicLineParser.parseStatusLine(response.split('\n', 1)[0], lineParser);
+
+            if (statusLine.getStatusCode() != 200) {
+                System.out.println("Error on group retrieve: " + statusLine.getStatusCode());
+                return {}; // Skip and continue
+            }
+
+            return JSON.parse(body);
+
+        }
+
+        // Content-Type prefix for batch response
+        const BATCH_RESPONSE_TYPE_PREFIX = "multipart/mixed; boundary=";
+
+        /**
+         * Parses the response to a batch group fetch request.
+         *
+         * @param response The HTTP response object.
+         * @return An array with the response body of each sub-response.
+         */
+        function parseBatchResponse(response) {
+
+            const body = EntityUtils.toString(response.getEntity());
+            const contentType = response.getFirstHeader("Content-Type").getValue();
+            if (!contentType.startsWith(BATCH_RESPONSE_TYPE_PREFIX)) {
+                throw new Error('Unexpected Content-Type');
+            }
+            const separator = contentType.slice(BATCH_RESPONSE_TYPE_PREFIX.length);
+
+            const delimiter = `--${separator}`;
+            const endDelimiter = `--${separator}--`;
+
+            const start = body.indexOf(delimiter) + delimiter.length;
+            const end = body.lastIndexOf(endDelimiter);
+
+            // Remove first and last markers so there are only delimiters between items
+            const body_trimmed = body.substring(start, end);
+            const items = body_trimmed.split(delimiter);
+
+            return items.map(parseBatchResponseItem);
+
+        }
+
+        /**
+         * Queries the groups that a list of users/groups are members of using a batch request.
+         *
+         * @param http The HTTP client.
+         * @param accessToken The authorization token.
+         * @param emails The emails of the users/groups to query.
+         * @return The response body of each query.
+         */
+        function getGroupsBatch(http, accessToken, emails) {
+
+            const entity = emails.map(email => "GET /admin/directory/v1/groups?userKey=" + email)
+                .map(request => new StringBody(request, ContentType.create("application/http")))
+                .map((body, i) => FormBodyPartBuilder.create()
+                    .setName("request-" + i)
+                    .setBody(body)
+                    .build()
+                )
+                .reduce(
+                    (builder, part) => builder.addPart(part),
+                    MultipartEntityBuilder.create()
+                )
+                .setMimeSubtype("mixed")
+                .build();
+
+            var httpPost = new HttpPost("https://admin.googleapis.com/batch/directory/v1");
+            httpPost.addHeader(new BasicHeader("Authorization", "Bearer " + accessToken));
+            httpPost.setEntity(entity);
+
+            const response = http.execute(httpPost);
+            const statusLine = response.getStatusLine();
+
+            if (statusLine.getStatusCode() != 200) {
+                System.out.println("Error on batch request: " + statusLine.getStatusCode());
+                return []; // Skip and continue
+            }
+
+            return parseBatchResponse(response);
+
+        }
+
+        {{ else }}
+
+        // getGroupsBatch (should) never get called if transitive groups are disabled, so omit it
+        // and its helpers so the interpreter doesn't have to parse functionally dead code
+        function getGroupsBatch(http, accessToken, emails) {
+
+            System.out.println("Unexpected call to getGroupsBatch");
+            return [];
+
+        }
+
+        {{ end }}
+
+        /**
+         * Queries the groups that a user/group is member of using a direct (single) request.
+         *
+         * @param http The HTTP client.
+         * @param accessToken The authorization token.
+         * @param emails The email of the user/group to query.
+         * @return The response body of the query as an array. May be empty if an error happened.
+         */
+        function getGroupsSingle(http, accessToken, email) {
+
+            var httpGet = new HttpGet("https://admin.googleapis.com/admin/directory/v1/groups?userKey=" + email);
+            httpGet.addHeader(new BasicHeader("Authorization","Bearer " + accessToken));
+
+            const response = http.execute(httpGet);
+            const jsonResp = EntityUtils.toString(response.getEntity());
+            
+            if (response.getStatusLine().getStatusCode() != 200) {
+                System.out.println("Error on group retrieve: " + statusLine.getStatusCode() + " / " + jsonResp);
+                return []; // Skip and continue
+            }
+            
+            return [JSON.parse(jsonResp)]; // Return as array to keep type consistent and make skip case simpler
+
+        }
+
+        /**
+         * Retrieves the groups that a list of users/groups are members of.
+         *
+         * @param http The HTTP client.
+         * @param accessToken The authorization token.
+         * @param emails The emails of the users/groups to query.
+         * @return An array of group objects. May contain duplicates.
+         */
+        function getGroups(http, accessToken, emails) {
+
+            // Sanity check
+            if (emails.length == 0) {
+                System.out.println("Attempted to retrieve groups of nothing");
+                return [];
+            }
+
+            const responses = emails.length == 1 
+                ? getGroupsSingle(http, accessToken, emails[0]) // Do single call if possible to save on processing
+                : getGroupsBatch(http, accessToken, emails);
+
+            return responses.flatMap(data => data.groups ? data.groups : []);
+
+        }
+
         function doAuth(request,response,as) {
+            
           // setup classes that we can use from Java
           Attribute = Java.type("com.tremolosecurity.saml.Attribute");
           ProxyConstants = Java.type("com.tremolosecurity.proxy.util.ProxyConstants");
@@ -25,19 +195,16 @@ spec:
           IOUtils = Java.type("org.apache.commons.io.IOUtils");
           AlgorithmIdentifiers = Java.type("org.jose4j.jws.AlgorithmIdentifiers");
           JcaPEMKeyConverter = Java.type("org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter");
-          HttpPost = Java.type("org.apache.http.client.methods.HttpPost");
           HttpGet = Java.type("org.apache.http.client.methods.HttpGet");
           ArrayList = Java.type("java.util.ArrayList");
           NameValuePair = Java.type("org.apache.http.NameValuePair");
           BasicNameValuePair = Java.type("org.apache.http.message.BasicNameValuePair");
           UrlEncodedFormEntity = Java.type("org.apache.http.client.entity.UrlEncodedFormEntity");
           EntityUtils = Java.type("org.apache.http.util.EntityUtils");
-          BasicHeader = Java.type("org.apache.http.message.BasicHeader");
           
 
           // get the session data needed
           var session = request.getSession();
-          
           
           
           var holder = request.getAttribute(ProxyConstants.AUTOIDM_CFG);
@@ -71,9 +238,6 @@ spec:
             var secret = JSON.parse(jsonData);
             var decoded = JSUtils.base64Decode(secret.data.key);
 
-            
-
-
             var pemParser = new PEMParser(new InputStreamReader(IOUtils.toInputStream(decoded)));
             var converter = new JcaPEMKeyConverter();
             var sigKey = converter.	getPrivateKey(pemParser.readObject());
@@ -103,31 +267,36 @@ spec:
                 return;
             }
 
-            
-            
             var accessToken = JSON.parse(jsonResp)["access_token"];
-            
 
-            var listMembersUrl = "https://admin.googleapis.com/admin/directory/v1/groups?userKey=" + mail;
+            var groups = new Set();
+            var pending = [mail]
 
-            httpGet = new HttpGet(listMembersUrl);
-            httpGet.addHeader(new BasicHeader("Authorization","Bearer " + accessToken));
+            while (pending.length > 0) {
 
-            resp = con.getHttp().execute(httpGet);
+                // Fetch all at once for batching
+                const found_groups = getGroups(con.getHttp(), accessToken, pending);
+                pending = [];
 
-            jsonResp = EntityUtils.toString(resp.getEntity());
-            
-            
-            if (resp.getStatusLine().getStatusCode() != 200) {
-                System.out.println("Unable to retrieve groups: " + resp.getStatusLine().getStatusCode() + " / " + jsonResp);
-                as.setExecuted(true);
-                as.setSuccess(false);
-                holder.getConfig().getAuthManager().nextAuth(request, response,session,false);
-                return;
+                found_groups.forEach(data => {
+
+                    var group_name = data.name;
+
+                    // Skip groups that have already been seen
+                    if (!groups.has(group_name)) {
+                        groups.add(group_name);
+                        pending.push(data.email)
+                    }
+
+                })
+
+                {{ if not .Values.google_ws.include_transitive_groups }}
+                // If transitive groups are not enabled, skip after fetching
+                // direct groups (first iteration)
+                break;
+                {{ end }}
+
             }
-            
-            
-            var groupData = JSON.parse(jsonResp);
 
             // remove the old groups, then add the ones from the lookup to AzureAD
             var memberof = ac.getAuthInfo().getAttribs().get("memberOf");
@@ -137,9 +306,7 @@ spec:
             }
             memberof.getValues().clear();
 
-            for (var i = 0;i<groupData.groups.length;i++) {
-              memberof.getValues().add(groupData.groups[i].name);
-            }
+            groups.forEach(group => memberof.getValues().add(group));
 
           } finally {
             if (con != null) {
@@ -147,14 +314,6 @@ spec:
               con.getBcm().close()
             }
           }
-
-
-          
-          
-          
-          
-          
-          
 
           as.setExecuted(true);
           as.setSuccess(true);
