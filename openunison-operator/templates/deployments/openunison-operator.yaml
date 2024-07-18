@@ -206,7 +206,7 @@ spec:
             name: kerb-config
         - name: krb-keytab
           secret:
-            secretName: kerb-keytab
+            secretName: kerb-keytab{{ .Values.openunison.secret_ext }}
         {{ end }}
         {{ end }}
       {{ $length := len .Values.services.node_selectors }}

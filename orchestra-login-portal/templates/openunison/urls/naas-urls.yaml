@@ -1,5 +1,5 @@
 {{ if .Values.openunison.enable_provisioning }}
-{{ if .Values.openunison.enable_activemq }}
+{{ if .Values.openunison.amq.enabled }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: PortalUrl

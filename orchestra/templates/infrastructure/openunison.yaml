@@ -71,7 +71,7 @@ spec:
         {{ range $keyconfig := .Values.openunison.keys}}
         - name: {{ $keyconfig.name }}
           import_into_ks: {{ $keyconfig.import_into_ks }}
-          tls_secret_name: {{ $keyconfig.tls_secret_name }}
+          tls_secret_name: {{ $keyconfig.tls_secret_name }}{{ .Values.openunison.secret_ext }}
           {{ if $keyconfig.create_data }}
           create_data:
             ca_cert: {{$keyconfig.create_data.ca_cert}}
@@ -179,6 +179,7 @@ spec:
             subject_alternative_names: []
           import_into_ks: keypair
           name: unison-saml2-rp-sig
+          tls_secret_name: unison-saml2-rp-sig{{ .Values.openunison.secret_ext }}
         - create_data:
             ca_cert: false
             key_size: 2048
@@ -187,60 +188,58 @@ spec:
             subject_alternative_names: []
           import_into_ks: keypair
           name: remote-k8s-idp-sig
+          tls_secret_name: remote-k8s-idp-sig{{ .Values.openunison.secret_ext }}
         {{ if .Values.openunison.enable_provisioning }}
         - create_data:
-            {{ if .Values.certs.use_k8s_cm }}
             ca_cert: false
-            {{ else }}
-            ca_cert: true
-            {{ end }}
             key_size: 2048
             server_name: amq.openunison.svc
             sign_by_k8s_ca: {{ .Values.certs.use_k8s_cm }}
-            {{ if .Values.openunison.activemq_ha }}
+            {{ if .Values.openunison.amq.ha }}
             subject_alternative_names:
             - amq-backup.openunison.svc
-            {{ if .Values.openunison.activemq_cert_hosts }}
-            {{ range $host := .Values.openunison.activemq_cert_hosts }}
+            {{ if .Values.openunison.amq.cert_host }}
+            {{ range $host := .Values.openunison.amq.cert_host }}
             - {{ $host }}
+            {{ end }}
             {{ end }}
             {{ else }}
             subject_alternative_names: []
             {{ end }}
-            {{ if .Values.openunison.activemq_external_server_cert }}
+            {{ if .Values.openunison.amq.external_server_cert }}
             secret_info:
                 cert_name: tls.crt
                 key_name: tls.key
             {{ end }}
           {{ if .Values.certs.use_k8s_cm  }}
           import_into_ks: "none"
-          {{ else if .Values.openunison.activemq_external_server_cert }}
+          {{ else if .Values.openunison.amq.external_server_cert }}
           import_into_ks: "certificate"
           {{ else }}
           import_into_ks: "certificate"
           {{ end }}
           name: amq-server
-          {{ if .Values.openunison.activemq_external_server_cert }}
+          {{ if .Values.openunison.amq.external_server_cert }}
           replace_if_exists: false
           {{ else }}
           replace_if_exists: true
           {{ end }}
-          tls_secret_name: {{ .Release.Name }}-amq-server
+          tls_secret_name: {{ .Release.Name }}-amq-server{{ .Values.openunison.secret_ext }}
         - create_data:
             ca_cert: true
             key_size: 2048
             server_name: amq-client
             sign_by_k8s_ca: false
             subject_alternative_names: []
-            {{ if .Values.openunison.activemq_external_client_cert }}
+            {{ if .Values.openunison.amq.external_client_cert }}
             secret_info:
                 cert_name: tls.crt
                 key_name: tls.key
             {{ end }}
           import_into_ks: keypair
           name: amq-client
-          tls_secret_name: {{ .Release.Name }}-amq-client{{ end }}
-          {{ if .Values.openunison.activemq_external_client_cert }}
+          tls_secret_name: {{ .Release.Name }}-amq-client{{ .Values.openunison.secret_ext }}
+          {{ if .Values.openunison.amq.external_client_cert }}
           replace_if_exists: false
           {{ else }}
           replace_if_exists: true
@@ -278,6 +277,12 @@ spec:
     {{ end }}
     - name: K8S_CLUSTER_NAME
       value: {{ .Values.k8s_cluster_name }}
+    {{ if .Values.openunison.make_secrets_readonly }}
+    - name: openunison.static-secret.skip_write
+      value: "true"
+    - name: openunison.static-secret.suffix
+      value: "{{ .Values.openunison.secret_ext }}"
+    {{ end }}
 
 {{ if .Values.openunison.enable_provisioning }}
     - name: OPENUNISON_PROVISIONING_ENABLED

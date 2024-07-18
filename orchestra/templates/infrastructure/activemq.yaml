@@ -1,4 +1,4 @@
-{{ if and .Values.openunison.enable_provisioning .Values.openunison.enable_activemq }}
+{{ if and .Values.openunison.enable_provisioning .Values.openunison.amq.enabled }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -41,7 +41,6 @@ spec:
         runAsUser: 431
         runAsGroup: 433
       {{ end }}
-
       containers:
       - env:
         - name: ACTIVEMQ_DEBUG_OPTS
@@ -77,6 +76,13 @@ spec:
             secretKeyRef:
               name: amq-env-secrets-{{ .Release.Name  }}
               key: TLS_KS_PWD
+        {{ if .Values.openunison.amq.use_token }}
+        - name: AMQ_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: orchestra-secrets-source{{ .Values.openunison.secret_ext }}
+              key: activemq.token
+        {{ end }}
         {{ if .Values.kerberos  }}
         {{ if .Values.kerberos.enabled }}
         - name: KRB5_CONFIG
@@ -86,6 +92,10 @@ spec:
         - name: KRB5CCNAME
           value: /dev/shm/ccache
         {{ end }}
+        {{ end }}
+        {{ if .Values.openunison.amq.use_token }}
+        command: 
+        - /usr/bin/start_amq.sh
         {{ end }}
         securityContext:
           allowPrivilegeEscalation: false
@@ -143,7 +153,11 @@ spec:
           mountPath: "/usr/local/activemq/data"
         - name: jetty-tmp
           mountPath: "/usr/local/activemq/tmp"
-        {{ if  .Values.openunison.activemq_use_pvc }}
+        {{ if  .Values.openunison.amq.use_token }}
+        - name: local-credentials
+          mountPath: /usr/local/activemq/conf
+        {{ end }}
+        {{ if  .Values.openunison.amq.pvc.enabled }}
         - name: kahadb
           mountPath: /activemq-data
         {{ end }}
@@ -244,10 +258,14 @@ spec:
         emptyDir: {}
       - name: jetty-tmp
         emptyDir: {}
+      {{ if .Values.openunison.amq.use_token }}
+      - name: local-credentials
+        emptyDir: {}
+      {{ end }}
       - name: config-volume
         configMap:
           name: activemq-config-{{ .Release.Name }}
-      {{ if .Values.openunison.activemq_use_pvc}}
+      {{ if .Values.openunison.amq.pvc.enabled}}
       - name: kahadb
         persistentVolumeClaim:
           claimName: activemq-kahadb
@@ -259,7 +277,7 @@ spec:
           name: kerb-config
       - name: krb-keytab
         secret:
-          secretName: kerb-keytab
+          secretName: kerb-keytab{{ .Values.openunison.secret_ext }}
       {{ end }}
       {{ end }}
       tolerations:
@@ -319,8 +337,11 @@ spec:
   sessionAffinityConfig:
     clientIP:
       timeoutSeconds: 10800
-  type: {{ .Values.openunison.activemq_service_type | default "ClusterIP" }}
-{{ if .Values.openunison.activemq_ha }}
+  type: {{ .Values.openunison.amq.service_type | default "ClusterIP" }}
+  {{ if .Values.openunison.amq.primary_load_balancer_ip }}
+  loadBalancerIP: {{ .Values.openunison.amq.primary_load_balancer_ip }}
+  {{ end }}
+{{ if .Values.openunison.amq.ha }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -399,6 +420,13 @@ spec:
             secretKeyRef:
               name: amq-env-secrets-{{ .Release.Name  }}
               key: TLS_KS_PWD
+        {{ if .Values.openunison.amq.use_token }}
+        - name: AMQ_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: orchestra-secrets-source{{ .Values.openunison.secret_ext }}
+              key: activemq.token
+        {{ end }}
         {{ if .Values.kerberos  }}
         {{ if .Values.kerberos.enabled }}
         - name: KRB5_CONFIG
@@ -408,6 +436,10 @@ spec:
         - name: KRB5CCNAME
           value: /dev/shm/ccache
         {{ end }}
+        {{ end }}
+        {{ if .Values.openunison.amq.use_token }}
+        command: 
+        - /usr/bin/start_amq.sh
         {{ end }}
         securityContext:
           allowPrivilegeEscalation: false
@@ -465,9 +497,13 @@ spec:
           mountPath: "/usr/local/activemq/data"
         - name: jetty-tmp
           mountPath: "/usr/local/activemq/tmp"
-        {{ if  .Values.openunison.activemq_use_pvc }}
+        {{ if  .Values.openunison.amq.pvc.enabled }}
         - name: kahadb
           mountPath: /activemq-data
+        {{ end }}
+        {{ if  .Values.openunison.amq.use_token }}
+        - name: local-credentials
+          mountPath: /usr/local/activemq/conf
         {{ end }}
         {{ if .Values.kerberos  }}
         {{ if .Values.kerberos.enabled }}
@@ -566,10 +602,14 @@ spec:
         emptyDir: {}
       - name: jetty-tmp
         emptyDir: {}
+      {{ if .Values.openunison.amq.use_token }}
+      - name: local-credentials
+        emptyDir: {}
+      {{ end }}
       - name: config-volume
         configMap:
           name: activemq-config-{{ .Release.Name }}
-      {{ if .Values.openunison.activemq_use_pvc}}
+      {{ if .Values.openunison.amq.pvc.enabled}}
       - name: kahadb
         persistentVolumeClaim:
           claimName: activemq-kahadb
@@ -581,7 +621,7 @@ spec:
           name: kerb-config
       - name: krb-keytab
         secret:
-          secretName: kerb-keytab
+          secretName: kerb-keytab{{ .Values.openunison.secret_ext }}
       {{ end }}
       {{ end }}
       tolerations:
@@ -641,6 +681,9 @@ spec:
   sessionAffinityConfig:
     clientIP:
       timeoutSeconds: 10800
-  type: {{ .Values.openunison.activemq_service_type | default "ClusterIP" }}
+  type: {{ .Values.openunison.amq.service_type | default "ClusterIP" }}
+  {{ if .Values.openunison.amq.backup_load_balancer_ip }}
+  loadBalancerIP: {{ .Values.openunison.amq.backup_load_balancer_ip }}
+  {{ end }}
 {{ end }}
 {{ end }}

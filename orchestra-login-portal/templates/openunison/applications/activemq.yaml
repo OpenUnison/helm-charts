@@ -1,4 +1,4 @@
-{{ if and .Values.openunison.enable_provisioning .Values.openunison.enable_activemq }}
+{{ if and .Values.openunison.enable_provisioning .Values.openunison.amq.enabled }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Application
