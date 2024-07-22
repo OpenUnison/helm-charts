@@ -115,6 +115,7 @@ operator:
       cpu: 1.0
 
 openunison:
+  secret_ext: ""
   apps: []
   imagePullPolicy: Always
   replicas: 1
@@ -129,7 +130,7 @@ openunison:
     refresh_token:
       grace_period_millis: 0
   html:
-    image: ghcr.io/openunison/openunison-k8s-html:1.0.0
+    image: ghcr.io/openunison/openunison-k8s-react:1.0.0
     legacy: false
     theme:
       startPage: front-page

@@ -1,5 +1,5 @@
-{{ if and .Values.openunison.enable_provisioning .Values.openunison.enable_activemq }}
-{{ if not .Values.openunison.activemq_use_pvc }}
+{{ if or (and .Values.openunison.enable_provisioning .Values.openunison.amq.enabled) (and .Values.openunison.enable_provisioning .Values.openunison.enable_activemq ) }}
+{{ if not (or .Values.openunison.amq.pvc.enabled .Values.openunison.activemq_use_pvc) }}
 {{ if eq (substr 0 14 .Values.database.url)  "jdbc:sqlserver"}}
 apiVersion: v1
 kind: ConfigMap
@@ -149,10 +149,10 @@ data:
                 <bean xmlns="http://www.springframework.org/schema/beans" class="org.apache.activemq.hooks.SpringContextHook" />
             </shutdownHooks>
                 <networkConnectors>
-{{ if .Values.openunison.activemq_remote }}
+{{ if .Values.openunison.amq.remote_brokers }}
 {{ $remote_queue_num := 0 }}
 {{ $remote_queues := splitList "," .Values.openunison.non_secret_data.K8S_DR_QUEUES }}
-{{ range $host := .Values.openunison.activemq_remote}}
+{{ range $host := .Values.openunison.amq.remote_brokers}}
                     <networkConnector  uri="static:(ssl://{{ $host }})" >
                         <dynamicallyIncludedDestinations>
                             <queue physicalName="{{ index $remote_queues $remote_queue_num }}" />
@@ -300,7 +300,7 @@ data:
                     <bean id="SecureConnector" class="org.eclipse.jetty.server.ServerConnector">
                         <constructor-arg ref="Server" />
                         <constructor-arg>
-                            <bean id="handlers" class="org.eclipse.jetty.util.ssl.SslContextFactory">
+                            <bean id="handlers" class="org.eclipse.jetty.util.ssl.SslContextFactory$Server">
 
                                 <property name="keyStorePath" value="/etc/activemq-secrets/amq.p12" />
                                 <property name="keyStorePassword" value="${TLS_KS_PWD}" />

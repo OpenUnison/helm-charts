@@ -1,5 +1,6 @@
-{{ if and .Values.openunison.enable_provisioning .Values.openunison.enable_activemq }}
-{{ if .Values.openunison.activemq_use_pvc }}
+{{ if or (and .Values.openunison.enable_provisioning .Values.openunison.amq.enabled) (and .Values.openunison.enable_provisioning .Values.openunison.enable_activemq ) }}
+{{ if or .Values.openunison.amq.pvc.enabled .Values.openunison.activemq_use_pvc }}
+{{- $root := . -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -45,16 +46,26 @@ data:
 
 
         <!-- Allows accessing the server log -->
-            <bean id="logQuery" class="io.fabric8.insight.log.log4j.Log4jLogQuery"
+            <!-- <bean id="logQuery" class="io.fabric8.insight.log.log4j.Log4jLogQuery"
                 lazy-init="false" scope="singleton"
                 init-method="start" destroy-method="stop">
-            </bean>
+            </bean> -->
 
             <!--
                 The <broker> element is used to configure the ActiveMQ broker.
             -->
             <broker xmlns="http://activemq.apache.org/schema/core" brokerName="localhost" dataDirectory="${activemq.data}">
-
+                {{ if .Values.openunison.amq.use_token }}
+                <plugins>
+                    <simpleAuthenticationPlugin anonymousAccessAllowed="false">
+                        <users>
+                            <authenticationUser username="openunison" password="${AMQ_TOKEN}" groups="users,admins"/>
+                            <authenticationUser username="system" password="${AMQ_TOKEN}" groups="users,admins"/>
+                            
+                        </users>
+                    </simpleAuthenticationPlugin>
+                </plugins>
+                {{ end }}
                 <destinationPolicy>
                     <policyMap>
                     <policyEntries>
@@ -112,10 +123,18 @@ data:
                             <memoryUsage percentOfJvmHeap="70" />
                         </memoryUsage>
                         <storeUsage>
-                            <storeUsage limit="{{ .Values.openunison.activemq_pvc_size | default "1G" }}"/>
+                            {{ if .Values.openunison.activemq_pvc_size }}
+                            <storeUsage limit="{{ .Values.openunison.activemq_pvc_size }}"/>
+                            {{ else }}
+                            <storeUsage limit="{{ .Values.openunison.amq.pvc.size | default "1G" }}"/>
+                            {{ end }}
                         </storeUsage>
                         <tempUsage>
-                            <tempUsage limit="{{ .Values.openunison.activemq_pvc_size | default "1G" }}"/>
+                            {{ if .Values.openunison.activemq_pvc_size }}
+                            <tempUsage limit="{{ .Values.openunison.activemq_pvc_size }}"/>
+                            {{ else }}
+                            <tempUsage limit="{{ .Values.openunison.amq.pvc.size | default "1G" }}"/>
+                            {{ end }}
                         </tempUsage>
                     </systemUsage>
                 </systemUsage>
@@ -133,7 +152,12 @@ data:
                     </sslContext>
                 <transportConnectors>
                     <!-- DOS protection, limit concurrent connections to 1000 and frame size to 100MB -->
+                    {{ if .Values.openunison.amq.use_token }}
+                    <transportConnector name="openwire" uri="ssl://0.0.0.0:61616?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+                    {{ else }}
                     <transportConnector name="openwire" uri="ssl://0.0.0.0:61616?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600&amp;needClientAuth=true"/>
+                    {{ end }}
+                    
                 </transportConnectors>
 
                 <!-- destroy the spring context on shutdown to stop jetty -->
@@ -142,14 +166,15 @@ data:
                 </shutdownHooks>
 
                 <networkConnectors>
-{{ if .Values.openunison.activemq_remote }}
+{{ if .Values.openunison.amq.remote_brokers }}
 {{ $remote_queue_num := 0 }}
 {{ $remote_queues := splitList "," .Values.openunison.non_secret_data.K8S_DR_QUEUES }}
-{{ range $host := .Values.openunison.activemq_remote}}
-                    <networkConnector  uri="static:(ssl://{{ $host }})" >
+{{ range $host := .Values.openunison.amq.remote_brokers}}
+                    <networkConnector {{ if $root.Values.openunison.amq.use_token}}userName="openunison" password="${AMQ_TOKEN}"{{ end }}    uri="static:(ssl://{{ $host }})" >
                         <dynamicallyIncludedDestinations>
-                            <queue physicalName="{{ index $remote_queues $remote_queue_num }}" />
-                            {{ $remote_queue_num := add1 $remote_queue_num }}
+                            {{ range $remote_queue_name := $remote_queues }}
+                            <queue physicalName="{{ $remote_queue_name }}" />
+                            {{ end }}
                         </dynamicallyIncludedDestinations>
                         <excludedDestinations>
                             <queue physicalName="ActiveMQ.DLQ" />
@@ -294,7 +319,7 @@ data:
                         <bean id="SecureConnector" class="org.eclipse.jetty.server.ServerConnector">
                             <constructor-arg ref="Server" />
                             <constructor-arg>
-                                <bean id="handlers" class="org.eclipse.jetty.util.ssl.SslContextFactory">
+                                <bean id="handlers" class="org.eclipse.jetty.util.ssl.SslContextFactory$Server">
 
                                     <property name="keyStorePath" value="/etc/activemq-secrets/amq.p12" />
                                     <property name="keyStorePassword" value="${TLS_KS_PWD}" />
@@ -304,7 +329,6 @@ data:
                                     <property name="trustStorePassword" value="${TLS_KS_PWD}" />
                                     <property name="trustStoreType" value="pkcs12" />
                                     <property name="needClientAuth" value="true" />
-                                    
                                     <property name="endpointIdentificationAlgorithm">
                                         <null></null>
                                     </property>
@@ -343,11 +367,17 @@ metadata:
 spec:
   {{ if .Values.openunison.activemq_storageclass }}
   storageClassName: {{ .Values.openunison.activemq_storageclass }}
+  {{ else if .Values.openunison.amq.pvc.storageclass }}
+  storageClassName: {{ .Values.openunison.amq.pvc.storageclass }}
   {{ end }}
   accessModes:
-    - {{ .Values.openunison.activemq_accessmode | default "ReadWriteOnce" }}
+    - {{ .Values.openunison.amq.pvc.accessmode | default "ReadWriteOnce" }}
   resources:
     requests:
-      storage: {{ .Values.openunison.activemq_pvc_size | default "1G" }}
+      {{ if .Values.openunison.activemq_pvc_size }}
+      storage: {{ .Values.openunison.activemq_pvc_size }}
+      {{ else }}
+      storage: {{ .Values.openunison.amq.pvc.size | default "1G" }}
+      {{ end }}
 {{ end }}
 {{ end }}

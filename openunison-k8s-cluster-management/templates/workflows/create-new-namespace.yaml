@@ -221,7 +221,7 @@ spec:
                  attributes: ["uid"]
               {{ end }}
 
-           {{ if .Values.openunison.naas.workflows.new_namespace.pre_run_workflow }}
+           {{ if .Values.openunison.naas.workflows.new_namespace.pre_provision_workflow }}
            - taskType: callWorkflow
              name: {{ .Values.openunison.naas.workflows.new_namespace.pre_provision_workflow }}
            {{ end }}
