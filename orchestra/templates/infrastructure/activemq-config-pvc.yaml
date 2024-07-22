@@ -1,5 +1,5 @@
-{{ if and .Values.openunison.enable_provisioning .Values.openunison.amq.enabled }}
-{{ if .Values.openunison.amq.pvc.enabled }}
+{{ if or (and .Values.openunison.enable_provisioning .Values.openunison.amq.enabled) (and .Values.openunison.enable_provisioning .Values.openunison.enable_activemq ) }}
+{{ if or .Values.openunison.amq.pvc.enabled .Values.openunison.activemq_use_pvc }}
 {{- $root := . -}}
 apiVersion: v1
 kind: ConfigMap
@@ -123,10 +123,18 @@ data:
                             <memoryUsage percentOfJvmHeap="70" />
                         </memoryUsage>
                         <storeUsage>
+                            {{ if .Values.openunison.activemq_pvc_size }}
+                            <storeUsage limit="{{ .Values.openunison.activemq_pvc_size }}"/>
+                            {{ else }}
                             <storeUsage limit="{{ .Values.openunison.amq.pvc.size | default "1G" }}"/>
+                            {{ end }}
                         </storeUsage>
                         <tempUsage>
+                            {{ if .Values.openunison.activemq_pvc_size }}
+                            <tempUsage limit="{{ .Values.openunison.activemq_pvc_size }}"/>
+                            {{ else }}
                             <tempUsage limit="{{ .Values.openunison.amq.pvc.size | default "1G" }}"/>
+                            {{ end }}
                         </tempUsage>
                     </systemUsage>
                 </systemUsage>
@@ -357,13 +365,19 @@ metadata:
   name: activemq-kahadb
   namespace: {{ .Release.Namespace }}
 spec:
-  {{ if .Values.openunison.amq.pvc.storageclass }}
+  {{ if .Values.openunison.activemq_storageclass }}
+  storageClassName: {{ .Values.openunison.activemq_storageclass }}
+  {{ else if .Values.openunison.amq.pvc.storageclass }}
   storageClassName: {{ .Values.openunison.amq.pvc.storageclass }}
   {{ end }}
   accessModes:
     - {{ .Values.openunison.amq.pvc.accessmode | default "ReadWriteOnce" }}
   resources:
     requests:
+      {{ if .Values.openunison.activemq_pvc_size }}
+      storage: {{ .Values.openunison.activemq_pvc_size }}
+      {{ else }}
       storage: {{ .Values.openunison.amq.pvc.size | default "1G" }}
+      {{ end }}
 {{ end }}
 {{ end }}

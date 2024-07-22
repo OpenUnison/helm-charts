@@ -1,5 +1,5 @@
-{{ if and .Values.openunison.enable_provisioning .Values.openunison.amq.enabled }}
-{{ if not .Values.openunison.amq.pvc.enabled }}
+{{ if or (and .Values.openunison.enable_provisioning .Values.openunison.amq.enabled) (and .Values.openunison.enable_provisioning .Values.openunison.enable_activemq ) }}
+{{ if not (or .Values.openunison.amq.pvc.enabled .Values.openunison.activemq_use_pvc) }}
 {{ if eq (substr 0 14 .Values.database.url)  "jdbc:sqlserver"}}
 apiVersion: v1
 kind: ConfigMap

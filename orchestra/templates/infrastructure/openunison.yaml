@@ -71,7 +71,7 @@ spec:
         {{ range $keyconfig := .Values.openunison.keys}}
         - name: {{ $keyconfig.name }}
           import_into_ks: {{ $keyconfig.import_into_ks }}
-          tls_secret_name: {{ $keyconfig.tls_secret_name }}{{ .Values.openunison.secret_ext }}
+          tls_secret_name: {{ $keyconfig.tls_secret_name }}{{ $root.Values.openunison.secret_ext }}
           {{ if $keyconfig.create_data }}
           create_data:
             ca_cert: {{$keyconfig.create_data.ca_cert}}

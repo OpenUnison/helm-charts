@@ -1,4 +1,4 @@
-{{ if and .Values.openunison.enable_provisioning .Values.openunison.amq.enabled }}
+{{ if or (and .Values.openunison.enable_provisioning .Values.openunison.amq.enabled) (and .Values.openunison.enable_provisioning .Values.openunison.enable_activemq ) }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -157,7 +157,7 @@ spec:
         - name: local-credentials
           mountPath: /usr/local/activemq/conf
         {{ end }}
-        {{ if  .Values.openunison.amq.pvc.enabled }}
+        {{ if  or .Values.openunison.amq.pvc.enabled .Values.openunison.activemq_use_pvc }}
         - name: kahadb
           mountPath: /activemq-data
         {{ end }}
@@ -265,7 +265,7 @@ spec:
       - name: config-volume
         configMap:
           name: activemq-config-{{ .Release.Name }}
-      {{ if .Values.openunison.amq.pvc.enabled}}
+      {{ if or .Values.openunison.amq.pvc.enabled .Values.openunison.activemq_use_pvc}}
       - name: kahadb
         persistentVolumeClaim:
           claimName: activemq-kahadb
@@ -497,7 +497,7 @@ spec:
           mountPath: "/usr/local/activemq/data"
         - name: jetty-tmp
           mountPath: "/usr/local/activemq/tmp"
-        {{ if  .Values.openunison.amq.pvc.enabled }}
+        {{ if  or .Values.openunison.amq.pvc.enabled .Values.openunison.activemq_use_pvc }}
         - name: kahadb
           mountPath: /activemq-data
         {{ end }}
@@ -609,7 +609,7 @@ spec:
       - name: config-volume
         configMap:
           name: activemq-config-{{ .Release.Name }}
-      {{ if .Values.openunison.amq.pvc.enabled}}
+      {{ if or .Values.openunison.amq.pvc.enabled .Values.openunison.activemq_use_pvc}}
       - name: kahadb
         persistentVolumeClaim:
           claimName: activemq-kahadb
