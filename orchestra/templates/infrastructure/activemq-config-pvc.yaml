@@ -167,12 +167,19 @@ data:
 
                 <networkConnectors>
 {{ if .Values.openunison.amq.remote_brokers }}
+
 {{ $remote_queue_num := 0 }}
 {{ $remote_queues := splitList "," .Values.openunison.non_secret_data.K8S_DR_QUEUES }}
+{{ $remote_extra_queues := splitList "," .Values.openunison.non_secret_data.K8S_REMOTE_QUEUES }}
+
 {{ range $host := .Values.openunison.amq.remote_brokers}}
-                    <networkConnector {{ if $root.Values.openunison.amq.use_token}}userName="openunison" password="${AMQ_TOKEN}"{{ end }}    uri="static:(ssl://{{ $host }})" >
+                    <networkConnector {{ if $root.Values.openunison.amq.use_token}}userName="openunison" password="${AMQ_TOKEN}"{{ end }}  name="{{ $host }}"  uri="static:(ssl://{{ $host }})" >
                         <dynamicallyIncludedDestinations>
                             {{ range $remote_queue_name := $remote_queues }}
+                            <queue physicalName="{{ $remote_queue_name }}" />
+                            {{ end }}
+
+                            {{ range $remote_queue_name := $remote_extra_queues }}
                             <queue physicalName="{{ $remote_queue_name }}" />
                             {{ end }}
                         </dynamicallyIncludedDestinations>
@@ -181,6 +188,10 @@ data:
                         </excludedDestinations>
                     </networkConnector>
 {{ end }}
+
+
+
+
 {{ end }}
                 </networkConnectors>
 
