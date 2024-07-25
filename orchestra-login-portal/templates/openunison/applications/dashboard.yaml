@@ -1,4 +1,579 @@
 {{ if .Values.dashboard.enabled }}
+{{ if .Values.dashboard.new  }}
+{{ if .Values.dashboard.proxy }}
+apiVersion: openunison.tremolo.io/v2
+{{ else }}
+apiVersion: openunison.tremolo.io/v1
+{{ end }}
+kind: Application
+metadata:
+  name: dashboard
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-applications
+    app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+spec:
+  azTimeoutMillis: 3000
+  isApp: true
+  urls:
+  # URL 1 - Auth login
+  # - hosts:
+  #   - "{{ .Values.network.dashboard_host }}"
+  #   filterChain: 
+  #   - className: com.tremolosecurity.proxy.filters.SetNoCacheHeaders
+  #     params: {}
+  #   {{ if .Values.dashboard.require_session }}
+  #   - className: com.tremolosecurity.proxy.filters.AzFilter
+  #     params:
+  #       rules:
+  #       - "custom;require-session"
+  #       azFail: "force-logout"
+  #   {{ end }}
+  #   {{ if .Values.enable_impersonation }}
+  #   - className: com.tremolosecurity.proxy.filters.K8sInjectImpersonation
+  #     params:
+  #       targetName: k8s
+  #       userNameAttribute: sub
+  #       useLdapGroups: "false"
+  #       groupAttribute: groups
+  #   {{ end }}
+  #   uri: "/auth/api/v1/login"
+  #   proxyTo: http://{{ .Values.dashboard.auth_service_name }}.{{ .Values.dashboard.namespace }}.svc:8000${fullURI}
+  #   {{ if .Values.dashboard.proxy }}
+  #   proxyConfiguration:
+  #     connectionTimeoutMillis: {{ .Values.dashboard.proxy.connectionTimeoutMillis | default 0}}
+  #     requestTimeoutMillis: {{ .Values.dashboard.proxy.requestTimeoutMillis | default 0}}
+  #     socketTimeoutMillis: {{ .Values.dashboard.proxy.socketTimeoutMillis | default 0}}
+  #   {{ end }}
+  #   authChain: k8s-db-oidc
+  #   overrideHost: true
+  #   overrideReferer: true
+  #   azRules:
+  #   {{ if .Values.openunison.enable_provisioning }}
+  #   {{ if .Values.openunison.naas.groups.external.enabled }}
+  #   - constraint: (groups=k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.external.suffix }})
+  #     scope: filter
+  #   {{ end }}
+  #   {{ if .Values.openunison.naas.groups.internal.enabled }}
+  #   - constraint: (groups=k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }})
+  #     scope: filter
+  #   {{ end }}
+  #   {{ range $role := .Values.openunison.naas.groups.default }}
+  #   - constraint: (groups=k8s-namespace-{{ $role.name }}-k8s-*)
+  #     scope: filter
+  #   {{ end }}
+  #   {{ range $role := .Values.openunison.naas.groups.roles }}
+  #   - constraint: (groups=k8s-namespace-{{ $role.name }}-k8s-*)
+  #     scope: filter
+  #   {{ end }}
+  #   {{ else }}
+  #   {{ $length := len .Values.openunison.az_groups }}
+  #   {{ if eq $length 0 }}
+  #   - scope: dn
+  #     constraint: o=Tremolo
+  #   {{ else }}
+  #   {{ range $az_group := .Values.openunison.az_groups }}
+  #   - scope: filter
+  #     constraint: (groups={{ $az_group }})
+  #   {{ end }}
+  #   {{ end }}
+  #   {{ end }}  
+    
+  #   results:
+  #   {{ if not .Values.enable_impersonation }}
+  #     azSuccess: oauth2bearer
+  #   {{ end  }}
+  #     azFail: default-login-failure
+  #     auFail: default-login-failure
+  # URL 2 - Auth CSRF
+  # - hosts:
+  #   - "{{ .Values.network.dashboard_host }}"
+  #   filterChain: 
+  #   - className: com.tremolosecurity.proxy.filters.SetNoCacheHeaders
+  #     params: {}
+  #   {{ if .Values.dashboard.require_session }}
+  #   - className: com.tremolosecurity.proxy.filters.AzFilter
+  #     params:
+  #       rules:
+  #       - "custom;require-session"
+  #       azFail: "force-logout"
+  #   {{ end }}
+  #   {{ if .Values.enable_impersonation }}
+  #   - className: com.tremolosecurity.proxy.filters.K8sInjectImpersonation
+  #     params:
+  #       targetName: k8s
+  #       userNameAttribute: sub
+  #       useLdapGroups: "false"
+  #       groupAttribute: groups
+  #   {{ end }}
+  #   uri: "/api/v1/csrftoken/login"
+  #   proxyTo: http://{{ .Values.dashboard.auth_service_name }}.{{ .Values.dashboard.namespace }}.svc:8000${fullURI}
+  #   {{ if .Values.dashboard.proxy }}
+  #   proxyConfiguration:
+  #     connectionTimeoutMillis: {{ .Values.dashboard.proxy.connectionTimeoutMillis | default 0}}
+  #     requestTimeoutMillis: {{ .Values.dashboard.proxy.requestTimeoutMillis | default 0}}
+  #     socketTimeoutMillis: {{ .Values.dashboard.proxy.socketTimeoutMillis | default 0}}
+  #   {{ end }}
+  #   authChain: k8s-db-oidc
+  #   overrideHost: true
+  #   overrideReferer: true
+  #   azRules:
+  #   {{ if .Values.openunison.enable_provisioning }}
+  #   {{ if .Values.openunison.naas.groups.external.enabled }}
+  #   - constraint: (groups=k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.external.suffix }})
+  #     scope: filter
+  #   {{ end }}
+  #   {{ if .Values.openunison.naas.groups.internal.enabled }}
+  #   - constraint: (groups=k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }})
+  #     scope: filter
+  #   {{ end }}
+  #   {{ range $role := .Values.openunison.naas.groups.default }}
+  #   - constraint: (groups=k8s-namespace-{{ $role.name }}-k8s-*)
+  #     scope: filter
+  #   {{ end }}
+  #   {{ range $role := .Values.openunison.naas.groups.roles }}
+  #   - constraint: (groups=k8s-namespace-{{ $role.name }}-k8s-*)
+  #     scope: filter
+  #   {{ end }}
+  #   {{ else }}
+  #   {{ $length := len .Values.openunison.az_groups }}
+  #   {{ if eq $length 0 }}
+  #   - scope: dn
+  #     constraint: o=Tremolo
+  #   {{ else }}
+  #   {{ range $az_group := .Values.openunison.az_groups }}
+  #   - scope: filter
+  #     constraint: (groups={{ $az_group }})
+  #   {{ end }}
+  #   {{ end }}
+  #   {{ end }}  
+    
+  #   results:
+  #   {{ if not .Values.enable_impersonation }}
+  #     azSuccess: oauth2bearer
+  #   {{ end  }}
+  #     azFail: default-login-failure
+  #     auFail: default-login-failure
+
+  # URL 3 - Auth Me
+  # Since the only thing this does is tell the dashbaord you're authenticated, and the underlying container doesn't support TLS, we'll do this ourselves
+  - hosts:
+    - "{{ .Values.network.dashboard_host }}"
+    filterChain: 
+    - className: com.tremolosecurity.proxy.filters.SetNoCacheHeaders
+      params: {}
+    {{ if .Values.dashboard.require_session }}
+    - className: com.tremolosecurity.proxy.filters.AzFilter
+      params:
+        rules:
+        - "custom;require-session"
+        azFail: "force-logout"
+    {{ end }}
+    {{ if .Values.enable_impersonation }}
+    - className: com.tremolosecurity.proxy.filters.K8sInjectImpersonation
+      params:
+        targetName: k8s
+        userNameAttribute: sub
+        useLdapGroups: "false"
+        groupAttribute: groups
+    
+    {{ end }}
+    - className: com.tremolosecurity.proxy.filters.JavaScriptFilter
+      params:
+        javaScript: |-
+          
+          GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+          HashMap = Java.type("java.util.HashMap");
+          
+          function initFilter(config) {
+
+          }
+
+          function doFilter(request,response,chain) {
+            response.getWriter().print(JSON.stringify({"authenticated":true}));
+          }
+    uri: "/api/v1/me"
+    proxyTo: http://{{ .Values.dashboard.auth_service_name }}.{{ .Values.dashboard.namespace }}.svc:8000${fullURI}
+    {{ if .Values.dashboard.proxy }}
+    proxyConfiguration:
+      connectionTimeoutMillis: {{ .Values.dashboard.proxy.connectionTimeoutMillis | default 0}}
+      requestTimeoutMillis: {{ .Values.dashboard.proxy.requestTimeoutMillis | default 0}}
+      socketTimeoutMillis: {{ .Values.dashboard.proxy.socketTimeoutMillis | default 0}}
+    {{ end }}
+    authChain: k8s-db-oidc
+    overrideHost: true
+    overrideReferer: true
+    azRules:
+    {{ if .Values.openunison.enable_provisioning }}
+    {{ if .Values.openunison.naas.groups.external.enabled }}
+    - constraint: (groups=k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.external.suffix }})
+      scope: filter
+    {{ end }}
+    {{ if .Values.openunison.naas.groups.internal.enabled }}
+    - constraint: (groups=k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }})
+      scope: filter
+    {{ end }}
+    {{ range $role := .Values.openunison.naas.groups.default }}
+    - constraint: (groups=k8s-namespace-{{ $role.name }}-k8s-*)
+      scope: filter
+    {{ end }}
+    {{ range $role := .Values.openunison.naas.groups.roles }}
+    - constraint: (groups=k8s-namespace-{{ $role.name }}-k8s-*)
+      scope: filter
+    {{ end }}
+    {{ else }}
+    {{ $length := len .Values.openunison.az_groups }}
+    {{ if eq $length 0 }}
+    - scope: dn
+      constraint: o=Tremolo
+    {{ else }}
+    {{ range $az_group := .Values.openunison.az_groups }}
+    - scope: filter
+      constraint: (groups={{ $az_group }})
+    {{ end }}
+    {{ end }}
+    {{ end }}  
+    
+    results:
+    {{ if not .Values.enable_impersonation }}
+      azSuccess: oauth2bearer
+    {{ end  }}
+      azFail: default-login-failure
+      auFail: default-login-failure
+
+  # # URL 5 - API metrics
+  # - hosts:
+  #   - "{{ .Values.network.dashboard_host }}"
+  #   filterChain: 
+  #   - className: com.tremolosecurity.proxy.filters.SetNoCacheHeaders
+  #     params: {}
+  #   {{ if .Values.dashboard.require_session }}
+  #   - className: com.tremolosecurity.proxy.filters.AzFilter
+  #     params:
+  #       rules:
+  #       - "custom;require-session"
+  #       azFail: "force-logout"
+  #   {{ end }}
+  #   {{ if .Values.enable_impersonation }}
+  #   - className: com.tremolosecurity.proxy.filters.K8sInjectImpersonation
+  #     params:
+  #       targetName: k8s
+  #       userNameAttribute: sub
+  #       useLdapGroups: "false"
+  #       groupAttribute: groups
+  #   {{ end }}
+  #   uri: "/metrics"
+  #   proxyTo: http://{{ .Values.dashboard.api_service_name }}.{{ .Values.dashboard.namespace }}.svc:8000${fullURI}
+  #   {{ if .Values.dashboard.proxy }}
+  #   proxyConfiguration:
+  #     connectionTimeoutMillis: {{ .Values.dashboard.proxy.connectionTimeoutMillis | default 0}}
+  #     requestTimeoutMillis: {{ .Values.dashboard.proxy.requestTimeoutMillis | default 0}}
+  #     socketTimeoutMillis: {{ .Values.dashboard.proxy.socketTimeoutMillis | default 0}}
+  #   {{ end }}
+  #   authChain: k8s-db-oidc
+  #   overrideHost: true
+  #   overrideReferer: true
+  #   azRules:
+  #   {{ if .Values.openunison.enable_provisioning }}
+  #   {{ if .Values.openunison.naas.groups.external.enabled }}
+  #   - constraint: (groups=k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.external.suffix }})
+  #     scope: filter
+  #   {{ end }}
+  #   {{ if .Values.openunison.naas.groups.internal.enabled }}
+  #   - constraint: (groups=k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }})
+  #     scope: filter
+  #   {{ end }}
+  #   {{ range $role := .Values.openunison.naas.groups.default }}
+  #   - constraint: (groups=k8s-namespace-{{ $role.name }}-k8s-*)
+  #     scope: filter
+  #   {{ end }}
+  #   {{ range $role := .Values.openunison.naas.groups.roles }}
+  #   - constraint: (groups=k8s-namespace-{{ $role.name }}-k8s-*)
+  #     scope: filter
+  #   {{ end }}
+  #   {{ else }}
+  #   {{ $length := len .Values.openunison.az_groups }}
+  #   {{ if eq $length 0 }}
+  #   - scope: dn
+  #     constraint: o=Tremolo
+  #   {{ else }}
+  #   {{ range $az_group := .Values.openunison.az_groups }}
+  #   - scope: filter
+  #     constraint: (groups={{ $az_group }})
+  #   {{ end }}
+  #   {{ end }}
+  #   {{ end }}  
+    
+  #   results:
+  #   {{ if not .Values.enable_impersonation }}
+  #     azSuccess: oauth2bearer
+  #   {{ end  }}
+  #     azFail: default-login-failure
+  #     auFail: default-login-failure
+  
+  # URL 4 - API api
+  - hosts:
+    - "{{ .Values.network.dashboard_host }}"
+    filterChain: 
+    - className: com.tremolosecurity.proxy.filters.SetNoCacheHeaders
+      params: {}
+    {{ if .Values.dashboard.require_session }}
+    - className: com.tremolosecurity.proxy.filters.AzFilter
+      params:
+        rules:
+        - "custom;require-session"
+        azFail: "force-logout"
+    {{ end }}
+    {{ if .Values.enable_impersonation }}
+    - className: com.tremolosecurity.proxy.filters.K8sInjectImpersonation
+      params:
+        targetName: k8s
+        userNameAttribute: sub
+        useLdapGroups: "false"
+        groupAttribute: groups
+    {{ end }}
+    uri: "/api"
+    proxyTo: https://{{ .Values.dashboard.api_service_name }}.{{ .Values.dashboard.namespace }}.svc:8001${fullURI}
+    {{ if .Values.dashboard.proxy }}
+    proxyConfiguration:
+      connectionTimeoutMillis: {{ .Values.dashboard.proxy.connectionTimeoutMillis | default 0}}
+      requestTimeoutMillis: {{ .Values.dashboard.proxy.requestTimeoutMillis | default 0}}
+      socketTimeoutMillis: {{ .Values.dashboard.proxy.socketTimeoutMillis | default 0}}
+    {{ end }}
+    authChain: k8s-db-oidc
+    overrideHost: true
+    overrideReferer: true
+    azRules:
+    {{ if .Values.openunison.enable_provisioning }}
+    {{ if .Values.openunison.naas.groups.external.enabled }}
+    - constraint: (groups=k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.external.suffix }})
+      scope: filter
+    {{ end }}
+    {{ if .Values.openunison.naas.groups.internal.enabled }}
+    - constraint: (groups=k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }})
+      scope: filter
+    {{ end }}
+    {{ range $role := .Values.openunison.naas.groups.default }}
+    - constraint: (groups=k8s-namespace-{{ $role.name }}-k8s-*)
+      scope: filter
+    {{ end }}
+    {{ range $role := .Values.openunison.naas.groups.roles }}
+    - constraint: (groups=k8s-namespace-{{ $role.name }}-k8s-*)
+      scope: filter
+    {{ end }}
+    {{ else }}
+    {{ $length := len .Values.openunison.az_groups }}
+    {{ if eq $length 0 }}
+    - scope: dn
+      constraint: o=Tremolo
+    {{ else }}
+    {{ range $az_group := .Values.openunison.az_groups }}
+    - scope: filter
+      constraint: (groups={{ $az_group }})
+    {{ end }}
+    {{ end }}
+    {{ end }}  
+    
+    results:
+    {{ if not .Values.enable_impersonation }}
+      azSuccess: oauth2bearer
+    {{ end  }}
+      azFail: default-login-failure
+      auFail: default-login-failure
+
+  
+  
+  # URL 6 - web
+  - hosts:
+    - "{{ .Values.network.dashboard_host }}"
+    filterChain: 
+    - className: com.tremolosecurity.proxy.filters.SetNoCacheHeaders
+      params: {}
+    {{ if .Values.dashboard.require_session }}
+    - className: com.tremolosecurity.proxy.filters.AzFilter
+      params:
+        rules:
+        - "custom;require-session"
+        azFail: "force-logout"
+    {{ end }}
+    {{ if .Values.enable_impersonation }}
+    - className: com.tremolosecurity.proxy.filters.K8sInjectImpersonation
+      params:
+        targetName: k8s
+        userNameAttribute: sub
+        useLdapGroups: "false"
+        groupAttribute: groups
+    {{ end }}
+    uri: "/"
+    proxyTo: https://{{ .Values.dashboard.web_service_name }}.{{ .Values.dashboard.namespace }}.svc:8001${fullURI}
+    {{ if .Values.dashboard.proxy }}
+    proxyConfiguration:
+      connectionTimeoutMillis: {{ .Values.dashboard.proxy.connectionTimeoutMillis | default 0}}
+      requestTimeoutMillis: {{ .Values.dashboard.proxy.requestTimeoutMillis | default 0}}
+      socketTimeoutMillis: {{ .Values.dashboard.proxy.socketTimeoutMillis | default 0}}
+    {{ end }}
+    authChain: k8s-db-oidc
+    overrideHost: true
+    overrideReferer: true
+    azRules:
+    {{ if .Values.openunison.enable_provisioning }}
+    {{ if .Values.openunison.naas.groups.external.enabled }}
+    - constraint: (groups=k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.external.suffix }})
+      scope: filter
+    {{ end }}
+    {{ if .Values.openunison.naas.groups.internal.enabled }}
+    - constraint: (groups=k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }})
+      scope: filter
+    {{ end }}
+    {{ range $role := .Values.openunison.naas.groups.default }}
+    - constraint: (groups=k8s-namespace-{{ $role.name }}-k8s-*)
+      scope: filter
+    {{ end }}
+    {{ range $role := .Values.openunison.naas.groups.roles }}
+    - constraint: (groups=k8s-namespace-{{ $role.name }}-k8s-*)
+      scope: filter
+    {{ end }}
+    {{ else }}
+    {{ $length := len .Values.openunison.az_groups }}
+    {{ if eq $length 0 }}
+    - scope: dn
+      constraint: o=Tremolo
+    {{ else }}
+    {{ range $az_group := .Values.openunison.az_groups }}
+    - scope: filter
+      constraint: (groups={{ $az_group }})
+    {{ end }}
+    {{ end }}
+    {{ end }}  
+    
+    results:
+    {{ if not .Values.enable_impersonation }}
+      azSuccess: oauth2bearer
+    {{ end  }}
+      azFail: default-login-failure
+      auFail: default-login-failure
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  - hosts:
+    - "{{ .Values.network.dashboard_host }}"
+    filterChain: 
+    - className: com.tremolosecurity.proxy.filters.SetNoCacheHeaders
+      params: {}
+    {{ if .Values.dashboard.require_session }}
+    - className: com.tremolosecurity.proxy.filters.AzFilter
+      params:
+        rules:
+        - "custom;require-session"
+        azFail: "force-logout"
+    {{ end }}
+    {{ if .Values.enable_impersonation }}
+    - className: com.tremolosecurity.proxy.filters.K8sInjectImpersonation
+      params:
+        targetName: k8s
+        userNameAttribute: sub
+        useLdapGroups: "false"
+        groupAttribute: groups
+    {{ end }}
+    uri: "/"
+    proxyTo: https://{{ .Values.dashboard.service_name }}.{{ .Values.dashboard.namespace }}.svc${fullURI}
+    {{ if .Values.dashboard.proxy }}
+    proxyConfiguration:
+      connectionTimeoutMillis: {{ .Values.dashboard.proxy.connectionTimeoutMillis | default 0}}
+      requestTimeoutMillis: {{ .Values.dashboard.proxy.requestTimeoutMillis | default 0}}
+      socketTimeoutMillis: {{ .Values.dashboard.proxy.socketTimeoutMillis | default 0}}
+    {{ end }}
+    authChain: k8s-db-oidc
+    overrideHost: true
+    overrideReferer: true
+    azRules:
+    {{ if .Values.openunison.enable_provisioning }}
+    {{ if .Values.openunison.naas.groups.external.enabled }}
+    - constraint: (groups=k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.external.suffix }})
+      scope: filter
+    {{ end }}
+    {{ if .Values.openunison.naas.groups.internal.enabled }}
+    - constraint: (groups=k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }})
+      scope: filter
+    {{ end }}
+    {{ range $role := .Values.openunison.naas.groups.default }}
+    - constraint: (groups=k8s-namespace-{{ $role.name }}-k8s-*)
+      scope: filter
+    {{ end }}
+    {{ range $role := .Values.openunison.naas.groups.roles }}
+    - constraint: (groups=k8s-namespace-{{ $role.name }}-k8s-*)
+      scope: filter
+    {{ end }}
+    {{ else }}
+    {{ $length := len .Values.openunison.az_groups }}
+    {{ if eq $length 0 }}
+    - scope: dn
+      constraint: o=Tremolo
+    {{ else }}
+    {{ range $az_group := .Values.openunison.az_groups }}
+    - scope: filter
+      constraint: (groups={{ $az_group }})
+    {{ end }}
+    {{ end }}
+    {{ end }}  
+    
+    results:
+    {{ if not .Values.enable_impersonation }}
+      azSuccess: oauth2bearer
+    {{ end  }}
+      azFail: default-login-failure
+      auFail: default-login-failure
+
+
+    
+  - hosts:
+    - "{{ .Values.network.dashboard_host }}"
+    filterChain:
+    - className: com.tremolosecurity.prelude.filters.StopProcessing
+      params: {}
+    uri: /logout
+    azRules:
+    - scope: dn
+      constraint: o=Tremolo
+    authChain: anon
+    results:
+      azSuccess: logout
+  cookieConfig:
+    sessionCookieName: tremolosession
+    domain: "{{ .Values.network.dashboard_host }}"
+    secure: true
+    httpOnly: true
+    logoutURI: "/logout"
+    keyAlias: session-unison
+    timeout: {{ .Values.network.session_inactivity_timeout_seconds }}
+    scope: -1
+    cookiesEnabled: true
+{{ else }}
 ---
 {{ if .Values.dashboard.proxy }}
 apiVersion: openunison.tremolo.io/v2
@@ -111,4 +686,8 @@ spec:
     timeout: {{ .Values.network.session_inactivity_timeout_seconds }}
     scope: -1
     cookiesEnabled: true
+{{ end }}
+
+
+
 {{ end }}

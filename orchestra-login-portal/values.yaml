@@ -27,7 +27,11 @@ dashboard:
   namespace: "kubernetes-dashboard"
   cert_name: "kubernetes-dashboard-certs"
   label: "k8s-app=kubernetes-dashboard"
+  new_label: "app.kubernetes.io/part-of=kubernetes-dashboard"
   service_name: kubernetes-dashboard
+  auth_service_name: kubernetes-dashboard-auth
+  api_service_name: kubernetes-dashboard-api
+  web_service_name: kubernetes-dashboard-web
   enabled: true
 certs:
   use_k8s_cm: false

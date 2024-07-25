@@ -154,14 +154,25 @@ spec:
             key_size: 2048
             server_name: {{ .Values.dashboard.service_name }}.{{ .Values.dashboard.namespace }}.svc
             sign_by_k8s_ca: {{ .Values.certs.use_k8s_cm }}
+            {{ if .Values.dashboard.new }}
+            subject_alternative_names:
+            - {{ .Values.dashboard.auth_service_name }}.{{ .Values.dashboard.namespace }}.svc
+            - {{ .Values.dashboard.web_service_name }}.{{ .Values.dashboard.namespace }}.svc
+            - {{ .Values.dashboard.api_service_name }}.{{ .Values.dashboard.namespace }}.svc
+            {{ else }}
             subject_alternative_names: []
+            {{ end }}
             target_namespace: {{ .Values.dashboard.namespace }}
             secret_info:
               type_of_secret: Opaque
               cert_name: dashboard.crt
               key_name: dashboard.key
             delete_pods_labels:
+              {{ if .Values.dashboard.new }}
+              - {{ .Values.dashboard.new_label }}
+              {{ else }}
               - {{ .Values.dashboard.label }}
+              {{ end }}
           {{ if .Values.certs.use_k8s_cm  }}
           import_into_ks: "none"
           {{ else }}
