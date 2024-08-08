@@ -104,7 +104,6 @@ spec:
           dnsPolicy: ClusterFirst
           restartPolicy: Never
           schedulerName: default-scheduler
-          securityContext: {}
           serviceAccount: openunison-operator
           serviceAccountName: openunison-operator
           terminationGracePeriodSeconds: 30
