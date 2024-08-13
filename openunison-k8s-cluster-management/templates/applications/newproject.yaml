@@ -90,9 +90,6 @@ spec:
         - {{ $role.external.fieldName }}
         {{ end }}
         
-        {{ if .Values.openunison.naas.groups.internal.enabled }}
-        - enableInternal
-        {{ end }}
         {{ end }}
         - gitUrl
         - gitSshKey
@@ -169,20 +166,6 @@ spec:
 
 
         {{ if .Values.openunison.naas.groups.external.enabled }}
-
-        {{ if .Values.openunison.naas.groups.internal.enabled }}
-        enableInternal.displayName: "Internal access groups"
-        enableInternal.readOnly: "false"
-        enableInternal.required: "true"
-        enableInternal.regEx: ".*"
-        enableInternal.minChars: "0"
-        enableInternal.maxChars: "255"
-        enableInternal.unique: "false"
-        enableInternal.type: "list"
-        enableInternal.values:
-        - "Enabled=enabled"
-        - "Disabled=disabled"
-        {{ end }}
         
         
         {{ range $role := .Values.openunison.naas.groups.default }}
