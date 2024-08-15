@@ -16,7 +16,7 @@ cert_template:
   st: "State of Cluster"
   c: "MyCountry"
 
-image: "ghcr.io/openunison/openunison-k8s:1.0.40"
+image: "ghcr.io/openunison/openunison-k8s:1.0.41"
 amq_image: "ghcr.io/tremolosecurity/activemq-docker:5.16.6"
 cert_update_image: "ghcr.io/openunison/openunison-kubernetes-operator:1.0.6"
 myvd_config_path: "WEB-INF/myvd.conf"

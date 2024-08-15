@@ -20,7 +20,7 @@ version: 2.10.55
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
 # follow Semantic Versioning. They should reflect the version the application is using.
-appVersion: 1.0.40
+appVersion: 1.0.41
 home: https://openunison.github.io.
 icon: https://nexus.tremolo.io/repository/images/shield.png
 sources:
