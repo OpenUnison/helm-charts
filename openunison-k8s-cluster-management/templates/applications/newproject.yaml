@@ -388,7 +388,7 @@ spec:
         gitUrl.type: "text"
         gitUrl.show: "false"
 
-        gitPath.displayName: "Git URL"
+        gitPath.displayName: "Git Path (must start with '/')"
         gitPath.readOnly: "false"
         gitPath.required: "false"
         gitPath.regEx: "^(/)?([^/\0]+(/)?)+$"
