@@ -240,7 +240,7 @@ spec:
                        name: sshkey-namespace-$cluster$-$nameSpace$
                        labels:
                          cluster: $cluster$
-                         namespace: openunison
+                       namespace: openunison
                      data:
                        id_rsa: $b64sshkey$
                      type: Opaque
