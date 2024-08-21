@@ -238,13 +238,12 @@ spec:
                      apiVersion: v1
                      metadata:
                        name: sshkey-namespace-$cluster$-$nameSpace$
+                       namespace: openunison
                        labels:
                          cluster: $cluster$
-                       namespace: openunison
                      data:
                        id_rsa: $b64sshkey$
                      type: Opaque
-                   kind: Secret
                    srcType: yaml
                    writeToRequest: "false"
 
