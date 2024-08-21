@@ -9,7 +9,8 @@ impersonation:
   orchestra_release_name: orchestra
 
 openunison:
-  
+  git:
+    prefix: ""
   orchestra_login_portal_name: orchestra-login-portal
   naas:
     jobs:
