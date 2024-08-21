@@ -9,9 +9,10 @@ impersonation:
   orchestra_release_name: orchestra
 
 openunison:
-  
   orchestra_login_portal_name: orchestra-login-portal
   naas:
+    git:
+      prefix: ""
     jobs:
       rebase:
         queuename: rebase-queue

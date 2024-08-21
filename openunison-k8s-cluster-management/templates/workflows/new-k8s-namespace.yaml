@@ -20,6 +20,7 @@ spec:
                attribute:
                - nameSpace
                - cluster
+               - gitPath
                {{ if .Values.openunison.naas.groups.external.enabled }}
                {{ range $role := .Values.openunison.naas.groups.default }}
                - {{ $role.external.fieldName }}

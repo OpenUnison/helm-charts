@@ -92,6 +92,7 @@ spec:
         
         {{ end }}
         - gitUrl
+        - gitPath
         - gitSshKey
 
         
@@ -386,6 +387,17 @@ spec:
         gitUrl.unique: "false"
         gitUrl.type: "text"
         gitUrl.show: "false"
+
+        gitPath.displayName: "Git Path (must start with '/')"
+        gitPath.readOnly: "false"
+        gitPath.required: "false"
+        gitPath.regEx: "^(/)?([^/\0]+(/)?)+$"
+        gitPath.regExFailedMsg: "Invalid git path"
+        gitPath.minChars: "0"
+        gitPath.maxChars: "0"
+        gitPath.unique: "false"
+        gitPath.type: "text"
+        gitPath.show: "false"
 
         gitSshKey.displayName: "Git SSH Private Key"
         gitSshKey.readOnly: "false"
