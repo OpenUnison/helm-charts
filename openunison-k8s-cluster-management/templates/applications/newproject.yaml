@@ -391,7 +391,7 @@ spec:
         gitPath.displayName: "Git Path (must start with '/')"
         gitPath.readOnly: "false"
         gitPath.required: "false"
-        gitPath.regEx: "^(/)?([^/\0]+(/)?)+$"
+        gitPath.regEx: ""
         gitPath.regExFailedMsg: "Invalid git path"
         gitPath.minChars: "0"
         gitPath.maxChars: "0"
