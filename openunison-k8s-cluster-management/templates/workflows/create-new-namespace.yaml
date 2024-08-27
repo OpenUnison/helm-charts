@@ -268,7 +268,7 @@ spec:
                kind: Namespace
                srcType: yaml
                writeToRequest: "$useGit$"
-               requestAttribute: git-secret-cluster-$cluster$-$nameSpace$
+               requestAttribute: git-secret-cluster-k8s-$nameSpace$
                path: {{ $root.Values.openunison.naas.git.prefix }}/namespaces/$nameSpace$.yaml
 
            {{ if .Values.openunison.naas.workflows.new_namespace.post_namespace_create_workflow }}
