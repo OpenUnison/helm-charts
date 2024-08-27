@@ -125,7 +125,7 @@ spec:
                   srcType: yaml
                   writeToRequest: "$useGit$"
                   requestAttribute: git-secret-cluster-k8s-$nameSpace$
-                  path: {{ $root.Values.openunison.naas.git.prefix }}/$nameSpace$/groupmetadatas/k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace$.yaml
+                  path: {{ $root.Values.openunison.naas.git.prefix }}/openunison/groupmetadatas/k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace$.yaml
            {{ end }}
            {{ range $role := .Values.openunison.naas.groups.roles }}
            - taskType: customTask
@@ -189,7 +189,7 @@ spec:
                   srcType: yaml
                   writeToRequest: "$useGit$"
                   requestAttribute: git-secret-cluster-k8s-$nameSpace$
-                  path: {{ $root.Values.openunison.naas.git.prefix }}/$nameSpace$/groupmetadatas/k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace$.yaml
+                  path: {{ $root.Values.openunison.naas.git.prefix }}/openunison/groupmetadatas/k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace$.yaml
            {{ end }}
 
             
@@ -302,7 +302,7 @@ spec:
                srcType: yaml
                writeToRequest: "$useGit$"
                requestAttribute: git-secret-namespace-$cluster$-$nameSpace$
-               path: $gitPath$/$nameSpace$/rolebindings/{{ $role.name }}-binding{{ $root.Values.openunison.naas.groups.internal.suffix }}.yaml
+               path: $gitPath$/$nameSpace$/rolebindings/{{ $bind.binding }}-binding{{ $root.Values.openunison.naas.groups.internal.suffix }}.yaml
            {{ end }}
            {{ end }}
            {{ range $role := .Values.openunison.naas.groups.roles }}
@@ -325,11 +325,10 @@ spec:
                       kind: {{ $bind.type }}
                       name: {{ $bind.name }}
                       apiGroup: rbac.authorization.k8s.io
-               kind: RoleBinding
                srcType: yaml
                writeToRequest: "$useGit$"
                requestAttribute: git-secret-namespace-$cluster$-$nameSpace$
-               path: $gitPath$/$nameSpace$/rolebindings/{{ $role.name }}-binding{{ $root.Values.openunison.naas.groups.internal.suffix }}.yaml
+               path: $gitPath$/$nameSpace$/rolebindings/{{ $bind.binding }}-binding{{ $root.Values.openunison.naas.groups.internal.suffix }}.yaml
            {{ end }}
            {{ end }}
            {{ end }}
@@ -360,11 +359,10 @@ spec:
                           kind: {{ $bind.type }}
                           name: {{ $bind.name }}
                           apiGroup: rbac.authorization.k8s.io
-                  kind: RoleBinding
                   srcType: yaml
                   writeToRequest: "$useGit$"
                   requestAttribute: git-secret-namespace-$cluster$-$nameSpace$
-                  path: $gitPath$/$nameSpace$/rolebindings/{{ $role.bindingname }}-binding{{ $root.Values.openunison.naas.groups.external.suffix }}.yaml
+                  path: $gitPath$/$nameSpace$/rolebindings/{{ $bind.binding }}-binding{{ $root.Values.openunison.naas.groups.external.suffix }}.yaml
            {{ end }}
            {{ end }}
            {{ range $role := .Values.openunison.naas.groups.roles }}
@@ -391,11 +389,10 @@ spec:
                           kind: {{ $bind.type }}
                           name: {{ $bind.name }}
                           apiGroup: rbac.authorization.k8s.io
-                  kind: RoleBinding
                   srcType: yaml
                   writeToRequest: "$useGit$"
                   requestAttribute: git-secret-namespace-$cluster$-$nameSpace$
-                  path: $gitPath$/$nameSpace$/rolebindings/{{ $role.bindingname }}-binding{{ $root.Values.openunison.naas.groups.external.suffix }}.yaml
+                  path: $gitPath$/$nameSpace$/rolebindings/{{ $bind.binding }}-binding{{ $root.Values.openunison.naas.groups.external.suffix }}.yaml
            {{ end }}
            {{ end }}
            {{ end }}
@@ -414,7 +411,7 @@ spec:
                    target: k8s
                    keyName: id_rsa
                    gitRepo: $clusterGitUrl$
-                   requestObject: git-secret-cluster-$cluster$-$nameSpace$
+                   requestObject: git-secret-cluster-k8s-$nameSpace$
                    commitMsg: For workflow $WORKFLOW.id$
 
                # GitOps - Run Job to push to namespace repo
