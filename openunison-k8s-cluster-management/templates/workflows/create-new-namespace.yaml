@@ -195,8 +195,8 @@ spec:
             
            {{ end }}
 
-
-                 
+           {{ if .Values.openunison.naas.groups.internal.enabled }}
+           {{ if .Values.openunison.naas.groups.internal.add_requestor_as_admin}}
            - taskType: mapping
              strict: true
              map:
@@ -204,7 +204,7 @@ spec:
                  targetAttributeSource: uid
                  sourceType: user
              onSuccess:
-               {{ if .Values.openunison.naas.groups.internal.enabled }}
+               
                - taskType: addGroup
                  name: approvers-k8s-$cluster$-$nameSpace$
                  remove: false
@@ -217,7 +217,8 @@ spec:
                  setPassword: false
                  onlyPassedInAttributes: false
                  attributes: ["uid"]
-              {{ end }}
+           {{ end }}
+           {{ end }}
 
            {{ if .Values.openunison.naas.workflows.new_namespace.pre_provision_workflow }}
            - taskType: callWorkflow

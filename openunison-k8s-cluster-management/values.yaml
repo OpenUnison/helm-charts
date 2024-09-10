@@ -79,6 +79,7 @@ openunison:
       internal:
         enabled: true
         suffix: "-internal"
+        add_requestor_as_admin: true
       external:
         suffix: "-external"
         enabled: false
