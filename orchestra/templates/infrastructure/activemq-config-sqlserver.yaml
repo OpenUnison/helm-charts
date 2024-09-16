@@ -137,7 +137,7 @@ data:
                 </sslContext>
             <transportConnectors>
                 <!-- DOS protection, limit concurrent connections to 1000 and frame size to 100MB -->
-                <transportConnector name="openwire" uri="ssl://0.0.0.0:61616?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600&amp;needClientAuth=true"/>
+                <transportConnector name="openwire" uri="ssl://0.0.0.0:61616?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600&amp;needClientAuth=true&amp;maximumConnections=2147483647"/>
             </transportConnectors>
 
             <!-- destroy the spring context on shutdown to stop jetty -->
