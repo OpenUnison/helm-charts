@@ -17,7 +17,7 @@ spec:
     month: '*'
     seconds: '*/10'
     year: '*'
-  group: admin
+  group: admin-local
   params:
     - name: target
       value: k8s
