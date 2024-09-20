@@ -69,6 +69,7 @@ spec:
              params:
                javaScript: |-
                  Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+                 UUID = Java.type("java.util.UUID");
 
                  function init(task,params) {
                    // nothing to do
@@ -82,6 +83,8 @@ spec:
                    if (! user.getAttribs().get("{{ $role.external.fieldName }}")) {
                      user.getAttribs().put("{{$role.external.fieldName}}",new Attribute("{{$role.external.fieldName}}",""));
                    }
+
+                   request.put("group_metadata_name",UUID.randomUUID().toString().toLowerCase().replaceAll("-",""));
                    
                    return true;
                  }
@@ -108,14 +111,18 @@ spec:
                       kind: GroupMetaData
                       apiVersion: openunison.tremolo.io/v1
                       metadata:
-                        name: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace$
+                        name: $group_metadata_name$
                         namespace: {{ $root.Release.Namespace }}
                         labels:
-                          name: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace$
+                          name: $group_metadata_name$
                           app.kubernetes.io/name: openunison
                           app.kubernetes.io/instance: openunison-{{ $root.Release.Name }}
                           app.kubernetes.io/component: openunison-groupmetadata
                           app.kubernetes.io/part-of: openunison
+                          tremolo.io/role: {{ $role.name }}
+                          tremolo.io/cluster: "$cluster$"
+                          tremolo.io/namespace: "$namespace$"
+
                         annotations:
                           tremolo.io/managedByGit: "$useGit$"
                       spec:
@@ -133,6 +140,7 @@ spec:
              params:
                javaScript: |-
                  Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+                 UUID = Java.type("java.util.UUID");
 
                  function init(task,params) {
                    // nothing to do
@@ -146,6 +154,8 @@ spec:
                    if (! user.getAttribs().get("{{ $role.external.fieldName }}")) {
                      user.getAttribs().put("{{$role.external.fieldName}}",new Attribute("{{$role.external.fieldName}}",""));
                    }
+
+                   request.put("group_metadata_name",UUID.randomUUID().toString().toLowerCase().replaceAll("-",""));
                    
                    return true;
                  }
@@ -172,14 +182,17 @@ spec:
                       kind: GroupMetaData
                       apiVersion: openunison.tremolo.io/v1
                       metadata:
-                        name: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace$
+                        name: $group_metadata_name$
                         namespace: {{ $root.Release.Namespace }}
                         labels:
-                          name: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace$
+                          name: $group_metadata_name$
                           app.kubernetes.io/name: openunison
                           app.kubernetes.io/instance: openunison-{{ $root.Release.Name }}
                           app.kubernetes.io/component: openunison-groupmetadata
                           app.kubernetes.io/part-of: openunison
+                          tremolo.io/role: {{ $role.name }}
+                          tremolo.io/cluster: "$cluster$"
+                          tremolo.io/namespace: "$namespace$"
                         annotations:
                           tremolo.io/managedByGit: "$useGit$"
                       spec:
