@@ -1,0 +1,110 @@
+{{ if eq .Values.network.ingress_type "f5nginx" }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "50"
+    nginx.org/ssl-services: openunison-{{ .Release.Name }}{{ if and (.Values.openunison.management_proxy) (eq .Values.openunison.management_proxy.enabled true)  }},kube-management-proxy-{{ .Release.Name }}{{ end }}
+    {{ if .Values.network.f5nginx  }}
+    {{ if .Values.network.f5nginx.plus  }}
+    nginx.com/sticky-cookie-services: serviceName=openunison-{{ .Release.Name }} srv_id expires=1h  path=/
+    {{ end }}
+    {{ end }}
+    {{ range $key,$value := .Values.network.ingress_annotations }}
+    {{ $key }}: {{ quote $value }}
+    {{ end }}
+  name: openunison-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: ingress-f5-nginx
+    app.kubernetes.io/part-of: openunison
+spec:
+  ingressClassName: {{ .Values.network.ingress_class | default "nginx" }}
+  rules:
+  - host: {{ .Values.network.openunison_host }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: openunison-{{ .Release.Name }}
+            port: 
+              number: 443
+        path: "/"
+        pathType: Prefix
+  {{ if .Values.dashboard.enabled }}
+  - host: {{ .Values.network.dashboard_host }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: openunison-{{ .Release.Name }}
+            port:
+              number: 443
+        path: "/"
+        pathType: Prefix
+  {{ end }}
+  {{- $root := . -}}
+  {{ range $app := $root.Values.openunison.apps }}
+  - host: {{ (urlParse $app.badgeUrl).host }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: openunison-{{ $root.Release.Name }}
+            port:
+              number: 443
+        path: "/"
+        pathType: Prefix
+  {{ end }}
+  {{ if eq .Values.enable_impersonation true }}
+  - host: {{ .Values.network.api_server_host }}
+    http:
+      paths:
+      - backend:
+          service:
+            {{ if eq .Values.impersonation.use_jetstack true }}
+            name: kube-oidc-proxy-{{ .Release.Name }}
+            {{ else }}
+            name: openunison-{{ .Release.Name }}
+            {{ end }}
+            port:
+              number: 443
+        path: "/"
+        pathType: Prefix
+  {{ end }}
+  {{ if and (.Values.openunison.management_proxy) (eq .Values.openunison.management_proxy.enabled true)  }}
+  - host: {{ .Values.openunison.management_proxy.host }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: kube-management-proxy-{{ .Release.Name }}
+            port:
+              number: 443
+        path: "/"
+        pathType: Prefix
+  {{ end }}
+  tls:
+  - hosts:
+    - {{ .Values.network.openunison_host }}
+    {{ if .Values.dashboard.enabled }}
+    - {{ .Values.network.dashboard_host }}
+    {{ end }}
+    {{ if eq .Values.enable_impersonation true }}
+    - {{ .Values.network.api_server_host }}
+    {{ end }}
+    {{ if and (.Values.openunison.management_proxy) (eq .Values.openunison.management_proxy.enabled true)  }}
+    - {{ .Values.openunison.management_proxy.host }}
+    {{ end }}
+    {{ range $app := $root.Values.openunison.apps }}
+    - {{ (urlParse $app.badgeUrl).host }}
+    {{ end }}
+    {{ if .Values.network.createIngressCertificate }}
+    secretName: ou-tls-certificate
+    {{ end }}
+
+
+{{ end }}
