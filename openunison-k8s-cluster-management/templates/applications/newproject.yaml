@@ -200,6 +200,8 @@ spec:
         - "objectClass=groupofnames"
         - "sort=true"
         {{ else if $root.Values.oidc}}
+        
+        
         {{ if eq $root.Values.oidc.type "okta" }}
         {{ if $role.external.required }}
         {{ $role.external.fieldName }}.type: "text-list-box"
@@ -222,7 +224,16 @@ spec:
         {{ $role.external.fieldName }}.dynamicValueSource.config: 
         - "target=azuread"
         - "maxEntries=10"
+        {{ else }}
+        {{ $role.external.fieldName }}.type: "text"
+
+
+
+
+        
         {{ end }}
+
+
         {{ else if $root.Values.github}}
         {{ if $root.Values.github.naas }}
         {{ if $role.external.required }}
@@ -255,39 +266,58 @@ spec:
         {{ $role.external.fieldName }}.minChars: "0"
         {{ $role.external.fieldName }}.maxChars: "255"
         {{ $role.external.fieldName }}.unique: "false"
+        
+        
+        # check ad
         {{ if $root.Values.active_directory }}
+
+        # is ad required?
         {{ if $role.external.required }}
         {{ $role.external.fieldName }}.type: "text-list-box"
         {{ else }}
         {{ $role.external.fieldName }}.type: "chk-text-list-box"
         {{ end }}
+
+
         {{ $role.external.fieldName }}.dynamicValueSource.className: "com.tremolosecurity.scalejs.register.dynamicSource.LoadFromLDAP"
         {{ $role.external.fieldName }}.dynamicValueSource.config: 
         - "nameField=distinguishedName"
         - "valueField=distinguishedName"
         - "searchField=cn"
         - "maxEntries=10"
+
+        #is there a specific search base?
         {{ if $root.Values.active_directory.group_search_base }}
         - "searchBase={{ $root.Values.active_directory.group_search_base }},ou=activedirectory,o=Data"
         {{ else }}
         - "searchBase=ou=activedirectory,o=Data"
         {{ end }}
+
         - "errorMessage=Invalid group name"
         - "objectClass=groupofnames"
         - "sort=true"
+
+        #is oidc?
         {{ else if $root.Values.oidc}}
+
+        # is okta?
         {{ if eq $root.Values.oidc.type "okta" }}
+
+        #is a required group?
         {{ if $role.external.required }}
         {{ $role.external.fieldName }}.type: "text-list-box"
         {{ else }}
         {{ $role.external.fieldName }}.type: "chk-text-list-box"
         {{ end }}
+
         {{ $role.external.fieldName }}.dynamicValueSource.className: "com.tremolosecurity.scalejs.register.dynamicSource.LoadGroupsFromOkta"
         {{ $role.external.fieldName }}.dynamicValueSource.config: 
         - "targetName=okta"
         - "maxEntries=10"
         - "errorMessage=Invalid group name"
         {{ end }}
+
+
         {{ else }}
         {{ $role.external.fieldName }}.type: "text"
         {{ end }}
