@@ -119,6 +119,7 @@ services:
   - "alive"
 openunison:
   amq:
+    enabled: true
     pvc: {}
   secret_ext: ""
   apps: []
@@ -201,7 +202,7 @@ openunison:
           errorMessage: "Invalid viewer group"
         workflow:
           label: "namespace viewer"
-          displayLabel: $name$ Administrator
+          displayLabel: $name$ Viewer
           emailTemplate: Approve viewer access to $cluster$ $name$
           approvalLabel: Approve viewer access for $cluster$ - $name$
           userNotification:

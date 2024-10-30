@@ -108,6 +108,8 @@ services:
 
 openunison:
   apps: []
+  amq:
+    enabled: true
   imagePullPolicy: Always
   authentication:
     refresh_token:
