@@ -119,6 +119,7 @@ services:
   - "alive"
 openunison:
   amq:
+    enabled: true
     pvc: {}
   secret_ext: ""
   apps: []
