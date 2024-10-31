@@ -196,6 +196,14 @@ spec:
     runAsUser: 431
     runAsGroup: 433
   {{ end }}
+  {{ $length := len .Values.services.node_selectors }}
+  {{ if eq $length 0  }}
+  nodeSelector: {}
+  {{ else }}
+  nodeSelector: {{ range $key,$value := .Values.services.node_selectors }}
+    {{ $key }}: {{ $value | quote }}
+  {{ end }}
+  {{ end }}
   
   volumes:
     - name: scripts
