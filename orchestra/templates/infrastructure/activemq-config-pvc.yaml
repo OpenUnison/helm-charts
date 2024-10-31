@@ -375,6 +375,8 @@ kind: PersistentVolumeClaim
 metadata:
   name: activemq-kahadb
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
 spec:
   {{ if .Values.openunison.activemq_storageclass }}
   storageClassName: {{ .Values.openunison.activemq_storageclass }}
