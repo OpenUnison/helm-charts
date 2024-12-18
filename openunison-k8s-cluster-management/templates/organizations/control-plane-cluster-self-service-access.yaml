@@ -1,5 +1,99 @@
 {{ if .Values.openunison.naas.groups.internal.enabled }}
 {{- $root := . -}}
+{{ if .Values.openunison.naas.groups.internal.isolateRequestAccess.enabled }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: control-plane-request-access
+  namespace: {{ $root.Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
+spec:
+  label: Access Management
+  azRules:
+  {{ if $root.Values.openunison.naas.groups.internal.isolateRequestAccess.azRules }}
+  {{ range $root.Values.openunison.naas.groups.internal.isolateRequestAccess.azRules }}
+  - scope: {{ .scope }}
+    constraint: {{ .constraint }}
+  {{ end }}
+  {{ else }}
+  - constraint: o=Tremolo
+    scope: dn
+  {{ end }}
+  description: Manage access to satelite clusters
+  parent: B158BD40-0C1B-11E3-8FFD-0800200C9A66
+  showInPortal: false
+  showInReports: false
+  showInRequestAccess: true
+  uuid: org-cluster-control-plane-request-access
+
+{{ range $role := .Values.openunison.naas.groups.default }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: control-plane-namespace-ra-{{ $role.name}}
+  namespace: {{ $root.Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
+spec:
+  label: {{ $role.workflow.org.label }}
+  azRules:
+  {{ if $root.Values.openunison.naas.groups.internal.azRules }}
+  {{ range $root.Values.openunison.naas.groups.internal.azRules }}
+  - scope: {{ .scope }}
+    constraint: {{ .constraint }}
+  {{ end }}
+  {{ else }}
+  - constraint: o=Tremolo
+    scope: dn
+  {{ end }}
+  description: {{ $role.workflow.org.description }}
+  parent: org-cluster-control-plane-request-access
+  showInPortal: false
+  showInReports: false
+  showInRequestAccess: true
+  uuid: org-cluster-control-plane-ra-{{ $role.name}}
+{{ end }}
+{{ range $role := .Values.openunison.naas.groups.roles }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: control-plane-namespace-ra-{{ $role.name}}
+  namespace: {{ $root.Release.Namespace }}
+spec:
+  label: {{ $role.workflow.org.label }}
+  azRules:
+  - constraint: o=Tremolo
+    scope: dn
+  description: {{ $role.workflow.org.description }}
+  parent: org-cluster-control-plane-request-access
+  showInPortal: false
+  showInReports: false
+  showInRequestAccess: true
+  uuid: org-cluster-control-plane-ra-{{ $role.name}}
+{{ end }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: control-plane-approvers-request-access
+  namespace: {{ .Release.Namespace }}
+spec:
+  label: Approvers
+  azRules:
+  - constraint: o=Tremolo
+    scope: dn
+  description: Approvers
+  parent: org-cluster-control-plane-request-access
+  showInPortal: false
+  showInReports: false
+  showInRequestAccess: true
+  uuid: org-cluster-control-plane-ra-approvers
+
+{{ else }}
 {{ range $role := .Values.openunison.naas.groups.default }}
 ---
 apiVersion: openunison.tremolo.io/v1
@@ -64,4 +158,6 @@ spec:
   showInReports: false
   showInRequestAccess: true
   uuid: org-cluster-control-plane-approvers
+{{ end }}
+
 {{ end }}
