@@ -19,7 +19,7 @@ network:
       tls: websecure
 
 precheck:
-  resources: {}
+  image: ghcr.io/tremolosecurity/python3:1.0.0
 
 cert_template:
   ou: "Kubernetes"

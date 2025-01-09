@@ -26,7 +26,7 @@ cert_template:
   st: "State of Cluster"
   c: "MyCountry"
 
-image: "ghcr.io/openunison/openunison-k8s:1.0.41"
+image: "ghcr.io/openunison/openunison-k8s:1.0.42"
 amq_image: "ghcr.io/tremolosecurity/activemq-docker:5.16.6"
 myvd_config_path: "WEB-INF/myvd.conf"
 k8s_cluster_name: kubernetes
@@ -77,7 +77,7 @@ monitoring:
 
 impersonation:
   use_jetstack: true
-  jetstack_oidc_proxy_image: ghcr.io/tremolosecurity/kube-oidc-proxy:1.0.8
+  jetstack_oidc_proxy_image: ghcr.io/tremolosecurity/kube-oidc-proxy:1.0.9
   explicit_certificate_trust: true
   ca_secret_name: ou-tls-certificate
 
@@ -121,7 +121,7 @@ openunison:
   secrets: []
   imagePullPolicy: Always
   html:
-    image: ghcr.io/openunison/openunison-k8s-html:1.0.0
+    image: ghcr.io/openunison/openunison-k8s-html:1.0.1
     prefix: ouhtml
   portal_release_name: orchestra-login-portal
   enable_provisioning: false

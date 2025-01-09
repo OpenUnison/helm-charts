@@ -1,5 +1,5 @@
 cicd_proxy:
-  image: ghcr.io/tremolosecurity/kube-oidc-proxy:1.0.8
+  image: ghcr.io/tremolosecurity/kube-oidc-proxy:1.0.9
   replicas: 1
   explicit_certificate_trust: false
   imagePullPolicy: Always
