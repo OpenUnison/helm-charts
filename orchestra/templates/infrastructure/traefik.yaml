@@ -5,7 +5,6 @@ kind: Ingress
 metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "20"
-    kubernetes.io/ingress.class: traefik
     traefik.ingress.kubernetes.io/router.entrypoints: "{{ .Values.network.traefik.entrypoints.tls }}"
     traefik.ingress.kubernetes.io/router.tls: "true"
     {{ range $key,$value := .Values.network.ingress_annotations }}
@@ -19,6 +18,7 @@ metadata:
     app.kubernetes.io/component: ingress-traefik
     app.kubernetes.io/part-of: openunison
 spec:
+  ingressClassName: traefik
   rules:
   - host: {{ .Values.network.openunison_host }}
     http:

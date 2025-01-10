@@ -6,7 +6,9 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "20"
     {{ range $key,$value := .Values.network.ingress_annotations }}
+    {{ if not ( eq $key "kubernetes.io/ingress.class"  )}}
     {{ $key }}: {{ quote $value }}
+    {{ end }}
     {{ end }}
   name: openunison-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
@@ -16,6 +18,7 @@ metadata:
     app.kubernetes.io/component: ingress-simple
     app.kubernetes.io/part-of: openunison
 spec:
+  ingressClassName: {{ index .Values.network.ingress_annotations "kubernetes.io/ingress.class" }}
   rules:
   - host: {{ .Values.network.openunison_host }}
     http:
