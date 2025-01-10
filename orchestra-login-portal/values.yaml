@@ -121,9 +121,10 @@ openunison:
   groups:
     areJson: "false"
   html:
-    image: ghcr.io/openunison/openunison-k8s-react:1.0.0
+    image: ghcr.io/openunison/openunison-k8s-react:1.0.1
     legacy: false
     theme:
+      headerTitle: "OpenUnison"
       startPage: front-page
       colors:
         primary: 

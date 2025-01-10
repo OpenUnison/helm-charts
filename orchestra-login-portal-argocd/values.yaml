@@ -138,11 +138,12 @@ openunison:
     refresh_token:
       grace_period_millis: 0
   html:
-    image: ghcr.io/openunison/openunison-k8s-react:1.0.0
+    image: ghcr.io/openunison/openunison-k8s-react:1.0.1
     legacy: false
     theme:
       startPage: front-page
       hidePages: []
+      headerTitle: "OpenUnison"
       colors:
         primary: 
           main: "#AC1622"

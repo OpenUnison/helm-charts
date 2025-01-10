@@ -82,6 +82,7 @@ spec:
         themeSecondaryDark: "{{ .Values.openunison.html.theme.colors.secondary.dark }}"
         themeSecondaryLight: "{{ .Values.openunison.html.theme.colors.secondary.light }}"
         errorColor: "{{ .Values.openunison.html.theme.colors.error }}"
+        headerTitle: "{{ .Values.openunison.html.theme.headerTitle | default "OpenUnison" }}"
         attributeNames:
         - cluster
         - nameSpace

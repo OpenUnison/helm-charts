@@ -12,6 +12,7 @@ openunison:
   orchestra_login_portal_name: orchestra-login-portal
   html:
     theme:
+      headerTitle: "OpenUnison"
       startPage: front-page
       colors:
         primary: 
