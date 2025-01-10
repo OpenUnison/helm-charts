@@ -155,8 +155,13 @@ metadata:
     sidecar.istio.io/inject: "false"
     argocd.argoproj.io/sync-wave: "20"
 spec:
+  {{ if .Values.services.affinity }}
+  affinity:
+    {{- toYaml .Values.services.affinity | nindent 6 }}
+  {{ end }}
   restartPolicy: Never
   containers:
+    
     - name: test-values
       image: {{ .Values.openunison.precheck.image | default "ghcr.io/tremolosecurity/python3:1.0.0" }}
       imagePullPolicy: {{ .Values.openunison.imagePullPolicy }}

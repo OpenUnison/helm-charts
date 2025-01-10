@@ -77,13 +77,16 @@ network_policies:
   enabled: false
   ingress:
     enabled: true
-    labels: []
+    labels:
+      app.kubernetes.io/name: ingress-nginx
   monitoring:
     enabled: true
-    labels: []
+    labels:
+      app.kubernetes.io/name: monitoring
   apiserver:
-    enabled: true
-    labels: []
+    enabled: false
+    labels:
+      app.kubernetes.io/name: kube-system
   namespace_label: kubernetes.io/metadata.name
       
 
@@ -91,7 +94,7 @@ services:
   enable_tokenrequest: false
   token_request_audience: api
   token_request_expiration_seconds: 600
-  node_selectors: []
+  node_selectors: {}
   tolerations: []
   pullSecret: ""
   liveness_probe:

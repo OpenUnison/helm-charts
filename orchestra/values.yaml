@@ -91,13 +91,16 @@ network_policies:
   enabled: true
   ingress:
     enabled: true
-    labels: []
+    labels:
+      app.kubernetes.io/name: ingress-nginx
   monitoring:
     enabled: true
-    labels: []
+    labels:
+      app.kubernetes.io/name: monitoring
   apiserver:
-    enabled: true
-    labels: []
+    enabled: false
+    labels:
+      app.kubernetes.io/name: kube-system
   namespace_label: kubernetes.io/metadata.name
 
 services:
@@ -105,7 +108,7 @@ services:
   token_request_audience: api
   token_request_expiration_seconds: 600
   tolerations: []
-  node_selectors: []
+  node_selectors: {}
   pullSecret: ""
   liveness_probe:
   - /usr/local/openunison/bin/check_alive.sh

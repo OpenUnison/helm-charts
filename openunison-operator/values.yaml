@@ -6,7 +6,7 @@ crd:
 
 services:
   tolerations: []
-  node_selectors: []
+  node_selectors: {}
   pullSecret: ""
 
 

@@ -47,6 +47,10 @@ spec:
         app.kubernetes.io/component: application
         app.kubernetes.io/part-of: openunison
     spec:
+      {{ if .Values.services.affinity }}
+      affinity:
+        {{- toYaml .Values.services.affinity | nindent 8 }}
+      {{ end }}
       {{ if .Values.network.enableHostNetwork }}
       hostNetwork: true
       {{ else }}

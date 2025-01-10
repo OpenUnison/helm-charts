@@ -23,5 +23,5 @@ cicd_proxy:
         labels: {}
   services:
     enable_tokenrequest: false
-    node_selectors: []
+    node_selectors: {}
   impersonation: {}

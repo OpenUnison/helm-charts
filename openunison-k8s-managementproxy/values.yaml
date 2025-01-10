@@ -7,7 +7,7 @@ services:
   token_request_audience: api
   token_request_expiration_seconds: 600
   createIngressCertificate: true
-  node_selectors: []
+  node_selectors: {}
   pullSecret: ""
   enable_cluster_admin: false
 
