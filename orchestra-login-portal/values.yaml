@@ -142,7 +142,7 @@ openunison:
   enable_activemq: true
   az_groups: []
   precheck:
-    image: ghcr.io/tremolosecurity/python3:1.0.0
+    image: ghcr.io/tremolosecurity/python-slim-nonroot/python3:1.0.0
   use_standard_jit_workflow: true
   management_proxy:
     enabled: false

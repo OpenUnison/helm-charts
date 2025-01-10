@@ -127,7 +127,7 @@ openunison:
   enable_provisioning: false
   enable_activemq: true
   precheck:
-    image: ghcr.io/tremolosecurity/python3:1.0.0
+    image: ghcr.io/tremolosecurity/python-slim-nonroot/python3:1.0.0
   management_proxy:
     enabled: false
   queue:
