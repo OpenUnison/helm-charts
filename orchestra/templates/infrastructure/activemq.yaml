@@ -28,6 +28,10 @@ spec:
         operated-by: openunison-operator
         tremolo.io/system: amq
     spec:
+      {{ if .Values.services.affinity }}
+      affinity:
+        {{- toYaml .Values.services.affinity | nindent 8 }}
+      {{ end }}
       {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
       securityContext:
         runAsNonRoot: true
@@ -371,6 +375,10 @@ spec:
         operated-by: openunison-operator
         tremolo.io/system: amq
     spec:
+      {{ if .Values.services.affinity }}
+      affinity:
+        {{- toYaml .Values.services.affinity | nindent 8 }}
+      {{ end }}
       {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
       securityContext:
         runAsNonRoot: true

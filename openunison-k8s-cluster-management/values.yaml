@@ -10,7 +10,20 @@ impersonation:
 
 openunison:
   orchestra_login_portal_name: orchestra-login-portal
-  
+  html:
+    theme:
+      headerTitle: "OpenUnison"
+      startPage: front-page
+      colors:
+        primary: 
+          main: "#AC1622"
+          dark: "#780f17"
+          light: "#bc444e"
+        secondary:
+          main: "#16aca0"
+          dark: "#0f7870"
+          light: "#44bcb3"
+        error: "#ff1744"
   naas:
     git:
       prefix: ""
@@ -81,6 +94,9 @@ openunison:
         enabled: true
         suffix: "-internal"
         add_requestor_as_admin: true
+        isolateRequestAccess:
+          enabled: false
+          
       external:
         suffix: "-external"
         enabled: false

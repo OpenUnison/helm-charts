@@ -18,6 +18,10 @@ spec:
       labels:
         job-name: onboard-vcluster-{{ .Release.Name }}
     spec:
+        {{ if .Values.services.affinity }}
+        affinity:
+          {{- toYaml .Values.services.affinity | nindent 10 }}
+        {{ end }}
         containers:
         - args:
             - /usr/local/openunison/onboard-cluster.sh

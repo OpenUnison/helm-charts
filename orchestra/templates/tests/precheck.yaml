@@ -155,12 +155,21 @@ metadata:
     sidecar.istio.io/inject: "false"
     argocd.argoproj.io/sync-wave: "20"
 spec:
+  {{ if .Values.services.affinity }}
+  affinity:
+    {{- toYaml .Values.services.affinity | nindent 6 }}
+  {{ end }}
   restartPolicy: Never
   containers:
+    
     - name: test-values
-      image: {{ .Values.openunison.precheck.image | default "ghcr.io/tremolosecurity/python3:1.0.0" }}
+      image: {{ .Values.openunison.precheck.image | default "ghcr.io/tremolosecurity/python-slim-nonroot/python3:1.0.0" }}
       imagePullPolicy: {{ .Values.openunison.imagePullPolicy }}
       command: ["python", "/scripts/check-hosts.py"]
+      {{ if .Values.precheck.resources }}
+      resources:
+        {{- toYaml .Values.precheck.resources | nindent 8 }}
+      {{ end }}
       securityContext:
         allowPrivilegeEscalation: false
         capabilities:
@@ -195,6 +204,14 @@ spec:
     runAsNonRoot: true
     runAsUser: 431
     runAsGroup: 433
+  {{ end }}
+  {{ $length := len .Values.services.node_selectors }}
+  {{ if eq $length 0  }}
+  nodeSelector: {}
+  {{ else }}
+  nodeSelector: {{ range $key,$value := .Values.services.node_selectors }}
+    {{ $key }}: {{ $value | quote }}
+  {{ end }}
   {{ end }}
   
   volumes:

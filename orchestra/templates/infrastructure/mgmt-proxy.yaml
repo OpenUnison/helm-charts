@@ -156,6 +156,10 @@ spec:
         app.kubernetes.io/component: kube-management-proxy
         app.kubernetes.io/part-of: openunison
     spec:
+      {{ if .Values.services.affinity }}
+      affinity:
+        {{- toYaml .Values.services.affinity | nindent 8 }}
+      {{ end }}
       serviceAccountName: kube-management-proxy-{{ .Release.Name }}
       containers:
       - image: {{ .Values.impersonation.jetstack_oidc_proxy_image}}
