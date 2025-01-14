@@ -1,0 +1,7 @@
+argowf:
+  namespace: argowf
+  org: "B158BD40-0C1B-11E3-8FFD-0800200C9A66"
+  openunison_release_name: "orchestra"
+  group_map: 
+    create: true
+    map: []
