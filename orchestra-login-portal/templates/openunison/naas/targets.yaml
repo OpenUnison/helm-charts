@@ -21,9 +21,9 @@ spec:
   - name: user
     value: "{{ .Values.database.user }}"
   - name: maxCons
-    value: "10"
+    value: "{{ .Values.database.maxcons | default 10 }}"
   - name: maxIdleCons
-    value: "10"
+    value: "{{ .Values.database.maxidlecons | default 10 }}"
   - name: validationQuery
     value: "{{ .Values.database.validation }}"
   - name: userTable

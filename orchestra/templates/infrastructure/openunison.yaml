@@ -314,6 +314,10 @@ spec:
       value: {{ .Values.database.user }}
     - name: OU_JDBC_VALIDATION
       value: {{ .Values.database.validation }}
+    - name: openunison.maxcons
+      value: "{{ .Values.database.maxcons | default 10 }}"
+    - name: openunison.maxidlecons
+      value: "{{ .Values.database.maxidlecons | default 10 }}"
     - name: SMTP_HOST
       value: {{ .Values.smtp.host }}
     - name: SMTP_PORT
