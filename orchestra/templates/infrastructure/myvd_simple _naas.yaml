@@ -67,8 +67,8 @@ data:
     server.shadowUsers.tremolo.config.url=#[OU_JDBC_URL]
     server.shadowUsers.tremolo.config.user=#[OU_JDBC_USER]
     server.shadowUsers.tremolo.config.password=#[OU_JDBC_PASSWORD]
-    server.shadowUsers.tremolo.config.maxCons=10
-    server.shadowUsers.tremolo.config.maxConsIdle=10
+    server.shadowUsers.tremolo.config.maxCons=#[openunison.maxcons:10]
+    server.shadowUsers.tremolo.config.maxConsIdle=#[openunison.maxidlecons:10]
     server.shadowUsers.tremolo.config.validationQuery=#[OU_JDBC_VALIDATION]
     server.shadowUsers.tremolo.config.rdn=uid
     server.shadowUsers.tremolo.config.useSimple=true
