@@ -27,6 +27,7 @@ openunison:
   naas:
     git:
       prefix: ""
+      enable_byo: true
     jobs:
       rebase:
         queuename: rebase-queue
