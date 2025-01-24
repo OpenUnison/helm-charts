@@ -238,6 +238,7 @@ spec:
              name: {{ .Values.openunison.naas.workflows.new_namespace.pre_provision_workflow }}
            {{ end }}
 
+           {{ if .Values.openunison.naas.git.enable_byo }}
            # GitOps - Create SSH Key for Namespace
            - taskType: ifAttrHasValue
              name: useGit
@@ -260,6 +261,7 @@ spec:
                      type: Opaque
                    srcType: yaml
                    writeToRequest: "false"
+           {{ end }}
 
            - taskType: customTask
              className: com.tremolosecurity.provisioning.tasks.CreateK8sObject

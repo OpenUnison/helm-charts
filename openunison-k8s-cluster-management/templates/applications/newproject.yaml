@@ -22,8 +22,25 @@ spec:
     - constraint: o=Tremolo
       scope: dn
     filterChain:
+    {{ if .Values.openunison.naas.git.enable_byo }}
     - className: com.tremolosecurity.proxy.filters.CheckK8sTargetMetadata
       params: {}
+    {{ else }}
+    - className: com.tremolosecurity.proxy.filters.JavaScriptFilter
+      params: 
+        javaScript: |-
+          GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+          HashMap = Java.type("java.util.HashMap");
+          
+          function initFilter(config) {
+
+          }
+
+          function doFilter(request,response,chain) {
+            response.getWriter().print(JSON.stringify({}));
+          }
+
+    {{ end }}
     hosts:
     - '#[OU_HOST]'
     results:
