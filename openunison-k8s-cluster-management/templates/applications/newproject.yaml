@@ -90,7 +90,11 @@ spec:
         requireTermsAndConditions: "false"
         termsAndCondisionsText: ""
         useCallWorkflowClass: "true"
+        {{ if .Values.openunison.naas.git.enable_byo }}
         callWorkflowClassName: "com.tremolosecurity.scalejs.K8sProjectCheck"
+        {{ else }}
+        callWorkflowClassName: com.tremolosecurity.scalejs.register.registrators.JavaScriptRegister
+        {{ end }}
         submitLoggedInUser: "true"
         themePrimaryMain: "{{ .Values.openunison.html.theme.colors.primary.main }}"
         themePrimaryDark: "{{ .Values.openunison.html.theme.colors.primary.dark }}"
@@ -478,6 +482,62 @@ spec:
         - workflowName=new-k8s-namespace
         - targetName=k8s
         - projectAttributeName=nameSpace
+        - |-
+            javaScript=
+            function init(config) {
+
+            }
+
+            function createTremoloUser(newUser, errors, userData) {
+              System = Java.type("java.lang.System");
+              GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+              
+              
+              var targetName = newUser.getAttributes().get("cluster");
+              var nameSpace = newUser.getAttributes().get("nameSpace");
+
+              k8s = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget(targetName);
+
+              if (! k8s) {
+                errors.add("invalid cluster");
+                return "";
+              }
+
+              http = k8s.getProvider().createClient();
+
+              try {
+                if (k8s.getProvider().isObjectExistsByName(k8s.getProvider().getAuthToken(),http,'/api/v1/namespaces',nameSpace)) {
+                  errors.add("Namespace name already exists");
+                }
+                
+              } finally {
+                if (http != null) {
+                  http.getHttp().close();
+                  http.getBcm().close();
+                }
+              }
+
+
+
+              return "new-k8s-namespace";
+            }
+
+            function setWorkflowParameters(wfParameters, newUser, userData) {
+              nameSpace = newUser.getAttributes().get("nameSpace");
+              wfParameters.put("namespace", nameSpace);
+              
+              
+              targetName = newUser.getAttributes().get("cluster");
+              
+              if (targetName == null) {
+                targetName = "k8s";
+              }
+              wfParameters.put("cluster", targetName);
+              
+              wfParameters.put("fully-qualified-namespace", targetName + "." + nameSpace);
+            }
+
+            
         jsUris:
         - js/register-functions.js
         - js-ext/functions.js
