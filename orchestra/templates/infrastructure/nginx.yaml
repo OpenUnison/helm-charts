@@ -13,7 +13,9 @@ metadata:
     nginx.ingress.kubernetes.io/session-cookie-hash: sha1
     
     {{ range $key,$value := .Values.network.ingress_annotations }}
+    {{ if not ( eq $key "kubernetes.io/ingress.class"  )}}
     {{ $key }}: {{ quote $value }}
+    {{ end }}
     {{ end }}
   name: openunison-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
@@ -23,7 +25,7 @@ metadata:
     app.kubernetes.io/component: ingress-nginx
     app.kubernetes.io/part-of: openunison
 spec:
-  ingressClassName: nginx
+  ingressClassName: {{ index .Values.network.ingress_annotations "kubernetes.io/ingress.class" | default "nginx" }}
   rules:
   - host: {{ .Values.network.openunison_host }}
     http:

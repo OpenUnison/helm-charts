@@ -52,6 +52,7 @@ rules:
   - "userextras/originaluser.jetstack.io-user"
   - "userextras/originaluser.jetstack.io-groups"
   - "userextras/originaluser.jetstack.io-extra"
+  - "userextras/authentication.kubernetes.io/credential-id"
   verbs:
   - "create"
   - "impersonate"
