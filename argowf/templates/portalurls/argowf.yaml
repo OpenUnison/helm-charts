@@ -3,6 +3,8 @@ kind: PortalUrl
 metadata:
   name: argowf
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   azRules:
   - constraint: o=Tremolo
