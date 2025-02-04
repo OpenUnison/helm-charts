@@ -4,6 +4,8 @@ kind: Workflow
 metadata:
   name: jit-argowf
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   description: creates a ServiceAccount and adds to (Cluster)RoleBindings based on group mappings
   inList: false

@@ -4,6 +4,8 @@ kind: Target
 metadata:
   name: k8s-rbac
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
 spec:
   className: com.tremolosecurity.provisioning.targets.RbacBindingsTarget
   params:
