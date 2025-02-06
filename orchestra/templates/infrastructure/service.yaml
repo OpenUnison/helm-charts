@@ -10,6 +10,9 @@ metadata:
     app.kubernetes.io/part-of: network
   annotations:
     argocd.argoproj.io/sync-wave: "20"
+    {{ if eq .Values.network.ingress_type "kong" }}
+    konghq.com/protocol: "https"
+    {{ end  }}
   name: openunison-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
   {{ if eq .Values.network.ingress_type "traefik" }}

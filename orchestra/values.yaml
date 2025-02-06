@@ -17,6 +17,7 @@ network:
     entrypoints:
       plaintext: web
       tls: websecure
+  kong: {}
 
 precheck:
   image: ghcr.io/tremolosecurity/python-slim-nonroot/python3:1.0.0

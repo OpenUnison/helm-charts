@@ -228,15 +228,20 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: kube-oidc-proxy
     app.kubernetes.io/part-of: openunison
+    
   name: kube-oidc-proxy-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
-  {{ if eq .Values.network.ingress_type "traefik" }}
   annotations:
     argocd.argoproj.io/sync-wave: "50"
+    {{ if eq .Values.network.ingress_type "traefik" }}
     {{ if .Values.network.traefik.secure }} 
     traefik.ingress.kubernetes.io/service.serversscheme: https
     {{ end }}
-  {{ end }}
+    {{ end }}
+    
+    {{ if eq .Values.network.ingress_type "kong" }}
+    konghq.com/protocol: "https"
+    {{ end  }}
 spec:
   ports:
   - port: 443
