@@ -124,24 +124,24 @@ config:
   cookie_name: "ingress_session"  # Name of the cookie
 plugin: session
 {{ if .Values.network.kong.allow_spdy }}
----
-apiVersion: configuration.konghq.com/v1beta1
-kind: TCPIngress
-metadata:
-  name: kube-oidc-proxy-passthrough-{{ .Release.Name }}
-  namespace: {{ .Release.Namespace }}
-  annotations:
-    kubernetes.io/ingress.class: {{ index .Values.network.ingress_annotations "kubernetes.io/ingress.class" | default "kong" }}
-spec:
-  tls:
-  - hosts:
-    - {{ .Values.network.api_server_host }}
-    secretName: unison-tls
-  rules:
-    - port: 443
-      host: {{ .Values.network.api_server_host }}
-      backend:
-        serviceName: kube-oidc-proxy-{{ .Release.Name }}
-        servicePort: 443
+# ---
+# apiVersion: configuration.konghq.com/v1beta1
+# kind: TCPIngress
+# metadata:
+#   name: kube-oidc-proxy-passthrough-{{ .Release.Name }}
+#   namespace: {{ .Release.Namespace }}
+#   annotations:
+#     kubernetes.io/ingress.class: {{ index .Values.network.ingress_annotations "kubernetes.io/ingress.class" | default "kong" }}
+# spec:
+#   tls:
+#   - hosts:
+#     - {{ .Values.network.api_server_host }}
+#     secretName: unison-tls
+#   rules:
+#     - port: 443
+#       host: {{ .Values.network.api_server_host }}
+#       backend:
+#         serviceName: kube-oidc-proxy-{{ .Release.Name }}
+#         servicePort: 443
 {{ end }}
 {{ end }}

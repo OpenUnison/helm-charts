@@ -56,7 +56,7 @@ spec:
     value: "{{ .Values.openunison.naas.readOnly | default false }}"
   secretParams:
   - name: password
-    secretName: orchestra-secrets-source
+    secretName: orchestra-secrets-source#[openunison.static-secret.suffix]
     secretKey: OU_JDBC_PASSWORD
   targetAttributes:
   - name: sub
