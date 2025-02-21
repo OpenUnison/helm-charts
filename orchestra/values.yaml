@@ -92,16 +92,13 @@ network_policies:
   enabled: true
   ingress:
     enabled: true
-    labels:
-      app.kubernetes.io/name: ingress-nginx
+    labels: []
   monitoring:
     enabled: true
-    labels:
-      app.kubernetes.io/name: monitoring
+    labels: []
   apiserver:
     enabled: false
-    labels:
-      app.kubernetes.io/name: kube-system
+    labels: []
   namespace_label: kubernetes.io/metadata.name
 
 services:
