@@ -37,7 +37,7 @@ spec:
       jwtTokenAttributeName: id_token
     secretParams:
     - name: secretid
-      secretName: orchestra-secrets-source
+      secretName: orchestra-secrets-source#[openunison.static-secret.suffix]
       secretKey: K8S_DB_SECRET
 {{ else }}
   - name: saml2

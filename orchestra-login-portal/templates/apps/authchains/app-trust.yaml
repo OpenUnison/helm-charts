@@ -27,7 +27,7 @@ spec:
     secretParams:
     - name: secretid
       secretKey: K8S_DB_SECRET
-      secretName: orchestra-secrets-source
+      secretName: orchestra-secrets-source#[openunison.static-secret.suffix]
 {{ if $app.injectToken }}
   - name: genoidctoken
     params:

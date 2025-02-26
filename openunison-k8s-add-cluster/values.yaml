@@ -12,7 +12,7 @@ cluster:
       useToken: true
       tokenType: oidc
       staticSecret:
-        secretName: orchestra-secrets-source
+        secretName: orchestra-secrets-source#[openunison.static-secret.suffix]
         keyName: cluster-secret
     admins:
       enabled: true

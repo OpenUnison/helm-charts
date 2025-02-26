@@ -7,6 +7,7 @@ network:
   createIngressCertificate: true
   ingress_type: nginx
   ingress_annotations: {}
+  kong: {}
   
 
 cert_template:

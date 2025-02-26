@@ -97,7 +97,7 @@ data:
     server.shadowGroups.tremolo.config.addBaseToFilter=false
     server.shadowGroups.tremolo.config.objectClass=groupOfUniqueNames
     server.shadowGroups.tremolo.config.mapping=cn=name,uniqueMember=sub
-    server.shadowGroups.tremolo.config.sql=SELECT name,sub FROM localGroups LEFT OUTER JOIN userGroups ON localGroups.groupId=userGroups.groupId LEFT OUTER JOIN localUsers ON userGroups.userId=localUsers.userId
+    server.shadowGroups.tremolo.config.sql=SELECT name,sub FROM localGroups LEFT OUTER JOIN userGroups ON localGroups.groupId=userGroups.groupId LEFT OUTER JOIN localUsers ON userGroups.userId=localUsers.userId ORDER BY name DESC
 
     server.activedirectory.chain=objectguid2text,dnmapper,objmap,membertrans,ldap
     server.activedirectory.nameSpace=ou=activedirectory,o=Data

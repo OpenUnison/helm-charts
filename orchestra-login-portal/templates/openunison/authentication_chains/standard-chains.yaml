@@ -74,7 +74,7 @@ spec:
       secretKey: OIDC_CLIENT_SECRET
     {{ if .Values.oidc.client_id_is_secret }}
     - name: clientid
-      secretName: orchestra-secrets-source
+      secretName: orchestra-secrets-source#[openunison.static-secret.suffix]
       secretKey: OIDC_CLIENT_ID
     {{ end }}
   - name: map
@@ -102,7 +102,7 @@ spec:
       defaultObjectClass: inetOrgPerson
     secretParams:
     - name: secretid
-      secretName: orchestra-secrets-source
+      secretName: orchestra-secrets-source#[openunison.static-secret.suffix]
       secretKey: GITHUB_SECRET_ID
   - name: az
     required: required

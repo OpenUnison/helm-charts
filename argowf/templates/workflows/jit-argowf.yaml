@@ -40,10 +40,11 @@ spec:
 
             function doTask(user,request) {
                 // map the user to a dns compliant name
-                var saname = OpenShiftTarget.sub2uid(user.getAttribs().get("uid").getValues().get(0));
+                var saname = OpenShiftTarget.sub2uid(user.getAttribs().get("sub").getValues().get(0));
+                
                 request.put("saname", saname);
                 user.getAttribs().put("saname",new Attribute("saname",saname));
-                request.put("sub",user.getAttribs().get("uid").getValues().get(0));
+                request.put("sub",user.getAttribs().get("sub").getValues().get(0));
 
                 // load the ConfigMap that stores mappings from groups to (Cluster)RoleBindings
                 var group2bindings = JSON.parse(K8sUtils.loadConfigMap("k8s","openunison","argowf-groups2bindings").get("mappings"));

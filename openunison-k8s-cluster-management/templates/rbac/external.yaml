@@ -3,7 +3,7 @@
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: openunison-{{ .Release.Name }}-cluster-administrators
+  name: openunison-{{ .Release.Name }}-cluster-administrators{{ .Values.openunison.naas.groups.external.suffix }}
   annotations:
     argocd.argoproj.io/sync-wave: "40"
 subjects:
@@ -13,9 +13,6 @@ subjects:
   {{ else }}
   name: k8s-cluster-administrators{{ .Values.openunison.naas.groups.external.suffix }}
   {{ end }}
-  apiGroup: rbac.authorization.k8s.io
-- kind: Group
-  name: k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.external.suffix }}
   apiGroup: rbac.authorization.k8s.io
 - kind: ServiceAccount
   name: openunison-{{ .Values.impersonation.orchestra_release_name }}
