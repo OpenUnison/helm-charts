@@ -89,6 +89,7 @@ spec:
           capabilities:
             drop:
             - "ALL"
+          readOnlyRootFilesystem: {{ .Values.operator.readOnlyRootFilesystem }}
           {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
           runAsNonRoot: true
           {{ else }}

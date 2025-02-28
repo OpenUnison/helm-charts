@@ -130,6 +130,7 @@ openunison:
   non_secret_data: {}
   env: {}
   secrets: []
+  readOnlyRootFilesystem: false
   imagePullPolicy: Always
   html:
     image: ghcr.io/openunison/openunison-k8s-html:1.0.1
