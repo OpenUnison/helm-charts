@@ -75,11 +75,33 @@ spec:
                      }
 
                      function doTask(user,request) {
+                       HashMap = Java.type("java.util.HashMap");
+                       System = Java.type("java.lang.System");
                        sql = task.getConfigManager().getProvisioningEngine().getTarget("jitdb").getProvider().getDS().getConnection();
+                       k8s = task.getConfigManager().getProvisioningEngine().getTarget("k8s").getProvider();
+
+                       
+
                        try {
                          rs = sql.createStatement().executeQuery("SELECT COUNT(*) AS num FROM localUsers");
                          rs.next();
                          if (rs.getInt("num") == 1) {
+                           // setup internal groups
+                           {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+                           System.out.println("checking for '" + "administrators{{ .Values.openunison.naas.groups.internal.suffix }}" + "'");
+                           if (! k8s.isGroupExists("administrators{{ .Values.openunison.naas.groups.internal.suffix }}",user,request)) {
+                             additionalAttribs = new HashMap();
+                             System.out.println("creating '" + "administrators{{ .Values.openunison.naas.groups.internal.suffix }}" + "'");
+                             k8s.addGroup("administrators{{ .Values.openunison.naas.groups.internal.suffix }}",additionalAttribs,user,request);
+                           }
+
+                           System.out.println("Checking for '" + "k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }}" + "'");
+                           if (! k8s.isGroupExists("k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }}",user,request)) {
+                             System.out.println("Creating for '" + "k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }}" + "'");
+                             additionalAttribs = new HashMap();
+                             k8s.addGroup("k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }}",additionalAttribs,user,request);
+                           }
+                           {{ end }}
                            // first user, add the admin group
                            user.getGroups().add("administrators{{ .Values.openunison.naas.groups.internal.suffix }}");
                            user.getGroups().add("k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }}");
@@ -101,6 +123,15 @@ spec:
                  - mail
                  - firstName
                  - lastName
+               {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+               - taskType: provision
+                 sync: true
+                 target: k8s
+                 setPassword: false
+                 onlyPassedInAttributes: true
+                 attributes:
+                 - sub
+               {{ end }}
                - taskType: resync
                  keepExternalAttrs: false
                  changeRoot: true

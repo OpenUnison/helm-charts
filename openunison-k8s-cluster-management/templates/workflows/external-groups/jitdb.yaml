@@ -98,6 +98,7 @@ spec:
 
 
                    jitDb = task.getConfigManager().getProvisioningEngine().getTarget("jitdb").getProvider();
+                   k8s = task.getConfigManager().getProvisioningEngine().getTarget("k8s").getProvider();
                    
                    if (user.getAttribs().get("githubTeams") != null) {
                     memberOf = user.getAttribs().get("githubTeams"); 
@@ -123,6 +124,13 @@ spec:
 
                             jitDb.addGroup(k8sGroupName,additionalAttribs,user,request);
                           }
+
+                          {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+                          if (! k8s.isGroupExists(k8sGroupName,user,request)) {
+                            additionalAttribs = new HashMap();
+                            k8s.addGroup(k8sGroupName,additionalAttribs,user,request);
+                          }
+                          {{ end }}
 
                           user.getGroups().add(k8sGroupName);
                         }
@@ -169,6 +177,15 @@ spec:
                  - mail
                  - firstName
                  - lastName
+               {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+               - taskType: provision
+                 sync: true
+                 target: k8s
+                 setPassword: false
+                 onlyPassedInAttributes: true
+                 attributes:
+                 - sub
+               {{ end }}
                - taskType: resync
                  keepExternalAttrs: false
                  changeRoot: true

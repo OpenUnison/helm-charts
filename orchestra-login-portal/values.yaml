@@ -109,6 +109,8 @@ services:
 
 openunison:
   apps: []
+  kubeAuth:
+    enabled: true
   amq:
     enabled: true
   imagePullPolicy: Always

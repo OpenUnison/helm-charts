@@ -54,6 +54,14 @@ spec:
               setPassword: false
               onlyPassedInAttributes: false
               attributes: ['sub']
+            {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+            - taskType: provision
+              sync: false
+              target: k8s
+              setPassword: false
+              onlyPassedInAttributes: false
+              attributes: ['sub']
+            {{ end }}
             - taskType: notifyUser
               subject: Approval access to $groupName$ approved
               mailAttrib: mail
@@ -84,4 +92,12 @@ spec:
               setPassword: false
               onlyPassedInAttributes: false
               attributes: ['sub']
+            {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+            - taskType: provision
+              sync: true
+              target: k8s
+              setPassword: false
+              onlyPassedInAttributes: false
+              attributes: ['sub']
+            {{ end }}
 {{ end }}
