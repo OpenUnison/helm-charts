@@ -34,6 +34,14 @@ spec:
                  attributes:
                  - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
                  - unison.group.create.param.2=Approve access to $cluster$ $name$
+             {{ if $root.Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
+               params:
+                 target: k8s
+                 name: approvers-k8s-$cluster$-$name$
+                 attributes: []
+             {{ end }}
                  
              - taskType: customTask
                className: com.tremolosecurity.provisioning.tasks.CopyGroupMembers
@@ -82,6 +90,14 @@ spec:
                  attributes:
                  - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
                  - unison.group.create.param.2={{ $role.description }}
+             {{ if $root.Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
+               params:
+                 target: k8s
+                 name: k8s-namespace-{{ $role.name }}-$cluster$-$name${{ $root.Values.openunison.naas.groups.internal.suffix }}
+                 attributes: []
+             {{ end }}
                  
              - taskType: mapping
                strict: true
@@ -96,12 +112,22 @@ spec:
                - taskType: addGroup
                  name: k8s-namespace-{{ $role.name }}-$cluster$-$name${{ $root.Values.openunison.naas.groups.internal.suffix }}
                  remove: false
+                 
                - taskType: provision
                  sync: false
                  target: jitdb
                  setPassword: false
                  onlyPassedInAttributes: false
                  attributes: ["uid"]
+               {{ if $root.Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+               - taskType: provision
+                 sync: false
+                 target: k8s
+                 setPassword: false
+                 onlyPassedInAttributes: false
+                 attributes: ["uid"]
+               {{ end }}
+
                {{ range $bind := $role.bindings }}
                - taskType: customTask
                  className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
@@ -157,6 +183,14 @@ spec:
                   setPassword: false
                   onlyPassedInAttributes: false
                   attributes: ["uid"]
+                {{ if $root.Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+                - taskType: provision
+                  sync: true
+                  target: k8s
+                  setPassword: false
+                  onlyPassedInAttributes: false
+                  attributes: ["uid"]
+                {{ end }}
 
 {{ end }}
 {{ range $role := $root.Values.openunison.naas.groups.roles }}
@@ -192,6 +226,14 @@ spec:
                  attributes:
                  - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
                  - unison.group.create.param.2=Approve access to $cluster$ $name$
+             {{ if $root.Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
+               params:
+                 target: k8s
+                 name: approvers-k8s-$cluster$-$name$
+                 attributes: []
+             {{ end }}
                  
              - taskType: customTask
                className: com.tremolosecurity.provisioning.tasks.CopyGroupMembers
@@ -240,6 +282,14 @@ spec:
                  attributes:
                  - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
                  - unison.group.create.param.2={{ $role.description }}
+             {{ if $root.Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
+               params:
+                 target: k8s
+                 name: k8s-namespace-{{ $role.name }}-$cluster$-$name${{ $root.Values.openunison.naas.groups.internal.suffix }}
+                 attributes: []
+             {{ end }}
                  
              - taskType: mapping
                strict: true
@@ -260,6 +310,14 @@ spec:
                  setPassword: false
                  onlyPassedInAttributes: false
                  attributes: ["uid"]
+               {{ if $root.Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+               - taskType: provision
+                 sync: false
+                 target: k8s
+                 setPassword: false
+                 onlyPassedInAttributes: false
+                 attributes: ["uid"]
+               {{ end }}
 
                {{ range $bind := $role.bindings }}
                - taskType: customTask
@@ -315,6 +373,14 @@ spec:
                   setPassword: false
                   onlyPassedInAttributes: false
                   attributes: ["uid"]
+                {{ if $root.Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+                - taskType: provision
+                  sync: true
+                  target: k8s
+                  setPassword: false
+                  onlyPassedInAttributes: false
+                  attributes: ["uid"]
+                {{ end }}
 
 {{ end }}
 {{ end }}

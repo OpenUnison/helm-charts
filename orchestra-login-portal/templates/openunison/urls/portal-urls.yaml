@@ -49,6 +49,7 @@ spec:
   {{ end }}
   {{ end }}
 {{ end }}
+{{ if .Values.openunison.kubeAuth.enabled }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: PortalUrl
@@ -95,4 +96,5 @@ spec:
   {{ end }}
   {{ end }}
   {{ end }}
+{{ end }}
 {{ end }}

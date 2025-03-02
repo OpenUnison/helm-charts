@@ -32,7 +32,7 @@ myvd_config_path: "WEB-INF/myvd.conf"
 k8s_cluster_name: kubernetes
 enable_impersonation: true
 myvd_configmap: myvd
-cert_update_image: "ghcr.io/openunison/openunison-kubernetes-operator:1.0.6"
+cert_update_image: "ghcr.io/openunison/openunison-kubernetes-operator:1.0.7"
 
 dashboard:
   namespace: "kubernetes-dashboard"

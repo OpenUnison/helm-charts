@@ -12,7 +12,7 @@ services:
 
 
 operator:
-  image: ghcr.io/openunison/openunison-kubernetes-operator:1.0.6
+  image: ghcr.io/openunison/openunison-kubernetes-operator:1.0.7
   validators: []
   mutators: []
   imagePullPolicy: Always

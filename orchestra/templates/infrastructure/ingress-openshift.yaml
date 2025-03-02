@@ -1,0 +1,22 @@
+{{ if eq .Values.network.ingress_type "openshift" }}
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: openunison
+  namespace: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+    router.openshift.io/cookie_name: ou-routes-session
+spec:
+  host: {{ .Values.network.openunison_host }}
+  path: /
+  to:
+    kind: Service
+    name: openunison-orchestra
+    weight: 100
+  port:
+    targetPort: openunison-secure-orchestra
+  tls:
+    termination: reencrypt
+  wildcardPolicy: None
+{{ end }}

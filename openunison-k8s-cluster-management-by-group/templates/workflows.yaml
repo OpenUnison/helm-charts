@@ -117,6 +117,15 @@ spec:
                  - mail
                  - firstName
                  - lastName
+               {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+               - taskType: provision
+                 sync: true
+                 target: k8s
+                 setPassword: false
+                 onlyPassedInAttributes: true
+                 attributes:
+                 - sub
+               {{ end }}
                - taskType: resync
                  keepExternalAttrs: false
                  changeRoot: true
@@ -177,6 +186,14 @@ spec:
                  attributes:
                  - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
                  - unison.group.create.param.2=Manage kubernetes namespace $cluster$ $nameSpace$
+             {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
+               params:
+                 target: k8s
+                 name: k8s-namespace-administrators-$cluster$-$nameSpace$
+                 attributes: []
+             {{ end }}
 
              # create group mapping
              - taskType: customTask
@@ -217,6 +234,14 @@ spec:
                  attributes:
                  - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
                  - unison.group.create.param.2=View kubernetes namespace $cluster$ $nameSpace$
+             {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
+               params:
+                 target: k8s
+                 name: k8s-namespace-viewer-$cluster$-$nameSpace$
+                 attributes: []
+             {{ end }}
                  
              # create group mapping
              - taskType: customTask

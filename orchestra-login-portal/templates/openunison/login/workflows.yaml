@@ -67,6 +67,15 @@ spec:
                  - first_name
                  - last_name
                  - uid
+               {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+               - taskType: provision
+                 sync: true
+                 target: k8s
+                 setPassword: false
+                 onlyPassedInAttributes: true
+                 attributes:
+                 - sub
+               {{ end }}
                - taskType: resync
                  keepExternalAttrs: false
                  changeRoot: true

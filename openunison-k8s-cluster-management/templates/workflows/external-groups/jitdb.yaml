@@ -66,6 +66,40 @@ spec:
                    var hasInternal = false;
                    {{ end }}
                    
+                   k8s = task.getConfigManager().getProvisioningEngine().getTarget("k8s").getProvider();
+                   request.put("WORKFLOW",task.getWorkflow());
+
+                   {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+                  {{ if .Values.openunison.naas.groups.internal.enabled }}
+                  if (! k8s.isGroupExists("administrators{{ .Values.openunison.naas.groups.internal.suffix }}",user,request)) {
+                    additionalAttribs = new HashMap();
+                    k8s.addGroup("administrators{{ .Values.openunison.naas.groups.internal.suffix }}",additionalAttribs,user,request);
+                  }
+
+                  
+                  if (! k8s.isGroupExists("k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }}",user,request)) {
+                    additionalAttribs = new HashMap();
+                    k8s.addGroup("k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.internal.suffix }}",additionalAttribs,user,request);
+                  }
+                  {{ end }}
+
+                  if (! k8s.isGroupExists("administrators{{ .Values.openunison.naas.groups.external.suffix }}",user,request)) {
+                    additionalAttribs = new HashMap();
+                    k8s.addGroup("administrators{{ .Values.openunison.naas.groups.external.suffix }}",additionalAttribs,user,request);
+                  }
+
+                  
+                  if (! k8s.isGroupExists("k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.external.suffix }}",user,request)) {
+                    additionalAttribs = new HashMap();
+                    k8s.addGroup("k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.external.suffix }}",additionalAttribs,user,request);
+                  }
+
+                  if (! k8s.isGroupExists("users",user,request)) {
+                    additionalAttribs = new HashMap();
+                    k8s.addGroup("users",additionalAttribs,user,request);
+                  }
+                  {{ end }}
+                   
                    var internalGroups = new ArrayList();
 
                    if (hasInternal) {
@@ -90,14 +124,15 @@ spec:
                    }
 
 
-                   System.out.println(user.getGroups());
+                   
                    user.getGroups().clear();
-                   System.out.println(user.getGroups());
+                   
                    user.getGroups().addAll(internalGroups);
-                   System.out.println(user.getGroups());
+                   
 
 
                    jitDb = task.getConfigManager().getProvisioningEngine().getTarget("jitdb").getProvider();
+                   k8s = task.getConfigManager().getProvisioningEngine().getTarget("k8s").getProvider();
                    
                    if (user.getAttribs().get("githubTeams") != null) {
                     memberOf = user.getAttribs().get("githubTeams"); 
@@ -124,12 +159,19 @@ spec:
                             jitDb.addGroup(k8sGroupName,additionalAttribs,user,request);
                           }
 
+                          {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+                          if (! k8s.isGroupExists(k8sGroupName,user,request)) {
+                            additionalAttribs = new HashMap();
+                            k8s.addGroup(k8sGroupName,additionalAttribs,user,request);
+                          }
+                          {{ end }}
+
                           user.getGroups().add(k8sGroupName);
                         }
                       }
                     }
                   }
-                   System.out.println(user.getGroups());
+                   
                    return true;
                  }  
            
@@ -169,6 +211,15 @@ spec:
                  - mail
                  - firstName
                  - lastName
+               {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+               - taskType: provision
+                 sync: true
+                 target: k8s
+                 setPassword: false
+                 onlyPassedInAttributes: true
+                 attributes:
+                 - sub
+               {{ end }}
                - taskType: resync
                  keepExternalAttrs: false
                  changeRoot: true
