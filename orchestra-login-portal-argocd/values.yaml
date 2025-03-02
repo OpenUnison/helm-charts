@@ -18,7 +18,7 @@ cert_template:
 
 image: "ghcr.io/openunison/openunison-k8s:1.0.42"
 amq_image: "ghcr.io/tremolosecurity/activemq-docker:5.16.6"
-cert_update_image: "ghcr.io/openunison/openunison-kubernetes-operator:1.0.6"
+cert_update_image: "ghcr.io/openunison/openunison-kubernetes-operator:1.0.7"
 myvd_config_path: "WEB-INF/myvd.conf"
 k8s_cluster_name: kubernetes
 enable_impersonation: true
@@ -111,7 +111,7 @@ services:
   - "alive"
 
 operator:
-  image: ghcr.io/openunison/openunison-kubernetes-operator:1.0.6
+  image: ghcr.io/openunison/openunison-kubernetes-operator:1.0.7
   validators: []
   mutators: []
   resources:
