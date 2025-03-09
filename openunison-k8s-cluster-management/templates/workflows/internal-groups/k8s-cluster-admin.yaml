@@ -34,6 +34,7 @@ spec:
                attributes: []
           {{ end }}
 
+           {{ if not .Values.openunison.naas.groups.privilegedAccessGroup }}
            - taskType: customTask
              className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
              params:
@@ -54,6 +55,7 @@ spec:
                kind: ClusterRoleBinding
                url: /apis/rbac.authorization.k8s.io/v1/clusterrolebindings
                srcType: yaml
+           {{ end }}
              
            - taskType: customTask
              className: com.tremolosecurity.provisioning.customTasks.LoadAttributes
