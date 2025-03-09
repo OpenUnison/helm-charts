@@ -30,4 +30,6 @@ mv *.tgz /tmp/helm
 
 helm repo index /tmp/helm --url https://nexus.tremolo.io/repository/helm$REPO
 
+./gen_versions.sh
+
 aws s3 sync /tmp/helm/ s3://tremolosecurity-maven/repository/helm$REPO/
