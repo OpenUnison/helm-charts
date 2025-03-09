@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          repository: git@github.com:OpenUnison/openunison.github.io.git
+          repository: OpenUnison/openunison.github.io
           ssh-key: ${{ secrets.UPDATE_DOCS_KEY }}
           fetch-depth: 0
 
