@@ -5,7 +5,7 @@ permissions:
   contents: read    
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
@@ -15,4 +15,24 @@ jobs:
           role-session-name: ${{ secrets.SESSION_NAME }}
           aws-region: us-east-1
       - run: ./generate_packages.sh ${{ secrets.REPO }}
+  
+  deploy-docs:
+    runs-on: ubuntu-latest
+    if: github.event.repository.fork == false
+    steps:
+      - name: patch remote docs
+        run: |-
+          mkdir -p ~/.ssh
+          echo -n '${{ secrets.UPDATE_DOCS_KEY }}' > ~/.ssh/id_rsa
+          chmod -R 600 ~/.ssh
+          mkdir /tmp/docs
+          cd /tmp/docs
+          git config user.name helm-chart-pipeline
+          git config user.email helm-chart-pipeline@nohost.domain.com
+          git clone git@github.com:OpenUnison/openunison.github.io.git
+          date >> patchlogs.txt
+          git add patchlogs.txt
+          git commit -m "updates to helm charts from commit ${{ github.sha }}"
+          git push
+
         
