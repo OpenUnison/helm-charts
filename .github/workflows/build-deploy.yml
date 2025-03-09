@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: git@github.com:OpenUnison/openunison.github.io.git
-          ssh-key: $secrets.UPDATE_DOCS_KEY$
+          ssh-key: ${{ secrets.UPDATE_DOCS_KEY }}
           fetch-depth: 0
 
       - name: patch remote docs
