@@ -16,7 +16,6 @@ operator:
   validators: []
   mutators: []
   imagePullPolicy: Always
-  readOnlyRootFilesystem: false
   resources:
     requests:
       memory: 200Mi

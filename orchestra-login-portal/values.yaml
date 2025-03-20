@@ -118,7 +118,6 @@ openunison:
   replicas: 1
   non_secret_data: {}
   secrets: []
-  readOnlyRootFilesystem: false
   role_attribute: groups
   groups:
     areJson: "false"
