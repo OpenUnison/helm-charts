@@ -82,10 +82,14 @@ metadata:
 spec:
   template:
       spec:
+        {{ if .Values.services.affinity }}
+        affinity:
+          {{- toYaml .Values.services.affinity | nindent 10 }}
+        {{ end }} 
         restartPolicy: OnFailure
         containers:
           - name: wait-for
-            image: {{ .Values.openunison.precheck.image | default "ghcr.io/tremolosecurity/python3:1.0.0" }}
+            image: {{ .Values.openunison.precheck.image | default "ghcr.io/tremolosecurity/python-slim-nonroot/python3:1.0.0" }}
             imagePullPolicy: {{ .Values.openunison.imagePullPolicy }}
             command: ["python", "/scripts/wait-for.py"]
             securityContext:

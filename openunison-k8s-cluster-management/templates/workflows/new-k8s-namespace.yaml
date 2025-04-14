@@ -20,6 +20,7 @@ spec:
                attribute:
                - nameSpace
                - cluster
+               - gitPath
                {{ if .Values.openunison.naas.groups.external.enabled }}
                {{ range $role := .Values.openunison.naas.groups.default }}
                - {{ $role.external.fieldName }}
@@ -66,20 +67,21 @@ spec:
                - sn
                - mail
 
-           {{ if not .Values.openunison.naas.groups.external.enabled }}
+           
+           
+           {{ if .Values.openunison.naas.groups.internal.enabled }}
            - taskType: addAttribute
              name: enableInternal
              value: enabled
              addToRequest: true
            {{ else }}
-           {{ if not .Values.openunison.naas.groups.internal.enabled }}
            - taskType: addAttribute
              name: enableInternal
              value: disabled
              addToRequest: true
            {{ end }}
-           {{ end }}
-
+           
+           
            - taskType: customTask
              className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
              params:

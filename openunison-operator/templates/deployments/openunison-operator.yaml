@@ -37,6 +37,10 @@ spec:
         app.kubernetes.io/component: operator
         app.kubernetes.io/part-of: openunison
     spec:
+      {{ if .Values.services.affinity }}
+      affinity:
+        {{- toYaml .Values.services.affinity | nindent 8 }}
+      {{ end }}
       containers:
       - env:
         - name: CA_CERTS_PATH
@@ -206,7 +210,7 @@ spec:
             name: kerb-config
         - name: krb-keytab
           secret:
-            secretName: kerb-keytab
+            secretName: kerb-keytab{{ .Values.openunison.secret_ext }}
         {{ end }}
         {{ end }}
       {{ $length := len .Values.services.node_selectors }}

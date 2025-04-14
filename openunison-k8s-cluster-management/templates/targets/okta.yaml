@@ -20,7 +20,7 @@ spec:
     value: "{{ .Values.oidc.issuer }}"
   secretParams:
   - name: token
-    secretName: orchestra-secrets-source
+    secretName: orchestra-secrets-source#[openunison.static-secret.suffix]
     secretKey: OKTA_TOKEN
   targetAttributes:
   - name: sub

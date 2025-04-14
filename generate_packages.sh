@@ -21,10 +21,15 @@ done
 echo "cicd-proxy"
 helm package cicd-proxy
 
+echo "argowf"
+helm package argowf
+
 aws s3 sync s3://tremolosecurity-maven/repository/helm$REPO/ /tmp/helm/ 
 
 mv *.tgz /tmp/helm
 
 helm repo index /tmp/helm --url https://nexus.tremolo.io/repository/helm$REPO
+
+./gen_versions.sh
 
 aws s3 sync /tmp/helm/ s3://tremolosecurity-maven/repository/helm$REPO/

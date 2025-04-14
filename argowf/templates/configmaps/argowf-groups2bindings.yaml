@@ -1,0 +1,24 @@
+{{ if .Values.argowf.group_map.create }}
+{{- $root := . -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argowf-groups2bindings
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+data:
+  mappings: |-
+    {
+    {{ range $index, $group := .Values.argowf.group_map.map }}
+        "{{ $group.group }}": {
+            "kind": "{{ $group.kind }}",
+            "name": "{{ $group.name }}",
+            "namespace": "{{ $group.namespace }}"
+        }
+        {{ if  lt (add $index 1) (len  $root.Values.argowf.group_map.map)  }}
+        ,
+        {{ end }}
+    {{ end }}
+    }
+{{ end }}

@@ -47,6 +47,10 @@ spec:
         app.kubernetes.io/component: application
         app.kubernetes.io/part-of: openunison
     spec:
+      {{ if .Values.services.affinity }}
+      affinity:
+        {{- toYaml .Values.services.affinity | nindent 8 }}
+      {{ end }}
       {{ if .Values.network.enableHostNetwork }}
       hostNetwork: true
       {{ else }}
@@ -55,6 +59,8 @@ spec:
 
       containers:
       - env:
+        - name: XDG_CACHE_HOME
+          value: /tmp/graaljscache
         {{ if $hasKerberos }}
         - name: JAVA_OPTS
           value: "-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom -DunisonEnvironmentFile=/etc/openunison/ou.env -Djavax.net.ssl.trustStore=/etc/openunison/cacerts.jks -Dpolyglot.engine.WarnInterpreterOnly=false -Djava.security.krb5.conf=/etc/krb5-local/krb5.conf -Djava.security.krb5.debug=true -Djava.security.auth.login.config=/etc/krb5-local/SQLJDBCDriver.conf"
@@ -325,7 +331,7 @@ spec:
           name: kerb-config
       - name: krb-keytab
         secret:
-          secretName: kerb-keytab
+          secretName: kerb-keytab{{ .Values.openunison.secret_ext }}
       {{ end }}
       {{- if .Values.services.tolerations }}
       tolerations:

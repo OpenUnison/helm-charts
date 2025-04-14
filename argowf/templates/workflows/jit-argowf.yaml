@@ -1,0 +1,144 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: jit-argowf
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+spec:
+  description: creates a ServiceAccount and adds to (Cluster)RoleBindings based on group mappings
+  inList: false
+  label: Creates a ResourceQuota
+  orgId: internal-does-not-exist
+  tasks: |-
+      - taskType: customTask
+        className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
+        params:
+          message: inside workflow
+
+      # two tasks:
+      # 1. map the user's sub to something that will work as a kubernetes object name
+      # 2. map the user's groups to (Cluster)RoleBindings
+      - taskType: customTask
+        className: com.tremolosecurity.provisioning.customTasks.JavaScriptTask
+        params:
+          javaScript: |-
+            HashMap = Java.type("java.util.HashMap");
+            OpenShiftTarget = Java.type("com.tremolosecurity.unison.openshiftv3.OpenShiftTarget");
+            Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+            K8sUtils = Java.type("com.tremolosecurity.k8s.util.K8sUtils");
+            System = Java.type("java.lang.System");
+
+            function init(task,params) {
+            // nothing to do
+            }
+
+            function reInit(task) {
+            // do nothing
+            }
+
+            function doTask(user,request) {
+                // map the user to a dns compliant name
+                var saname = OpenShiftTarget.sub2uid(user.getAttribs().get("sub").getValues().get(0));
+                
+                request.put("saname", saname);
+                user.getAttribs().put("saname",new Attribute("saname",saname));
+                request.put("sub",user.getAttribs().get("sub").getValues().get(0));
+
+                // load the ConfigMap that stores mappings from groups to (Cluster)RoleBindings
+                var group2bindings = JSON.parse(K8sUtils.loadConfigMap("k8s","openunison","argowf-groups2bindings").get("mappings"));
+                var bindings = new Attribute("bindings");
+                var memberOf = user.getAttribs().get("groups");
+                for (var i = 0;i < memberOf.getValues().size();i++) {
+                  var group = memberOf.getValues().get(i);
+                  System.out.println("group:" + group);
+                  var binding = group2bindings[group];
+                  
+                  if (binding != null && binding != "") {
+                    // there's a binding, map to json
+                    
+                    
+                    if (binding["kind"] == "crb") {
+                      // a ClusterRoleBinding doesn't have a namespace
+                      bindings.getValues().add("crb:" +  binding["name"]);
+                    } else if (binding["kind"] == "rb") {
+                      // RoleBindings require a namespace
+                      bindings.getValues().add("rb:" +  binding["namespace"] + ":" + binding["name"]);
+                    } // else, ignore
+                  }
+                }
+
+                // add the attribute, we'll map into groups later
+                user.getAttribs().put("bindings",bindings);
+
+                return true;
+            }
+
+      # create a ServiceAccount that maps to the the user
+      - taskType: customTask
+        className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
+        params:
+            targetName: k8s
+            template: |-
+                kind: ServiceAccount
+                apiVersion: v1
+                metadata:
+                  name: $saname$
+                  namespace: {{ .Values.argowf.namespace }}
+                  annotations:
+                    workflows.argoproj.io/rbac-rule: "sub == \"$sub$\""
+                spec: {}
+            srcType: yaml
+
+      # create a Secret for our ServiceAccount
+      - taskType: customTask
+        className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
+        params:
+            targetName: k8s
+            template: |-
+                kind: Secret
+                apiVersion: v1
+                metadata:
+                  name: $saname$.service-account-token
+                  namespace: {{ .Values.argowf.namespace }}
+                  annotations:
+                    kubernetes.io/service-account.name: $saname$
+                type: kubernetes.io/service-account-token
+                spec: {}
+            srcType: yaml
+
+      # map our user to our created ServiceAccount so we can provision the user's (Cluster)RoleBindings
+      # the mapping only applies to tasks in onSuccess
+      - taskType: mapping
+        strict: true
+        map:
+          - targetAttributeName: TREMOLO_USER_ID
+            targetAttributeSource: ${saname}:argowf
+            sourceType: composite
+          - targetAttributeName: bindings
+            targetAttributeSource: bindings
+            sourceType: user
+        onSuccess:
+        # clear the existing groups for the mapped user
+        - taskType: customTask
+          className: com.tremolosecurity.provisioning.customTasks.ClearGroups
+          params: {}
+        # make our mapped user's groups our bindings
+        - taskType: customTask
+          className: com.tremolosecurity.provisioning.customTasks.Attribute2Groups
+          params:
+            attributeName: bindings
+        
+        - taskType: customTask
+          className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
+          params:
+            message: inside workflow
+
+        # synchronize the ServiceAccount's (Cluster)RoleBindings
+        - taskType: provision
+          sync: true
+          target: k8s-rbac
+          setPassword: false
+          onlyPassedInAttributes: false
+          attributes: []

@@ -1,3 +1,4 @@
+{{ if .Values.openunison.kubeAuth.enabled }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Application
@@ -88,11 +89,19 @@ spec:
         uidAttributeName: uid
         logoutURL: "/logout"
         homeURL: "/scale/"
+        themePrimaryMain: "{{ .Values.openunison.html.theme.colors.primary.main }}"
+        themePrimaryDark: "{{ .Values.openunison.html.theme.colors.primary.dark }}"
+        themePrimaryLight: "{{ .Values.openunison.html.theme.colors.primary.light }}"
+        themeSecondaryMain: "{{ .Values.openunison.html.theme.colors.secondary.main }}"
+        themeSecondaryDark: "{{ .Values.openunison.html.theme.colors.secondary.dark }}"
+        themeSecondaryLight: "{{ .Values.openunison.html.theme.colors.secondary.light }}"
+        headerTitle: "{{ .Values.openunison.html.theme.headerTitle | default "OpenUnison" }}"
+        errorColor: "{{ .Values.openunison.html.theme.colors.error }}"
         warnMinutesLeft: "5"
         tokenClassName: "com.tremolosecurity.scalejs.KubectlTokenLoader"
         kubectlUsage: "Run the kubectl command to set your user-context and server connection"
         {{ if .Values.enable_impersonation  }}
-        {{ if eq .Values.network.ingress_type "istio"}}
+        {{ if or (eq .Values.network.ingress_type "istio") (and (eq .Values.network.ingress_type "kong") (.Values.network.kong.allow_spdy) )  }}
         k8sCaCertName: unison-tls
         {{ else }}
         k8sCaCertName: "#[K8S_API_SERVER_CERT:unison-ca]"
@@ -150,4 +159,4 @@ spec:
     timeout: {{ .Values.network.session_inactivity_timeout_seconds }}
     scope: -1
     cookiesEnabled: true
-    
+{{ end }}

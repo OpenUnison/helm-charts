@@ -35,6 +35,10 @@ spec:
           annotations:
             sidecar.istio.io/inject: "false"
         spec:
+          {{ if .Values.services.affinity }}
+          affinity:
+            {{- toYaml .Values.services.affinity | nindent 12 }}
+          {{ end }}
           containers:
           - command:
             - java
@@ -104,7 +108,6 @@ spec:
           dnsPolicy: ClusterFirst
           restartPolicy: Never
           schedulerName: default-scheduler
-          securityContext: {}
           serviceAccount: openunison-operator
           serviceAccountName: openunison-operator
           terminationGracePeriodSeconds: 30

@@ -25,7 +25,16 @@ spec:
                attributes:
                - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
                - unison.group.create.param.2=Administer $clusterlabel$
+          {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
+             params:
+               target: k8s
+               name: k8s-cluster-$cluster$-administrators{{ .Values.openunison.naas.groups.internal.suffix }}
+               attributes: []
+          {{ end }}
 
+           {{ if not .Values.openunison.naas.groups.privilegedAccessGroup }}
            - taskType: customTask
              className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
              params:
@@ -46,6 +55,7 @@ spec:
                kind: ClusterRoleBinding
                url: /apis/rbac.authorization.k8s.io/v1/clusterrolebindings
                srcType: yaml
+           {{ end }}
              
            - taskType: customTask
              className: com.tremolosecurity.provisioning.customTasks.LoadAttributes
@@ -90,6 +100,15 @@ spec:
                  onlyPassedInAttributes: false
                  attributes:
                  - sub
+              {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+               - taskType: provision
+                 sync: false
+                 target: k8s
+                 setPassword: false
+                 onlyPassedInAttributes: false
+                 attributes:
+                 - sub
+              {{ end }}
                - taskType: notifyUser
                  subject: Access to Cluster Admin Approved
                  mailAttrib: mail
@@ -120,4 +139,15 @@ spec:
                  onlyPassedInAttributes: false
                  attributes:
                  - sub 
+               {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+               - taskType: provision
+                 sync: true
+                 target: k8s
+                 setPassword: false
+                 onlyPassedInAttributes: false
+                 attributes:
+                 - sub
+               {{ end }}
+
+
 {{ end }}

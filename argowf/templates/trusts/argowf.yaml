@@ -1,0 +1,22 @@
+apiVersion: openunison.tremolo.io/v1
+kind: Trust
+metadata:
+  name: argowf
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+spec:
+  accessTokenSkewMillis: 120000
+  accessTokenTimeToLive: 1200000
+  authChainName: login-service
+  clientId: argowf
+  clientSecret:
+    keyName: clientsecret
+    secretName: argowf
+  codeLastMileKeyName: lastmile-oidc
+  codeTokenSkewMilis: 60000
+  publicEndpoint: true
+  redirectURI:
+  - https://{{ .Values.argowf.hostname }}/oauth2/callback
+  signedUserInfo: true
+  verifyRedirect: true

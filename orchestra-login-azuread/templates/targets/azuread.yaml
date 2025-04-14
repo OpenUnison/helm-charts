@@ -7,14 +7,21 @@ metadata:
 spec:
   className: com.tremolosecurity.provisioning.core.providers.AzureADProvider
   params:
+  {{ if not .Values.oidc.client_id_is_secret  }}
   - name: clientId
     value: "{{ .Values.oidc.client_id }}"
+  {{ end }}
   - name: tenantId
     value: "{{ .Values.azure.tennant_id }}"
   secretParams:
   - name: clientSecret
-    secretName: orchestra-secrets-source
+    secretName: orchestra-secrets-source#[openunison.static-secret.suffix]
     secretKey: OIDC_CLIENT_SECRET
+  {{ if .Values.oidc.client_id_is_secret }}
+  - name: clientId
+    secretName: orchestra-secrets-source#[openunison.static-secret.suffix]
+    secretKey: OIDC_CLIENT_ID
+  {{ end }}
   targetAttributes:
   - name: displayName
     source: displayName

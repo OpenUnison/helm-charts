@@ -74,7 +74,7 @@ data:
         {{ end }}
     services:
         enable_tokenrequest: false
-        node_selectors: []
+        node_selectors: {}
         token_request_audience: api
         token_request_expiration_seconds: 600
     trusted_certs: []

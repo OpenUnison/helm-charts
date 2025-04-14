@@ -1,4 +1,4 @@
-{{ if and .Values.openunison.enable_provisioning .Values.openunison.enable_activemq }}
+{{ if and .Values.openunison.enable_provisioning .Values.openunison.amq.enabled }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Application
@@ -34,6 +34,10 @@ spec:
       constraint: "(groups=administrators{{ .Values.openunison.naas.groups.external.suffix }})"
     - scope: filter
       constraint: "(groups=administrators{{ .Values.openunison.naas.groups.internal.suffix }})"
+    - scope: filter
+      constraint: "(groups=operations{{ .Values.openunison.naas.groups.external.suffix }})"
+    - scope: filter
+      constraint: "(groups=operations{{ .Values.openunison.naas.groups.internal.suffix }})"
     results: 
       azFail: default-login-failure
       auFail: default-login-failure

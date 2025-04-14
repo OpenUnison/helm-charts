@@ -10,10 +10,10 @@ metadata:
     app.kubernetes.io/part-of: network
   annotations:
     argocd.argoproj.io/sync-wave: "20"
-  name: openunison-{{ .Release.Name }}
-  namespace: {{ .Release.Namespace }}
-  {{ if eq .Values.network.ingress_type "traefik" }}
-  annotations:
+    {{ if eq .Values.network.ingress_type "kong" }}
+    konghq.com/protocol: "https"
+    {{ end  }}
+    {{ if eq .Values.network.ingress_type "traefik" }}
     {{ if .Values.network.traefik.secure }} 
     traefik.ingress.kubernetes.io/service.serversscheme: https
     {{ end }}
@@ -22,7 +22,12 @@ metadata:
     traefik.ingress.kubernetes.io/service.sticky.cookie.secure: "true"
     traefik.ingress.kubernetes.io/service.sticky.cookie.samesite: "none"
     traefik.ingress.kubernetes.io/service.sticky.cookie.httponly: "true"
-  {{ end }}
+    {{ end }}
+    {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+    service.beta.openshift.io/serving-cert-secret-name: unison-tls
+    {{ end }}
+  name: openunison-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
 spec:
   ports:
   {{ if or ( eq .Values.network.ingress_type "istio" ) ( eq .Values.network.ingress_type "traefik" ) }}

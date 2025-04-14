@@ -1,3 +1,4 @@
+{{ if .Values.openunison.kubeAuth.enabled }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Application
@@ -100,3 +101,4 @@ spec:
     timeout: {{ .Values.network.session_inactivity_timeout_seconds }}
     scope: -1
     cookiesEnabled: true
+{{ end }}

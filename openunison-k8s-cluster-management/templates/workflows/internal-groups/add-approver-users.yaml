@@ -26,3 +26,12 @@ spec:
             onlyPassedInAttributes: false
             attributes:
             - sub
+          {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+          - taskType: provision
+            sync: false
+            target: k8s
+            setPassword: false
+            onlyPassedInAttributes: false
+            attributes:
+            - sub
+          {{ end }}

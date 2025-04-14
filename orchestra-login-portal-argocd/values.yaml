@@ -16,9 +16,9 @@ cert_template:
   st: "State of Cluster"
   c: "MyCountry"
 
-image: "ghcr.io/openunison/openunison-k8s:1.0.40"
+image: "ghcr.io/openunison/openunison-k8s:1.0.42"
 amq_image: "ghcr.io/tremolosecurity/activemq-docker:5.16.6"
-cert_update_image: "ghcr.io/openunison/openunison-kubernetes-operator:1.0.6"
+cert_update_image: "ghcr.io/openunison/openunison-kubernetes-operator:1.0.7"
 myvd_config_path: "WEB-INF/myvd.conf"
 k8s_cluster_name: kubernetes
 enable_impersonation: true
@@ -28,8 +28,13 @@ dashboard:
   namespace: "kubernetes-dashboard"
   cert_name: "kubernetes-dashboard-certs"
   label: "k8s-app=kubernetes-dashboard"
+  new_label: "app.kubernetes.io/part-of=kubernetes-dashboard"
   service_name: kubernetes-dashboard
+  auth_service_name: kubernetes-dashboard-auth
+  api_service_name: kubernetes-dashboard-api
+  web_service_name: kubernetes-dashboard-web
   enabled: true
+  
 certs:
   use_k8s_cm: false
 
@@ -64,7 +69,7 @@ monitoring:
 
 impersonation:
   use_jetstack: true
-  jetstack_oidc_proxy_image: ghcr.io/tremolosecurity/kube-oidc-proxy:1.0.6
+  jetstack_oidc_proxy_image: ghcr.io/tremolosecurity/kube-oidc-proxy:1.0.9
   explicit_certificate_trust: true
   ca_secret_name: ou-tls-certificate
 
@@ -72,13 +77,16 @@ network_policies:
   enabled: false
   ingress:
     enabled: true
-    labels: []
+    labels:
+      app.kubernetes.io/name: ingress-nginx
   monitoring:
     enabled: true
-    labels: []
+    labels:
+      app.kubernetes.io/name: monitoring
   apiserver:
-    enabled: true
-    labels: []
+    enabled: false
+    labels:
+      app.kubernetes.io/name: kube-system
   namespace_label: kubernetes.io/metadata.name
       
 
@@ -86,7 +94,7 @@ services:
   enable_tokenrequest: false
   token_request_audience: api
   token_request_expiration_seconds: 600
-  node_selectors: []
+  node_selectors: {}
   tolerations: []
   pullSecret: ""
   liveness_probe:
@@ -103,7 +111,7 @@ services:
   - "alive"
 
 operator:
-  image: ghcr.io/openunison/openunison-kubernetes-operator:1.0.6
+  image: ghcr.io/openunison/openunison-kubernetes-operator:1.0.7
   validators: []
   mutators: []
   resources:
@@ -115,6 +123,7 @@ operator:
       cpu: 1.0
 
 openunison:
+  secret_ext: ""
   apps: []
   imagePullPolicy: Always
   replicas: 1
@@ -129,11 +138,12 @@ openunison:
     refresh_token:
       grace_period_millis: 0
   html:
-    image: ghcr.io/openunison/openunison-k8s-html:1.0.0
+    image: ghcr.io/openunison/openunison-k8s-react:1.0.1
     legacy: false
     theme:
       startPage: front-page
       hidePages: []
+      headerTitle: "OpenUnison"
       colors:
         primary: 
           main: "#AC1622"
@@ -148,7 +158,7 @@ openunison:
   enable_activemq: true
   az_groups: []
   precheck:
-    image: ghcr.io/tremolosecurity/python3:1.0.0
+    image: ghcr.io/tremolosecurity/python-slim-nonroot/python3:1.0.0
   use_standard_jit_workflow: true
   management_proxy:
     enabled: false

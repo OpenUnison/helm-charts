@@ -89,15 +89,15 @@ data:
     server.shadowGroups.tremolo.config.url=#[OU_JDBC_URL]
     server.shadowGroups.tremolo.config.user=#[OU_JDBC_USER]
     server.shadowGroups.tremolo.config.password=#[OU_JDBC_PASSWORD]
-    server.shadowGroups.tremolo.config.maxCons=10
-    server.shadowGroups.tremolo.config.maxConsIdle=10
+    server.shadowGroups.tremolo.config.maxCons=#[openunison.maxcons:10]
+    server.shadowGroups.tremolo.config.maxConsIdle=#[openunison.maxidlecons:10]
     server.shadowGroups.tremolo.config.validationQuery=#[OU_JDBC_VALIDATION]
     server.shadowGroups.tremolo.config.rdn=cn
     server.shadowGroups.tremolo.config.useSimple=true
     server.shadowGroups.tremolo.config.addBaseToFilter=false
     server.shadowGroups.tremolo.config.objectClass=groupOfUniqueNames
     server.shadowGroups.tremolo.config.mapping=cn=name,uniqueMember=sub
-    server.shadowGroups.tremolo.config.sql=SELECT name,sub FROM localGroups LEFT OUTER JOIN userGroups ON localGroups.groupId=userGroups.groupId LEFT OUTER JOIN localUsers ON userGroups.userId=localUsers.userId
+    server.shadowGroups.tremolo.config.sql=SELECT name,sub FROM localGroups LEFT OUTER JOIN userGroups ON localGroups.groupId=userGroups.groupId LEFT OUTER JOIN localUsers ON userGroups.userId=localUsers.userId ORDER BY name DESC
 
     server.activedirectory.chain=objectguid2text,dnmapper,objmap,membertrans,ldap
     server.activedirectory.nameSpace=ou=activedirectory,o=Data

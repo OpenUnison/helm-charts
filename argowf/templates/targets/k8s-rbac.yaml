@@ -1,0 +1,19 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Target
+metadata:
+  name: k8s-rbac
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+spec:
+  className: com.tremolosecurity.provisioning.targets.RbacBindingsTarget
+  params:
+  # The name of the openshift/kubernetes provisioning target to use
+  - name: target
+    value: k8s
+  # if true, then the target is designed to work with ServiceAccounts.  If false, generic users.
+  - name: forSa
+    value: "true"
+  secretParams: []
+  targetAttributes: []

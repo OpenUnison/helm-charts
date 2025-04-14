@@ -30,6 +30,7 @@ rules:
   - "userextras/originaluser.jetstack.io-user"
   - "userextras/originaluser.jetstack.io-groups"
   - "userextras/originaluser.jetstack.io-extra"
+  - "userextras/authentication.kubernetes.io/credential-id"
   verbs:
   - "create"
   - "impersonate"
@@ -254,8 +255,6 @@ roleRef:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  annotations:
-    audit2rbac.liggitt.net/version: v0.7.0
   labels:
     audit2rbac.liggitt.net/generated: "true"
     audit2rbac.liggitt.net/user: system-serviceaccount-openunison-openunison-{{ .Release.Name }}
@@ -277,8 +276,6 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  annotations:
-    audit2rbac.liggitt.net/version: v0.7.0
   labels:
     audit2rbac.liggitt.net/generated: "true"
     audit2rbac.liggitt.net/user: system-serviceaccount-openunison-openunison-{{ .Release.Name }}

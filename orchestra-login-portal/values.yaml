@@ -7,6 +7,7 @@ network:
   createIngressCertificate: true
   ingress_type: nginx
   ingress_annotations: {}
+  kong: {}
   
 
 cert_template:
@@ -16,7 +17,7 @@ cert_template:
   st: "State of Cluster"
   c: "MyCountry"
 
-image: "ghcr.io/openunison/openunison-k8s:1.0.40"
+image: "ghcr.io/openunison/openunison-k8s:1.0.42"
 amq_image: "ghcr.io/tremolosecurity/activemq-docker:5.0.16"
 myvd_config_path: "WEB-INF/myvd.conf"
 k8s_cluster_name: kubernetes
@@ -27,7 +28,11 @@ dashboard:
   namespace: "kubernetes-dashboard"
   cert_name: "kubernetes-dashboard-certs"
   label: "k8s-app=kubernetes-dashboard"
+  new_label: "app.kubernetes.io/part-of=kubernetes-dashboard"
   service_name: kubernetes-dashboard
+  auth_service_name: kubernetes-dashboard-auth
+  api_service_name: kubernetes-dashboard-api
+  web_service_name: kubernetes-dashboard-web
   enabled: true
 certs:
   use_k8s_cm: false
@@ -63,7 +68,7 @@ monitoring:
 
 impersonation:
   use_jetstack: true
-  jetstack_oidc_proxy_image: ghcr.io/tremolosecurity/kube-oidc-proxy:1.0.6
+  jetstack_oidc_proxy_image: ghcr.io/tremolosecurity/kube-oidc-proxy:1.0.9
   explicit_certificate_trust: true
   ca_secret_name: ou-tls-certificate
 
@@ -86,7 +91,7 @@ services:
   enable_tokenrequest: false
   token_request_audience: api
   token_request_expiration_seconds: 600
-  node_selectors: []
+  node_selectors: {}
   tolerations: []
   pullSecret: ""
   liveness_probe:
@@ -104,6 +109,10 @@ services:
 
 openunison:
   apps: []
+  kubeAuth:
+    enabled: true
+  amq:
+    enabled: true
   imagePullPolicy: Always
   authentication:
     refresh_token:
@@ -115,9 +124,10 @@ openunison:
   groups:
     areJson: "false"
   html:
-    image: ghcr.io/openunison/openunison-k8s-react:1.0.0
+    image: ghcr.io/openunison/openunison-k8s-react:1.0.1
     legacy: false
     theme:
+      headerTitle: "OpenUnison"
       startPage: front-page
       colors:
         primary: 
@@ -135,7 +145,7 @@ openunison:
   enable_activemq: true
   az_groups: []
   precheck:
-    image: ghcr.io/tremolosecurity/python3:1.0.0
+    image: ghcr.io/tremolosecurity/python-slim-nonroot/python3:1.0.0
   use_standard_jit_workflow: true
   management_proxy:
     enabled: false

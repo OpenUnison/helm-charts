@@ -27,19 +27,23 @@ cert_template:
   st: "State of Cluster"
   c: "MyCountry"
 
-image: "ghcr.io/openunison/openunison-k8s:1.0.40"
-amq_image: "ghcr.io/tremolosecurity/activemq-docker:5.16.6"
+image: "ghcr.io/openunison/openunison-k8s:1.0.42"
+amq_image: "ghcr.io/tremolosecurity/activemq-docker:5.18.4"
 myvd_config_path: "WEB-INF/myvd.conf"
 k8s_cluster_name: kubernetes
 enable_impersonation: true
 myvd_configmap: myvd
-cert_update_image: "ghcr.io/openunison/openunison-kubernetes-operator:1.0.6"
+cert_update_image: "ghcr.io/openunison/openunison-kubernetes-operator:1.0.7"
 
 dashboard:
   namespace: "kubernetes-dashboard"
   cert_name: "kubernetes-dashboard-certs"
   label: "k8s-app=kubernetes-dashboard"
+  new_label: "app.kubernetes.io/part-of=kubernetes-dashboard"
   service_name: kubernetes-dashboard
+  auth_service_name: kubernetes-dashboard-auth
+  api_service_name: kubernetes-dashboard-api
+  web_service_name: kubernetes-dashboard-web
   enabled: true
 certs:
   use_k8s_cm: false
@@ -78,7 +82,7 @@ monitoring:
 
 impersonation:
   use_jetstack: true
-  jetstack_oidc_proxy_image: ghcr.io/tremolosecurity/kube-oidc-proxy:1.0.6
+  jetstack_oidc_proxy_image: ghcr.io/tremolosecurity/kube-oidc-proxy:1.0.9
   explicit_certificate_trust: true
   ca_secret_name: ou-tls-certificate
 
@@ -91,7 +95,7 @@ network_policies:
     enabled: true
     labels: []
   apiserver:
-    enabled: true
+    enabled: false
     labels: []
   namespace_label: kubernetes.io/metadata.name
 
@@ -100,7 +104,7 @@ services:
   token_request_audience: api
   token_request_expiration_seconds: 600
   tolerations: []
-  node_selectors: []
+  node_selectors: {}
   pullSecret: ""
   liveness_probe:
   - /usr/local/openunison/bin/check_alive.sh
@@ -115,6 +119,10 @@ services:
   - "https://127.0.0.1:8443/check_alive"
   - "alive"
 openunison:
+  amq:
+    enabled: true
+    pvc: {}
+  secret_ext: ""
   apps: []
   replicas: 1
   non_secret_data: {}
@@ -122,13 +130,13 @@ openunison:
   secrets: []
   imagePullPolicy: Always
   html:
-    image: ghcr.io/openunison/openunison-k8s-html:1.0.0
+    image: ghcr.io/openunison/openunison-k8s-html:1.0.1
     prefix: ouhtml
   portal_release_name: orchestra-login-portal
   enable_provisioning: false
   enable_activemq: true
   precheck:
-    image: ghcr.io/tremolosecurity/python3:1.0.0
+    image: ghcr.io/tremolosecurity/python-slim-nonroot/python3:1.0.0
   management_proxy:
     enabled: false
   queue:
@@ -195,7 +203,7 @@ openunison:
           errorMessage: "Invalid viewer group"
         workflow:
           label: "namespace viewer"
-          displayLabel: $name$ Administrator
+          displayLabel: $name$ Viewer
           emailTemplate: Approve viewer access to $cluster$ $name$
           approvalLabel: Approve viewer access for $cluster$ - $name$
           userNotification:
