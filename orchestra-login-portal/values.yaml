@@ -108,6 +108,7 @@ services:
   - "alive"
 
 openunison:
+  extra_az_groups: []
   apps: []
   kubeAuth:
     enabled: true

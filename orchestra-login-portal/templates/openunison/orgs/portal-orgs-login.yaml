@@ -44,6 +44,14 @@ spec:
   {{ end }}
   {{ end }}
   {{ end }}
+  {{ $length := len .Values.openunison.extra_az_groups }}
+  {{ if eq $length 0 }}
+  {{ else }}
+  {{ range $az_group := .Values.openunison.extra_az_groups }}
+  - scope: filter
+    constraint: (groups={{ $az_group }})
+  {{ end }}
+  {{ end }}
   description: "#[K8S_DEPLOYMENT_DESC:Current Cluster]"
   parent: B158BD40-0C1B-11E3-8FFD-0800200C9A66
   showInPortal: true

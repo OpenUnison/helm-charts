@@ -80,6 +80,14 @@ spec:
     {{ end }}
     {{ end }}
     {{ end }}
+    {{ $length := len .Values.openunison.extra_az_groups }}
+    {{ if eq $length 0 }}
+    {{ else }}
+    {{ range $az_group := .Values.openunison.extra_az_groups }}
+    - scope: filter
+      constraint: (groups={{ $az_group }})
+    {{ end }}
+    {{ end }}
     authChain: oauth2jwt-login
   cookieConfig:
     sessionCookieName: tremolosession
