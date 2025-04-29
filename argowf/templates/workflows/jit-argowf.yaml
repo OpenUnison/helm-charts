@@ -114,7 +114,7 @@ spec:
         strict: true
         map:
           - targetAttributeName: TREMOLO_USER_ID
-            targetAttributeSource: ${saname}:argowf
+            targetAttributeSource: ${saname}:{{ .Values.argowf.namespace }}
             sourceType: composite
           - targetAttributeName: bindings
             targetAttributeSource: bindings

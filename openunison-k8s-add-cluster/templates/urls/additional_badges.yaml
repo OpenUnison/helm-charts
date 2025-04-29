@@ -23,5 +23,13 @@ spec:
     constraint: (groups={{ $az_group }})
   {{ end }}
   {{ end }}
+  {{ $length := len $root.Values.cluster.extra_az_groups }}
+  {{ if eq $length 0 }}
+  {{ else }}
+  {{ range $az_group := $root.Values.cluster.extra_az_groups }}
+  - scope: filter
+    constraint: (groups={{ $az_group }})
+  {{ end }}
+  {{ end }}
 {{ end }}
 {{ end }}

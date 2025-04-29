@@ -11,7 +11,7 @@ subjects:
   {{ if .Values.openunison.naas.groups.privilegedAccessGroup }}
   name: {{ .Values.openunison.naas.groups.privilegedAccessGroup }}{{ .Values.openunison.naas.groups.external.suffix }}
   {{ else }}
-  name: k8s-cluster-administrators{{ .Values.openunison.naas.groups.external.suffix }}
+  name: k8s-cluster-k8s-administrators{{ .Values.openunison.naas.groups.external.suffix }}
   {{ end }}
   apiGroup: rbac.authorization.k8s.io
 - kind: ServiceAccount

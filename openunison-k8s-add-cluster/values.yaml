@@ -35,5 +35,6 @@ cluster:
     portal: ksou.apps.192-168-2-140.nip.io
     dashboard: k8sdb.apps.192-168-2-140.nip.io
   az_groups: []
+  extra_az_groups: []
     
     
