@@ -41,8 +41,8 @@ metadata:
 spec:
   label: "Kubernetes Administration"
   azRules:
-  {{ if .Values.openunison.naas.groups.internal.azRules }}
-  {{ range .Values.openunison.naas.groups.internal.azRules }}
+  {{ if .Values.openunison.naas.groups.internal.isolateRequestAccess.enabled }}
+  {{ range .Values.openunison.naas.groups.internal.isolateRequestAccess.azRules }}
   - scope: {{ .scope }}
     constraint: {{ .constraint }}
   {{ end }}

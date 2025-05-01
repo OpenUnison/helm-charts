@@ -29,5 +29,26 @@ spec:
   parent: {{ .Values.cluster.parent }}
   showInPortal: true
   showInReports: false
-  showInRequestAccess: {{ .Values.cluster.enable_request_access }}
+  showInRequestAccess: true
   uuid: org-cluster-{{ .Values.cluster.name }}
+{{ if not .Values.cluster.enable_request_access }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: {{ .Values.cluster.name }}-ra
+  namespace: {{ .Release.Namespace }}
+spec:
+  label: {{ .Values.cluster.label }}
+  azRules:
+  {{ range .Values.cluster.az_request_access }}  
+  - scope: {{ .scope }}
+    constraint: {{ .constraint }}
+  {{ end }}
+  description: {{ .Values.cluster.description }}
+  parent: {{ .Values.cluster.parent }}-ra
+  showInPortal: true
+  showInReports: false
+  showInRequestAccess: true
+  uuid: org-cluster-{{ .Values.cluster.name }}-ra
+{{ end }}

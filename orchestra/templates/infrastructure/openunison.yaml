@@ -340,6 +340,14 @@ spec:
       value: {{ .Values.openunison.naas.groups.default | toJson | b64enc | quote }}
     - name: "openunison.naas.roles"
       value: {{ .Values.openunison.naas.groups.roles | toJson | b64enc | quote }}
+    - name: openunison.naas.external.approversGroup
+      value: {{ .Values.openunison.naas.groups.external.approversGroup | quote }}
+    - name: openunison.naas.external.approversGroup
+      value: {{ .Values.openunison.naas.groups.external.approversGroup | quote }}
+    {{ if .Values.openunison.naas.groups.internal.isolateRequestAccess.enabled }}
+    - name: "openunison.naas.internal-isolateRequestAccess"
+      value: {{ .Values.openunison.naas.groups.internal.isolateRequestAccess | toJson | b64enc | quote }}
+    {{ end }}
 {{ else }}
     - name: OPENUNISON_PROVISIONING_ENABLED
       value: "false"

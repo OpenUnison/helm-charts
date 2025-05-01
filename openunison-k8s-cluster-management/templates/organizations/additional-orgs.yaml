@@ -21,4 +21,27 @@ spec:
   showInReports: false
   showInRequestAccess: true
   uuid: added-org-{{ $org.name }}
+{{ if $root.Values.openunison.naas.groups.internal.isolateRequestAccess }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: {{ $org.name }}-ra
+  namespace: {{ $root.Release.Namespace }}
+  labels:
+    tremolo.io/org-type: added-org
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
+spec:
+  label: {{ $org.label }}
+  azRules:
+  - scope: filter
+    constraint: (objectClass=*)
+  description: {{ $org.description }}
+  parent: org-cluster-control-plane-request-access
+  showInPortal: false
+  showInReports: false
+  showInRequestAccess: true
+  uuid: added-org-{{ $org.name }}-ra
+{{ end }}
 {{ end }}

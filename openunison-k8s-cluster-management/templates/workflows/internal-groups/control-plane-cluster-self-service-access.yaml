@@ -13,7 +13,7 @@ spec:
   description: {{ $role.workflow.label }} for the $name$ namespace
   inList: true
   label: {{ $role.workflow.displayLabel }}
-  orgId: org-cluster-control-plane-{{ $role.name }}
+  orgId: org-cluster-control-plane-ra-{{ $role.name }}
   dynamicConfiguration:
     dynamic: true
     className: com.tremolosecurity.unison.openshiftv3.wf.OpenShiftWorkflows
@@ -36,13 +36,13 @@ spec:
 apiVersion: openunison.tremolo.io/v1
 kind: Workflow
 metadata:
-  name: control-plane-namespace-{{ $role.name }}
+  name: control-plane-namespace-ra-{{ $role.name }}
   namespace: {{ $root.Release.Namespace }}
 spec:
   description: {{ $role.workflow.label }} for the $name$ namespace
   inList: true
   label: {{ $role.workflow.displayLabel }}
-  orgId: org-cluster-control-plane-{{ $role.name }}
+  orgId: org-cluster-control-plane-ra-{{ $role.name }}
   dynamicConfiguration:
     dynamic: true
     className: com.tremolosecurity.unison.openshiftv3.wf.OpenShiftWorkflows
@@ -71,7 +71,7 @@ spec:
   description: Add new approvers
   inList: true
   label: $namespaceName$ Approver
-  orgId: org-cluster-control-plane-approvers
+  orgId: org-cluster-control-plane-ra-approvers
   dynamicConfiguration:
     dynamic: true
     className: com.tremolosecurity.scalejs.ListClusterApproverGroups

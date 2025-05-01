@@ -21,7 +21,14 @@ spec:
     - name: groupsAreDN
       value: "false"
     - name: groupPrefix
-      value: approvers-k8s-
+      value: {{ .Values.cluster.approvers_group }}
+    {{ if.Values.cluster.external_group_name}}
+    - name: groupSuffix
+      value: {{ .Values.cluster.external_group_name_suffix }}
+    {{ else }}
+    - name: groupSuffix
+      value: "-internal"
+    {{ end }}
   tasks: |-
            - taskType: addAttribute
              name: cluster

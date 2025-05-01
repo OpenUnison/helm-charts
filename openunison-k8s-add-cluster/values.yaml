@@ -1,4 +1,5 @@
 cluster:
+  approvers_group: approvers-k8s-
   name: managed
   label: Managed Cluster
   description: A managed remote cluster

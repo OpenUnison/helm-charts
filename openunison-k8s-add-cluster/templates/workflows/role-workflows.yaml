@@ -10,7 +10,11 @@ spec:
   description: {{ $role.description }}
   inList: true
   label: {{ $role.workflow.displayLabel }}
+  {{ if not $root.Values.cluster.enable_request_access }}
+  orgId: org-cluster-{{ $root.Values.cluster.name }}-{{ $role.name }}-ra
+  {{ else }}
   orgId: org-cluster-{{ $root.Values.cluster.name }}-{{ $role.name }}
+  {{ end }}
   dynamicConfiguration:
     dynamic: true
     className: com.tremolosecurity.unison.openshiftv3.wf.OpenShiftWorkflows
@@ -18,7 +22,7 @@ spec:
     - name: target
       value: k8s-{{ $root.Values.cluster.name }}
     - name: kind
-      value: /api/v1/namespaces
+      value: /api/v1/namespaces?labelSelector=tremolo.io/request-access%3Denabled
     
   tasks: |-
            - taskType: addAttribute
