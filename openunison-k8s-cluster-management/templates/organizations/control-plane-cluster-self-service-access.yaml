@@ -21,12 +21,39 @@ spec:
   - constraint: o=Tremolo
     scope: dn
   {{ end }}
-  description: Manage access to satelite clusters
+  description: Manage access to satellite clusters
   parent: B158BD40-0C1B-11E3-8FFD-0800200C9A66
   showInPortal: false
   showInReports: false
   showInRequestAccess: true
   uuid: org-cluster-control-plane-request-access
+
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: control-plane-request-access-local
+  namespace: {{ $root.Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
+spec:
+  label: "#[K8S_DEPLOYMENT_NAME:Local Deployment]"
+  azRules:
+  {{ if $root.Values.openunison.naas.groups.internal.isolateRequestAccess.azRules }}
+  {{ range $root.Values.openunison.naas.groups.internal.isolateRequestAccess.azRules }}
+  - scope: {{ .scope }}
+    constraint: {{ .constraint }}
+  {{ end }}
+  {{ else }}
+  - constraint: o=Tremolo
+    scope: dn
+  {{ end }}
+  description: Manage access to satellite clusters
+  parent: org-cluster-control-plane-request-access
+  showInPortal: false
+  showInReports: false
+  showInRequestAccess: true
+  uuid: org-cluster-control-plane-local-request-access
 
 {{ range $role := .Values.openunison.naas.groups.default }}
 ---
@@ -50,7 +77,7 @@ spec:
     scope: dn
   {{ end }}
   description: {{ $role.workflow.org.description }}
-  parent: org-cluster-control-plane-request-access
+  parent: org-cluster-control-plane-local-request-access
   showInPortal: false
   showInReports: false
   showInRequestAccess: true
@@ -69,7 +96,7 @@ spec:
   - constraint: o=Tremolo
     scope: dn
   description: {{ $role.workflow.org.description }}
-  parent: org-cluster-control-plane-request-access
+  parent: org-cluster-control-plane-local-request-access
   showInPortal: false
   showInReports: false
   showInRequestAccess: true
@@ -87,7 +114,7 @@ spec:
   - constraint: o=Tremolo
     scope: dn
   description: Approvers
-  parent: org-cluster-control-plane-request-access
+  parent: org-cluster-control-plane-local-request-access
   showInPortal: false
   showInReports: false
   showInRequestAccess: true
@@ -116,7 +143,7 @@ spec:
     scope: dn
   {{ end }}
   description: {{ $role.workflow.org.description }}
-  parent: org-cluster-control-plane
+  parent: org-cluster-control-plane-local-request-access
   showInPortal: false
   showInReports: false
   showInRequestAccess: true
@@ -135,7 +162,7 @@ spec:
   - constraint: o=Tremolo
     scope: dn
   description: {{ $role.workflow.org.description }}
-  parent: org-cluster-control-plane
+  parent: org-cluster-control-plane-local-request-access
   showInPortal: false
   showInReports: false
   showInRequestAccess: true
@@ -153,7 +180,7 @@ spec:
   - constraint: o=Tremolo
     scope: dn
   description: Approvers
-  parent: org-cluster-control-plane
+  parent: org-cluster-control-plane-local-request-access
   showInPortal: false
   showInReports: false
   showInRequestAccess: true
