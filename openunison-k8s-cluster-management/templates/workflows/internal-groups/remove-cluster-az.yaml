@@ -1,0 +1,129 @@
+{{ if .Values.openunison.naas.groups.internal.enabled }}
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: remove-cluster-az
+  namespace: {{ .Release.Namespace }}
+spec:
+  description: Remove all internal groups related to $cluster$
+  inList: false
+  label: Remove all internal groups related to $cluster$
+  orgId: 663b4074-eb34-4028-ac09-19de8886f816 
+  tasks: |-
+      - taskType: customTask
+        className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
+        params:
+          message: clear internal groups - pre load groups
+
+      - taskType: customTask
+        className: com.tremolosecurity.provisioning.customTasks.LoadGroups
+        params:
+          nameAttr: uid
+          inverse: "false"
+
+      - taskType: customTask
+        className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
+        params:
+          message: clear internal groups - post load groups
+
+      - taskType: customTask
+        className: com.tremolosecurity.provisioning.customTasks.JavaScriptTask
+        params:
+            uidAttribute: uid
+            javaScript: |-
+                // if there's any pre-initialization code, you can put it here
+                ArrayList = Java.type("java.util.ArrayList");
+                System = Java.type("java.lang.System");
+                GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+                TremoloUser = Java.type("com.tremolosecurity.provisioning.service.util.TremoloUser");
+                Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+                HashSet = Java.type("java.util.HashSet");
+                HashMap = Java.type("java.util.HashMap");
+                WFCall = Java.type("com.tremolosecurity.provisioning.service.util.WFCall");
+                ProvisioningParams = Java.type("com.tremolosecurity.provisioning.core.ProvisioningParams");
+
+                ServiceActions = Java.type("com.tremolosecurity.provisioning.service.util.ServiceActions");
+                
+                // the init function is called when the workflow is loaded
+                // it is meant for loading configuration options.
+                // task - com.tremolosecurity.provisioning.core.WorkflowTask
+                // params - Map<String, Attribute>
+                function init(task,params) {
+                    state.put("workflow_obj",task.getWorkflow());
+                    state.put("task",task);
+                }
+
+                function reInit(task) {
+                    state.put("workflow_obj",task.getWorkflow());
+                    state.put("task",task);
+                }
+
+                // doTask is where you will do your work.  
+                // user - com.tremolosecurity.provisioning.core.User
+                // request - Map<String, Object>
+                function doTask(user,request) {
+
+                    var k8s = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget("k8s").getProvider();
+                    var con = k8s.createClient();
+                    var namespaces = new Array();
+
+                    try {
+                      var jsonData = JSON.parse(k8s.callWS(k8s.getAuthToken(),con,"/api/v1/namespaces"));
+                      for (var i=0;i<jsonData["items"].length;i++)  {
+                        namespaces.push(jsonData["items"][i]["metadata"]["name"])
+                      }
+                    } finally {
+                      if (con != null) {
+                        con.getHttp().close();
+                        con.getBcm().close()
+                      }
+                    }
+
+                    var groupsToRemove = new Array();
+                    var groups = user.getGroups();
+                    for (var i=0;i<groups.size();i++) {
+                        var groupName = groups.get(i);
+                        var clusterName = request.get("cluster");
+                        if (clusterName == "k8s") { 
+                            
+                            if (groupName.endsWith("-internal")) {
+                              if (groupName.startsWith("approvers-k8s-k8s-")) {
+                                groupsToRemove.push(groupName);  
+                              } else if (groupName.startsWith("k8s-cluster-k8s-")) {
+                                groupsToRemove.push(groupName);
+                              } else {
+                                // check if a namespace in the cp cluster
+                                for (var j=0;j<namespaces.length;j++) {
+                                  if (groupName.includes("-k8s-" + namespaces[j])) {
+                                    groupsToRemove.push(groupName);
+                                  }
+                                }
+                              }
+                            }
+
+                        } else if (groupName.includes(clusterName) && groupName.endsWith("-internal")) {
+                            groupsToRemove.push(groupName);
+                        }
+                    }
+
+                    for (var i=0;i<groupsToRemove.length;i++) {
+                        groups.remove(groupsToRemove[i])
+                    }
+
+                    
+                    return true;
+                }
+                
+      - taskType: customTask
+        className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
+        params:
+          message: clear internal groups - post remove groups
+
+      - taskType: provision
+        sync: true
+        target: jitdb
+        setPassword: false
+        onlyPassedInAttributes: false
+        attributes:
+        - uid
+{{ end }}

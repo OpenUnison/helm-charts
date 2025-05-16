@@ -1,0 +1,138 @@
+{{ if .Values.openunison.naas.groups.internal.enabled }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: remove-cluster-internal-groups
+  namespace: {{ .Release.Namespace }}
+spec:
+  description: Remove all users from internal groups in $clusterlabel$
+  inList: true
+  label: $clusterlabel$
+  orgId: c542f500-63bf-4170-b4e8-1c5359f3a646
+  dynamicConfiguration:
+    dynamic: true
+    className: com.tremolosecurity.provisioning.dynamicwf.JavaScriptDynamicWorkflows
+    params:
+      - name: javaScript
+        value: |-
+            HashMap = Java.type("java.util.HashMap");
+            System = Java.type("java.lang.System");
+            GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+            ArrayList = Java.type("java.util.ArrayList");
+
+
+            function generateWorkflows(wf,cfg,params,authInfo) {
+                var workflows = new ArrayList();
+
+                var targets = GlobalEntries.getGlobalEntries().getConfigManager().getCfg().getProvisioning().getTargets().getTarget();
+                var sql = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget("jitdb").getProvider().getDS().getConnection();
+
+                try {
+                    var stmt = sql.createStatement();
+                    for (var i=0;i<targets.size();i++) {
+                        var tt = targets.get(i);
+
+                        if (tt.getClassName() == "com.tremolosecurity.unison.openshiftv3.OpenShiftTarget") {
+                            var target = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget(tt.getName()).getProvider();
+
+                            rs = stmt.executeQuery("select sub from localUsers inner join userGroups on userGroups.userId=localUSers.userId inner join localGroups on localGroups.groupId=userGroups.groupId where localGroups.name like '%" + target.getName() + "%-internal'  group by sub ");
+                            if (rs.next()) {
+                                var newwf = new HashMap();
+                                newwf.put("cluster",target.getName());
+                                newwf.put("clusterlabel",target.getLabel());
+                                workflows.add(newwf);
+                            }
+                            
+                        }
+                    }
+                } finally {
+                    if (sql) {
+                        sql.close();
+                    }
+                }
+
+                return workflows;
+
+                
+            }
+
+  tasks: |-
+      - taskType: customTask
+        className: com.tremolosecurity.provisioning.customTasks.JavaScriptTask
+        params:
+            uidAttribute: uid
+            javaScript: |-
+                // if there's any pre-initialization code, you can put it here
+                ArrayList = Java.type("java.util.ArrayList");
+                System = Java.type("java.lang.System");
+                GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+                TremoloUser = Java.type("com.tremolosecurity.provisioning.service.util.TremoloUser");
+                Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+                HashSet = Java.type("java.util.HashSet");
+                HashMap = Java.type("java.util.HashMap");
+                WFCall = Java.type("com.tremolosecurity.provisioning.service.util.WFCall");
+                ProvisioningParams = Java.type("com.tremolosecurity.provisioning.core.ProvisioningParams");
+
+                ServiceActions = Java.type("com.tremolosecurity.provisioning.service.util.ServiceActions");
+                
+                // the init function is called when the workflow is loaded
+                // it is meant for loading configuration options.
+                // task - com.tremolosecurity.provisioning.core.WorkflowTask
+                // params - Map<String, Attribute>
+                function init(task,params) {
+                    state.put("workflow_obj",task.getWorkflow());
+                    state.put("task",task);
+                }
+
+                function reInit(task) {
+                    state.put("workflow_obj",task.getWorkflow());
+                    state.put("task",task);
+                }
+
+                // doTask is where you will do your work.  
+                // user - com.tremolosecurity.provisioning.core.User
+                // request - Map<String, Object>
+                function doTask(user,request) {
+                    
+                    var sql = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget("jitdb").getProvider().getDS().getConnection();
+                    try {
+                        rs = sql.createStatement().executeQuery("select sub from localUsers inner join userGroups on userGroups.userId=localUSers.userId inner join localGroups on localGroups.groupId=userGroups.groupId where localGroups.name like '%" + request.get("cluster") + "%-internal'  group by sub ");
+                        while (rs.next()) {
+                            var sub = rs.getString("sub");
+                            
+                            var nuser = new TremoloUser();
+                            nuser.setUid(sub);
+                            nuser.getAttributes().add(new Attribute("sub",sub));
+                            nuser.getAttributes().add(new Attribute("uid",sub));
+
+                            
+                            
+
+                            attributes = new HashSet();
+                            attributes.add("sub");
+                            attributes.add("uid");
+
+                            var workflow = state.get("workflow_obj");
+
+
+                            call = new WFCall();
+                            call.setReason("remove all internal authorizations for " + request.get("cluster"));
+                            call.setUidAttributeName("sub");
+                            call.setUser(nuser);
+                            call.setRequestor(workflow.getRequester().getUserID());
+
+                            call.getRequestParams().put(ProvisioningParams.UNISON_EXEC_TYPE, ProvisioningParams.UNISON_EXEC_ASYNC);
+                            call.getRequestParams().put("cluster",request.get("cluster"));
+
+                            wf = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getWorkFlow("remove-cluster-az");
+                            wf.executeWorkflow(call);
+                        }
+                    } finally {
+                        if (sql) {
+                            sql.close();
+                        }
+                    }
+                    return true;
+                }
+{{ end }}

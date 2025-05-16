@@ -1,0 +1,26 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: remove-internal-authorizations
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-orgs
+    app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
+spec:
+  label: "Remove Internal Group Members"
+  azRules:
+  - scope: group
+    constraint: cn=administrators{{ .Values.openunison.naas.groups.external.suffix }},ou=groups,ou=shadow,o=Tremolo
+  - scope: group  
+    constraint: cn=administrators{{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
+  description: "Remove all users from internal OpenUnison groups for a selected cluster"
+  parent: ca5ad0bb-b207-41ad-93e4-cffab65dd37c
+  showInPortal: false
+  showInReports: false
+  showInRequestAccess: true
+  uuid: c542f500-63bf-4170-b4e8-1c5359f3a646
