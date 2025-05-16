@@ -217,6 +217,9 @@ openunison:
       internal:
         enabled: true
         suffix: "-internal"
+        isolateRequestAccess:
+          enabled: false
+          azRules: []
       external:
         suffix: "-external"
         enabled: false
