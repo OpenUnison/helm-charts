@@ -1,0 +1,39 @@
+{{ if .Values.openunison.naas.groups.privilegedAccessGroup }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: enable-break-glass-cluster
+  namespace: {{ .Release.Namespace }}
+spec:
+  description: Enable cluster break-glass access
+  inList: false
+  label: Enable break glass cluster
+  orgId: 663b4074-eb34-4028-ac09-19de8886f816 
+  tasks: |-
+      - taskType: customTask
+        className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
+        params:
+          targetName: $cluster$
+          template: |-
+            kind: ClusterRoleBinding
+            apiVersion: rbac.authorization.k8s.io/v1
+            metadata:
+              name: break-glass
+            roleRef:
+              apiGroup: rbac.authorization.k8s.io
+              kind: ClusterRole
+              name: cluster-admin
+            subjects:
+            {{ if .Values.openunison.naas.groups.internal.enabled }}
+            - apiGroup: rbac.authorization.k8s.io
+              kind: Group
+              name: k8s-cluster-$cluster$-administrators{{ .Values.openunison.naas.groups.internal.suffix }} 
+            {{ end }}
+            {{ if .Values.openunison.naas.groups.external.enabled }}
+            - apiGroup: rbac.authorization.k8s.io
+              kind: Group
+              name: k8s-cluster-$cluster$-administrators{{ .Values.openunison.naas.groups.external.suffix }} 
+            {{ end }}
+          srcType: yaml
+{{ end }}

@@ -1,0 +1,28 @@
+{{ if .Values.openunison.naas.groups.privilegedAccessGroup }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: break-glass
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-orgs
+    app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
+spec:
+  label: "Break Glass"
+  azRules:
+  - scope: group
+    constraint: cn={{ .Values.openunison.naas.forms.privileged_access.enable_break_glass.internal_group }}{{ .Values.openunison.naas.groups.external.suffix }},ou=groups,ou=shadow,o=Tremolo
+  - scope: group  
+    constraint: cn={{ .Values.openunison.naas.forms.privileged_access.enable_break_glass.internal_group }}{{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
+  description: "Manage the creation or removal of break-glass privileged access"
+  parent: B158BD40-0C1B-11E3-8FFD-0800200C9A66
+  showInPortal: false
+  showInReports: false
+  showInRequestAccess: true
+  uuid: 663b4074-eb34-4028-ac09-19de8886f816
+{{ end }}

@@ -1,0 +1,102 @@
+{{ if .Values.openunison.naas.groups.privilegedAccessGroup }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: exec-break-glass-ops
+  namespace: {{ .Release.Namespace }}
+spec:
+  description: Enable cluster break-glass access
+  inList: false
+  label: Enable break glass
+  orgId: 663b4074-eb34-4028-ac09-19de8886f816 
+  tasks: |-
+      - taskType: customTask
+        className: com.tremolosecurity.provisioning.customTasks.JavaScriptTask
+        params: 
+          javaScript: |-
+            ProvisioningParams = Java.type("com.tremolosecurity.provisioning.core.ProvisioningParams");
+            System = Java.type("java.lang.System");
+            User = Java.type("com.tremolosecurity.provisioning.core.User");
+            
+            TremoloUser = Java.type("com.tremolosecurity.provisioning.service.util.TremoloUser");
+            Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+            HashSet = Java.type("java.util.HashSet");
+            HashMap = Java.type("java.util.HashMap");
+            WFCall = Java.type("com.tremolosecurity.provisioning.service.util.WFCall");
+
+            ServiceActions = Java.type("com.tremolosecurity.provisioning.service.util.ServiceActions");
+            GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+            DateTime = Java.type("org.joda.time.DateTime");
+            ArrayList = Java.type("java.util.ArrayList");
+
+            PreparedStatement = Java.type("java.sql.PreparedStatement");
+            ResultSet = Java.type("java.sql.ResultSet");
+
+            FilterBuilder = Java.type("org.apache.directory.ldap.client.api.search.FilterBuilder");
+
+            Gson = Java.type("com.google.gson.Gson");
+            JSUtils = Java.type("com.tremolosecurity.util.JSUtils");
+            Base64 = Java.type("java.util.Base64");
+            EncryptedMessage = Java.type("com.tremolosecurity.provisioning.util.EncryptedMessage");
+
+            DateUtils = Java.type("org.apache.directory.api.util.DateUtils");
+            DateTime = Java.type("org.joda.time.DateTime");
+            DateTimeZone = Java.type("org.joda.time.DateTimeZone");
+
+            Long = Java.type("java.lang.Long");
+            Logger = Java.type("org.apache.log4j.Logger");
+            String = Java.type("java.lang.String");
+            
+            function init(task,params) {
+                state.put("workflow_obj",task.getWorkflow());
+              }
+
+              function reInit(task) {
+                state.put("workflow_obj",task.getWorkflow());
+              }
+
+              function doTask(user,request) {
+                var workflow = state.get("workflow_obj");
+                request.put("wf_request_reason",workflow.getUser().getRequestReason());
+
+                System = Java.type("java.lang.System");
+                
+                var targets = GlobalEntries.getGlobalEntries().getConfigManager().getCfg().getProvisioning().getTargets().getTarget();
+                for (var i=0;i<targets.size();i++) {
+                  var target = targets.get(i);
+                  if (target.getName().startsWith("k8s") && ! target.getName().startsWith("k8s-dr")) {
+                    System.out.println("*********" + target.getName() + "************");
+                    var nuser = new TremoloUser();
+
+                    
+                    nuser.setUid(workflow.getRequester().getUserID());
+                    nuser.getAttributes().add(new Attribute("sub",workflow.getRequester().getUserID()));
+                    nuser.getAttributes().add(new Attribute("uid",workflow.getRequester().getUserID()));
+
+                    
+                    
+
+                    attributes = new HashSet();
+                    attributes.add("sub");
+                    attributes.add("uid");
+
+                    call = new WFCall();
+                    call.setReason("enable break glass for workflow " + workflow.getId());
+                    call.setUidAttributeName("sub");
+                    call.setUser(nuser);
+                    call.setRequestor(nuser.getUid());
+
+                    call.getRequestParams().put(ProvisioningParams.UNISON_EXEC_TYPE, ProvisioningParams.UNISON_EXEC_ASYNC);
+                    
+                    call.getRequestParams().put("cluster",target.getName());
+                    
+                    wf = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getWorkFlow(request.get("wfname"));
+                    wf.executeWorkflow(call);
+                  }
+                }
+                
+
+                return true;
+              }
+{{ end }}

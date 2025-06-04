@@ -1,0 +1,86 @@
+{{ if .Values.openunison.naas.readOnly }}
+
+{{ else }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: OUJob
+metadata:
+  name: clear-expired-sessions
+  namespace: {{ .Release.Namespace }}
+spec:
+  cronSchedule:
+    seconds: "0"
+    minutes: "*"
+    hours: "*"
+    dayOfMonth: "*"
+    month: "*"
+    dayOfWeek: "?"
+    year: "*"
+  className: com.tremolosecurity.provisioning.scheduler.jobs.JavaScriptJob
+  group: approvals
+  params:
+  - name: javaScript
+    value: |-
+      function execute(configManager,context) {
+        System = Java.type("java.lang.System");
+        System.out.println("here");
+
+        ServiceActions = Java.type("com.tremolosecurity.provisioning.service.util.ServiceActions");
+        GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+        DateTime = Java.type("org.joda.time.DateTime");
+
+        k8s = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget("k8s").getProvider();
+        con = k8s.createClient();
+        try {
+            var moreSessions = true;
+            var sessionsUri = '/apis/openunison.tremolo.io/v1/namespaces/openunison/oidc-sessions?limit=500';
+            var continueToken = null;
+            var sessionsProcessed = 0;
+
+            while (moreSessions) {
+                var sessionsListURL = sessionsUri;
+                if (continueToken) {
+                    sessionsListURL = sessionsListURL + '&continue=' + continueToken;
+                }
+                
+                var sessionList = JSON.parse(k8s.callWS(k8s.getAuthToken(),con,sessionsListURL));
+                sessionsProcessed += 500;
+                if (sessionList.metadata.continue) {
+                    continueToken = sessionList.metadata.continue;
+                    System.out.println("Sessions retrieved: " + sessionsProcessed + ", Sessions left: " + sessionList.metadata.remainingItemCount);
+                    moreSessions = true;
+                } else {
+                    moreSessions = false;
+                    continueToken = null;
+                    System.out.println("Finall session set");
+                }
+
+                for (var i = 0;i<sessionList.items.length;i++) {
+                    session = sessionList.items[i];
+                    expires = session.spec.expires;
+                    name = session.metadata.name;
+                    if ((new DateTime(expires)).isBeforeNow()) {
+                        
+                        sessionUri = '/apis/openunison.tremolo.io/v1/namespaces/openunison/oidc-sessions/' + name;
+                        k8s.callWSDelete(k8s.getAuthToken(),con,sessionUri);
+                    }
+                }
+            }
+            
+            
+
+        } finally {
+            if (con != null) {
+                con.getHttp().close();
+                con.getBcm().close();
+            }
+
+            
+        }
+
+        
+        
+      }
+
+     
+{{ end }}

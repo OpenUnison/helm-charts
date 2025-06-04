@@ -1,0 +1,77 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: priv-manual-approval
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+spec:
+  description: Manually approve request for privileged access
+  inList: false
+  label: Approve request for privileged access
+  orgId: internal-does-not-exist
+  tasks: |-
+      - taskType: customTask
+        className: com.tremolosecurity.provisioning.customTasks.JavaScriptTask
+        params: 
+         javaScript: |-
+           DigestUtils = Java.type("org.apache.commons.codec.digest.DigestUtils");
+           FilterBuilder = Java.type("org.apache.directory.ldap.client.api.search.FilterBuilder");
+           GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+           ArrayList = Java.type("java.util.ArrayList");
+           Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+           JString = Java.type("java.lang.String");
+           System = Java.type("java.lang.System");
+           Gson = Java.type("com.google.gson.Gson");
+           JSUtils = Java.type("com.tremolosecurity.util.JSUtils");
+           Base64 = Java.type("java.util.Base64");
+           UUID = Java.type("java.util.UUID");
+           DateTime = Java.type("org.joda.time.DateTime");
+           DateTimeZone = Java.type("org.joda.time.DateTimeZone");
+           Logger = Java.type("org.apache.log4j.Logger");
+           String = Java.type("java.lang.String");
+           
+
+           function init(task,params) {
+             state.put("workflow_obj",task.getWorkflow());
+           }
+           function reInit(task) {
+             state.put("workflow_obj",task.getWorkflow());
+            }
+
+            function doTask(user,request) {
+              var workflow = state.get("workflow_obj");
+              // set the cluster
+              request.put("cluster",user.getAttribs().get("cluster").getValues().get(0));
+              
+              // set the incident
+              System.out.println(user.getAttribs().get("task").getValues().get(0));
+              taskData = JSON.parse(user.getAttribs().get("task").getValues().get(0));
+              request.put("incident_id",user.getAttribs().get("incident").getValues().get(0));
+              request.put("task_id",taskData["pamTaskID"]);
+              request.put("incident_expires",taskData["expiryTime"]);
+
+              return true;
+            }
+
+
+      - taskType: approval
+        emailTemplate: Approval for privileged access
+        mailAttr: mail
+        failureEmailSubject: Privileged Access Denied
+        failureEmailMsg: |-
+          Your request for privileged access has been denied because:
+          ${reason}
+
+        label: Privileged access to $cluster$ for incident $incident_id$, task $task_id$, expires at $incident_expires$
+        approvers:
+        {{ range .Values.openunison.naas.forms.privileged_access.manual_approval.groups }}
+        - scope: group
+          constraint: cn={{ . }},ou=groups,ou=shadow,o=Tremolo
+        {{ end }}
+        onSuccess:
+          - taskType: callWorkflow
+            name: request-privilege
+
+      

@@ -1,0 +1,54 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: deprivilege-admin
+  namespace: {{ .Release.Namespace }}
+spec:
+  description: De-escalate a privileged admin
+  inList: false
+  label: De-escalate
+  orgId: x
+  tasks: |-
+    - taskType: customTask
+      className: com.tremolosecurity.provisioning.customTasks.LoadAttributes
+      params:
+        nameAttr: uid
+        name: 
+        - givenName
+        - sn
+        - mail
+
+    - taskType: customTask
+      className: com.tremolosecurity.provisioning.customTasks.LoadGroups
+      params:
+        nameAttr: uid
+        inverse: "false"
+
+    - taskType: addGroup
+      name: $groupName$
+      remove: true
+
+    - taskType: provision
+      sync: true
+      target: jitdb
+      setPassword: false
+      onlyPassedInAttributes: false
+      attributes: ["uid"]
+
+
+
+    - taskType: ifAttrExists
+      name: tremoloio_has_session
+      onSuccess:
+      - taskType: customTask
+        className: com.tremolosecurity.provisioning.tasks.DeleteK8sObject
+        params:
+          targetName: k8s
+          kind:  Secret
+          url: /api/v1/namespaces/openunison/secrets/$tremoloio_sessionid$
+        
+
+    - taskType: callWorkflow
+      name: clear-admin-sessions
+  

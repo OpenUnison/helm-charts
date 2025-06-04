@@ -1,0 +1,35 @@
+network:
+  session_inactivity_timeout_seconds: 3600
+openunison:
+  naas:
+    groups:
+      internal:
+        suffix: "-internal"
+      external:
+        suffix: "-external"
+    privileged_access:
+        enable_break_glass:
+          internal_group: openunison-enable-break-glass
+          external_group: there-is-no-group
+        includeExtraJs: true
+        test_mode: false
+        uid_attribute: uid
+        manual_approval:
+          enabled: false
+          groups: []
+        submission_javascript: ""
+        additional_attributes: []
+  html:
+    theme:
+      headerTitle: "OpenUnison"
+      startPage: front-page
+      colors:
+        primary: 
+          main: "#AC1622"
+          dark: "#780f17"
+          light: "#bc444e"
+        secondary:
+          main: "#16aca0"
+          dark: "#0f7870"
+          light: "#44bcb3"
+        error: "#ff1744"

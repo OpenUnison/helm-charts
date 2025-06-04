@@ -1,0 +1,20 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: noop
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+spec:
+  description: creates a ServiceAccount and adds to (Cluster)RoleBindings based on group mappings
+  inList: false
+  label: Creates a ResourceQuota
+  orgId: internal-does-not-exist
+  tasks: |-
+      - taskType: customTask
+        className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
+        params:
+          message: inside workflow
+
+      

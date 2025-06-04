@@ -1,0 +1,41 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: CustomAuthorization
+metadata:
+  name: cluster-admin
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+spec:
+  className: com.tremolosecurity.customaz.JavaScriptAz
+  params:
+    javaScript: |-
+        GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+
+        function init(config) {
+            // No initialization needed
+        }
+
+        function isAuthorized(subject,params) {
+            var groups = subject.getAttribs().get('groups');
+            if (groups == null || groups.getValues().size() == 0) {
+                return false;
+            }
+            for (var i = 0; i < groups.getValues().size(); i++) {
+                if ((groups.getValues().get(i).startsWith('k8s-cluster-k8s') && ((groups.getValues().get(i).endsWith('-administrators{{ .Values.openunison.naas.groups.external.suffix }}') || (groups.getValues().get(i).endsWith('-administrators{{ .Values.openunison.naas.groups.internal.suffix }}') ) )))) {
+                    return true;
+                }
+            }
+            return true;
+        }
+
+        // we're only using this for web UI, so we don't need to implement this
+        function listPossibleApprovers(params) {
+            ArrayList = Java.type("java.util.ArrayList");
+            var approvers = new ArrayList();
+            
+            return approvers;
+        }
+
+       
+

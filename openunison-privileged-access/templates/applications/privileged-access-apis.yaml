@@ -1,0 +1,103 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Application
+metadata:
+  name: privileged-access-apis
+  namespace: {{ .Release.Namespace }}
+spec:
+  azTimeoutMillis: 3000
+  isApp: true
+  urls:
+  - hosts:
+    - "#[OU_HOST]"
+    filterChain:
+    - className: com.tremolosecurity.proxy.filters.JavaScriptFilter
+      params:
+        javaScript: |-
+          
+          GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+          HashMap = Java.type("java.util.HashMap");
+          ArrayList = Java.type("java.util.ArrayList");
+          NVP = Java.type("com.tremolosecurity.util.NVP");
+          ProxyConstants = Java.type("com.tremolosecurity.proxy.util.ProxyConstants");
+
+          function initFilter(config) {
+
+          }
+
+          function doFilter(request,response,chain) {
+            targets = GlobalEntries.getGlobalEntries().getConfigManager().getCfg().getProvisioning().getTargets().getTarget();
+            
+
+            var userData = (request.getSession().getAttribute(ProxyConstants.AUTH_CTL)).getAuthInfo();
+            var sub = userData.getAttribs().get("sub").getValues().get(0);
+            var groups = userData.getAttribs().get("groups").getValues();
+
+            var data = {};
+            data["items"] = Array();
+
+            
+
+            for (var i = 0; i < targets.size(); i++) {
+              target = targets.get(i);
+
+              var shouldIgnore = false;
+              if (target.getClassName() == 'com.tremolosecurity.unison.openshiftv3.OpenShiftTarget' ) {
+                targetObj = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget(target.getName()).getProvider();
+                if (target.getLabel() != null) {	
+                    for (var j=0;i<target.getLabel().size(); j++) {
+                        var nv = target.getLabel().get(j);
+                        if (nv.getName().equalsIgnoreCase("tremolo.io/list") && nv.getValue().equalsIgnoreCase("false")) {
+                            // this target is not listed in the UI
+                            shouldIgnore = true;
+                        }
+                    }
+                }
+
+                if (! shouldIgnore) {
+                    var internalAdminGroup = "k8s-cluster-" + target.getName() + "-administrators{{ .Values.openunison.naas.groups.internal.suffix }}";
+                    var externalAdminGroup  = "k8s-cluster-" + target.getName() + "-administrators{{ .Values.openunison.naas.groups.external.suffix }}";
+
+                    for (var k=0;k<groups.size();k++) {
+                        var groupName = groups.get(k);
+                        if (groupName == internalAdminGroup || groupName == externalAdminGroup) {
+                            data["items"].push(
+                            {
+                              "name": targetObj.getLabel(),
+                              "value": target.getName()
+                            }
+                            );
+                        }
+                    }
+                }
+
+
+              }
+
+
+            }
+
+            
+
+            
+
+            response.getWriter().print(JSON.stringify(data));
+          }
+
+    uri: /api/privileged-access/targets
+    # Only cluster administrators can access this API
+    azRules:
+    - scope: custom
+      constraint: cluster-admin
+    authChain: login-service
+    results: {}
+  cookieConfig:
+    sessionCookieName: tremolosession
+    domain: "#[OU_HOST]"
+    secure: true
+    httpOnly: true
+    logoutURI: "/logout"
+    keyAlias: session-unison
+    timeout: {{ .Values.network.session_inactivity_timeout_seconds }}
+    scope: -1
+    cookiesEnabled: false
