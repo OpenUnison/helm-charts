@@ -1,0 +1,348 @@
+{{ if .Values.openunison.naas.groups.privilegedAccessGroup }}
+{{ if .Values.openunison.naas.readOnly }}
+
+{{ else }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: OUJob
+metadata:
+  name: clear-privileged-sessions
+  namespace: {{ .Release.Namespace }}
+spec:
+  cronSchedule:
+    seconds: "0"
+    minutes: "*"
+    hours: "*"
+    dayOfMonth: "*"
+    month: "*"
+    dayOfWeek: "?"
+    year: "*"
+  className: com.tremolosecurity.provisioning.scheduler.jobs.JavaScriptJob
+  group: sessions
+  params:
+  - name: javaScript
+    value: |-
+      ProvisioningParams = Java.type("com.tremolosecurity.provisioning.core.ProvisioningParams");
+      System = Java.type("java.lang.System");
+      User = Java.type("com.tremolosecurity.provisioning.core.User");
+      
+      TremoloUser = Java.type("com.tremolosecurity.provisioning.service.util.TremoloUser");
+      Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+      HashSet = Java.type("java.util.HashSet");
+      HashMap = Java.type("java.util.HashMap");
+      WFCall = Java.type("com.tremolosecurity.provisioning.service.util.WFCall");
+
+      ServiceActions = Java.type("com.tremolosecurity.provisioning.service.util.ServiceActions");
+      GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+      DateTime = Java.type("org.joda.time.DateTime");
+      ArrayList = Java.type("java.util.ArrayList");
+
+      PreparedStatement = Java.type("java.sql.PreparedStatement");
+      ResultSet = Java.type("java.sql.ResultSet");
+
+      FilterBuilder = Java.type("org.apache.directory.ldap.client.api.search.FilterBuilder");
+
+      Gson = Java.type("com.google.gson.Gson");
+      JSUtils = Java.type("com.tremolosecurity.util.JSUtils");
+      Base64 = Java.type("java.util.Base64");
+      EncryptedMessage = Java.type("com.tremolosecurity.provisioning.util.EncryptedMessage");
+
+      DateUtils = Java.type("org.apache.directory.api.util.DateUtils");
+      DateTime = Java.type("org.joda.time.DateTime");
+      DateTimeZone = Java.type("org.joda.time.DateTimeZone");
+
+      Long = Java.type("java.lang.Long");
+      Logger = Java.type("org.apache.log4j.Logger");
+      String = Java.type("java.lang.String");
+
+      function deEscalatePrivilege(dn,dnHash,sessionid,workflowName,privGroupDn,clusterName,groupName) {
+        // find the user and create a TremoloUser
+        var res = GlobalEntries.getGlobalEntries().getConfigManager().getMyVD().search(dn,0,"(objectClass=*)",new ArrayList());
+        res.hasMore();
+        var fromLdap = res.next();
+        var nuser = new TremoloUser();
+
+        var sub = fromLdap.getAttribute('{{ .Values.openunison.naas.forms.privileged_access.uid_attribute }}').getStringValue();
+        nuser.setUid(sub);
+        nuser.getAttributes().add(new Attribute("sub",sub));
+        nuser.getAttributes().add(new Attribute("uid",sub));
+
+        
+        
+
+        attributes = new HashSet();
+        attributes.add("sub");
+        attributes.add("uid");
+
+        call = new WFCall();
+        call.setReason("de-privilege user");
+        call.setUidAttributeName("sub");
+        call.setUser(nuser);
+        call.setRequestor("system");
+
+        if (sessionid) {
+          call.getRequestParams().put("tremoloio_sessionid",sessionid);
+          nuser.getAttributes().add(new Attribute("tremoloio_has_session","yes"));
+
+          // log the creation
+          logger = GlobalEntries.getGlobalEntries().get("tremolo.io/privlogger");
+          if (! logger) {
+            logger = Logger.getLogger("com.tremolosecurity.PrivilegedAccessLogger");
+            GlobalEntries.getGlobalEntries().set("tremolo.io/privlogger",logger);
+          }
+
+          logger.info(String.format("End %s",sessionid));
+        }
+        
+        call.getRequestParams().put(ProvisioningParams.UNISON_EXEC_TYPE, ProvisioningParams.UNISON_EXEC_ASYNC);
+        //System.out.println("*****DN Hash:" + dnHash);
+        call.getRequestParams().put("tremoloio_userhash",dnHash);
+        call.getRequestParams().put("tremoloio_sessionid",sessionid);
+        call.getRequestParams().put("cluster",clusterName);
+        call.getRequestParams().put("groupName",groupName);
+        call.getRequestParams().put("privGroupDn",privGroupDn);
+
+        wf = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getWorkFlow(workflowName);
+        wf.executeWorkflow(call);
+
+      }
+
+      function clearSessions(dn,dnHash,sessionid,workflowName,privGroupDn,clusterName,groupName) {
+        // find the user and create a TremoloUser
+        var res = GlobalEntries.getGlobalEntries().getConfigManager().getMyVD().search(dn,0,"(objectClass=*)",new ArrayList());
+        res.hasMore();
+        var fromLdap = res.next();
+        var nuser = new TremoloUser();
+
+        var sub = fromLdap.getAttribute('{{ .Values.openunison.naas.forms.privileged_access.uid_attribute }}').getStringValue();
+        nuser.setUid(sub);
+        nuser.getAttributes().add(new Attribute("sub",sub));
+        nuser.getAttributes().add(new Attribute("uid",sub));
+
+        
+
+        attributes = new HashSet();
+        attributes.add("sub");
+        attributes.add("uid");
+
+        call = new WFCall();
+        call.setReason("de-privilege user");
+        call.setUidAttributeName("sub");
+        call.setUser(nuser);
+        call.setRequestor("system");
+        
+        call.getRequestParams().put(ProvisioningParams.UNISON_EXEC_TYPE, ProvisioningParams.UNISON_EXEC_ASYNC);
+        ///System.out.println("*****DN Hash:" + dnHash);
+        call.getRequestParams().put("tremoloio_userhash",dnHash);
+        if (sessionid) {
+          call.getRequestParams().put("tremoloio_sessionid",sessionid);
+          nuser.getAttributes().add(new Attribute("tremoloio_has_session","yes"));
+          // log the creation
+          logger = GlobalEntries.getGlobalEntries().get("tremolo.io/privlogger");
+          if (! logger) {
+            logger = Logger.getLogger("com.tremolosecurity.PrivilegedAccessLogger");
+            GlobalEntries.getGlobalEntries().set("tremolo.io/privlogger",logger);
+          }
+
+          logger.info(String.format("End %s",sessionid));
+        }
+        wf = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getWorkFlow(workflowName);
+        wf.executeWorkflow(call);
+
+      }
+
+      function checkIfPasswordChanged(dn,dnHash,createdTs) {
+        var uid = dn.substring(dn.indexOf('=')+1,dn.indexOf(','));
+        ///System.out.println("UID : '" + uid + "'");
+        var searchFilter = FilterBuilder.equal('{{ .Values.openunison.naas.forms.privileged_access.uid_attribute }}', uid).toString();
+        var res = GlobalEntries.getGlobalEntries().getConfigManager().getMyVD().search("o=Data",2, searchFilter  ,new ArrayList());
+        res.hasMore();
+        var fromAd = res.next();
+
+        while (res.hasMore()) res.next();
+
+        var pwdLastSet = fromAd.getAttribute("pwdLastSet").getStringValue();
+        //System.out.println("pwdLastSet: " + pwdLastSet);
+
+        var dateForLastSet = DateUtils.convertIntervalDate(pwdLastSet);
+        var jodaDateTime = new DateTime(dateForLastSet.getTime());
+
+        //System.out.println(dateForLastSet);
+        //System.out.println(jodaDateTime);
+        whenSessionCreated = new DateTime(new Long(createdTs));
+
+        if (whenSessionCreated.isBefore(jodaDateTime)) {
+          //System.out.println("User '" + uid + "' has had their password reset, clearing all sessions");
+          clearSessions(dn,dnHash,null,"clear-admin-sessions");
+        }
+
+      }
+
+      function checkMembership(dnHash,dn,privGroupDn,clusterName,groupName) {
+        try {
+        
+            
+            var moreSessions = true;
+            var sessionsUri = '/api/v1/namespaces/openunison/secrets?labelSelector=tremolo.io%2Fusage%3Dprivileged-session-data%2Ctremolo.io%2Fuser-dn%3D' + dnHash + '&limit=500&tremolo.io%2Fcluster%3D' + clusterName;
+            var continueToken = null;
+            var sessionsProcessed = 0;
+            var sessionsFound = false;
+
+            while (moreSessions) {
+                var sessionsListURL = sessionsUri;
+                if (continueToken) {
+                    sessionsListURL = sessionsListURL + '&continue=' + continueToken;
+                }
+                
+                var sessionList = JSON.parse(k8s.callWS(k8s.getAuthToken(),con,sessionsListURL));
+                sessionsProcessed += 500;
+                if (sessionList.metadata.continue) {
+                    continueToken = sessionList.metadata.continue;
+                    //System.out.println("Sessions retrieved: " + sessionsProcessed + ", Sessions left: " + sessionList.metadata.remainingItemCount);
+                    moreSessions = true;
+                } else {
+                    moreSessions = false;
+                    continueToken = null;
+                    //System.out.println("Finall session set");
+                }
+
+                 for (var i = 0;i<sessionList.items.length;i++) {
+                    session = sessionList.items[i];
+                    sessionsFound = true;
+                    
+                    incBytes = Base64.getDecoder().decode(session.data.incident);
+                    encIncInfoStr = JSUtils.bytes2string(incBytes);
+                    gson = new Gson();
+                    encryptedIncidentInfo = gson.fromJson(encIncInfoStr,EncryptedMessage.class);
+                    strIncidentInfo = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().decryptObject(encryptedIncidentInfo);
+                    
+
+                    try {
+                      incidentInfo = JSON.parse(strIncidentInfo);
+                    } catch (error) {
+                        strIncidentInfo = strIncidentInfo.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+                        incidentInfo = JSON.parse(strIncidentInfo);
+                    }
+
+                    System.out.println(JSON.stringify(incidentInfo));
+                    
+                    expires = incidentInfo.taskData.expiryTime;
+                    //System.out.println("EXPIRES: " + expires + " / " + (new DateTime(expires)));
+                    name = session.metadata.name;
+                    if ((new DateTime(expires)).isBeforeNow()) {
+                        //System.out.println("Incident " + incidentInfo.incident + " / Task " + incidentInfo.taskData.pamTaskID + " expired");
+                        deEscalatePrivilege(dn,dnHash,session.metadata.name,"deprivilege-admin",privGroupDn,clusterName,groupName);
+                    } else {
+                      //System.out.println("Incident " + incidentInfo.incident + " / Task " + incidentInfo.taskData.pamTaskID + " NOT EXPIRED");
+                      checkIfPasswordChanged(dn,dnHash,incidentInfo.createdTs);
+                    }
+                } 
+            }
+
+            if (sessionsFound) {
+              //System.out.println("Found sessions for " + dnHash + ", validating");
+            } else {
+              System.out.println("No sessions for " + dnHash + " found, deprovisioning and clearing all sessions");
+              deEscalatePrivilege(dn,dnHash,null,"deprivilege-admin",privGroupDn,clusterName,groupName);
+            }
+            
+            
+
+        } finally {
+            if (con != null) {
+                con.getHttp().close();
+                con.getBcm().close();
+            }
+
+            
+        }
+      }
+
+      function checkForGroup(groupName,k8s,con) {
+        const privGroupDn = "cn=" + groupName + ",ou=groups,ou=shadow,o=Tremolo";
+        var clusterName = "not-yet-set";
+        /*System.out.println("***********************************");
+        System.out.println("group name : '" + groupName + "'");
+        System.out.println("local group :'{{ .Values.openunison.naas.groups.privilegedAccessGroup }}'")        
+        System.out.println("priv for local : '" + (groupName == "{{ .Values.openunison.naas.groups.privilegedAccessGroup }}") + "'");*/
+        if (groupName == "{{ .Values.openunison.naas.groups.privilegedAccessGroup }}") {
+          clusterName = "k8s";
+        } else {
+          clusterName = groupName.substring(16,groupName.indexOf('-privileged'));
+        }
+        //System.out.println("Cluster: " + clusterName);
+        //System.out.println("***********************************");
+
+        
+          
+        
+        
+        var res = GlobalEntries.getGlobalEntries().getConfigManager().getMyVD().search(privGroupDn,0,"(objectClass=*)",new ArrayList());
+        res.hasMore();
+        groupFromLdap = res.next();
+        members = groupFromLdap.getAttribute("uniqueMember");
+        if (members) {
+          memberDns = members.getStringValueArray();
+          for (var i=0;i<memberDns.length;i++) {
+            memberDn = memberDns[i];
+            
+
+            DigestUtils = Java.type("org.apache.commons.codec.digest.DigestUtils");
+            dnHash = DigestUtils.sha1Hex(memberDn);
+            //System.out.println(dnHash);
+
+            // check if there are any Secrets associated with this user
+
+            checkMembership(dnHash,memberDn,privGroupDn,clusterName,groupName);
+            
+
+
+          }
+        }
+      
+      }
+
+      function execute(configManager,context) {
+        System = Java.type("java.lang.System");
+        System.out.println("here in clear-privileged-sessions");
+
+        
+
+        db = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget("jitdb").getProvider().getDS().getConnection();
+        k8s = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget("k8s").getProvider();
+        con = k8s.createClient();
+        try {
+
+          var privGroups = db.createStatement().executeQuery("select name from localGroups where name like '%-privileged-%'");
+
+        
+          while (privGroups.next()) {
+            groupName = privGroups.getString("name");
+            System.out.println("Group name: '" + groupName + "'" );
+            checkForGroup(groupName,k8s,con);
+          }
+
+        } catch (ex) {
+          System.out.println(ex);
+        } finally {
+          if (db != null) {
+            db.close();
+          }
+
+          if (con != null) {
+              con.getHttp().close();
+              con.getBcm().close();
+          }
+        }
+        
+        
+
+       
+
+        
+        
+      }
+
+     
+{{ end }}
+{{ end }}

@@ -494,6 +494,20 @@ spec:
 
                
 
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.LoadAttributes
+             params:
+               nameAttr: uid
+               name: 
+               - givenName
+               - sn
+               - mail
+
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
+             params:
+               message: pre-email-notification
+
            - taskType: notifyUser
              subject: {{ .Values.openunison.naas.workflows.new_namespace.notification.subject }}
              mailAttrib: mail

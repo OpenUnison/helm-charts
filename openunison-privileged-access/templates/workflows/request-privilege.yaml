@@ -1,0 +1,144 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: request-privilege
+  namespace: {{ .Release.Namespace }}
+spec:
+  description: Request privileged access for this cluster
+  inList: false
+  label: Request Privilege
+  orgId: x
+  tasks: |-
+     
+
+     - taskType: customTask
+       className: com.tremolosecurity.provisioning.customTasks.JavaScriptTask
+       params: 
+         javaScript: |-
+           DigestUtils = Java.type("org.apache.commons.codec.digest.DigestUtils");
+           FilterBuilder = Java.type("org.apache.directory.ldap.client.api.search.FilterBuilder");
+           GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+           ArrayList = Java.type("java.util.ArrayList");
+           Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+           JString = Java.type("java.lang.String");
+           System = Java.type("java.lang.System");
+           Gson = Java.type("com.google.gson.Gson");
+           JSUtils = Java.type("com.tremolosecurity.util.JSUtils");
+           Base64 = Java.type("java.util.Base64");
+           UUID = Java.type("java.util.UUID");
+           DateTime = Java.type("org.joda.time.DateTime");
+           DateTimeZone = Java.type("org.joda.time.DateTimeZone");
+           Logger = Java.type("org.apache.log4j.Logger");
+           String = Java.type("java.lang.String");
+           
+
+           function init(task,params) {
+             state.put("workflow_obj",task.getWorkflow());
+           }
+           function reInit(task) {
+             state.put("workflow_obj",task.getWorkflow());
+            }
+
+            function doTask(user,request) {
+              var workflow = state.get("workflow_obj");
+              var searchFilter = FilterBuilder.equal('{{ .Values.openunison.naas.forms.privileged_access.uid_attribute }}', user.getUserID()).toString();
+              res = GlobalEntries.getGlobalEntries().getConfigManager().getMyVD().search('o=Tremolo', 2, searchFilter, new ArrayList());
+              res.hasMore();
+              var fromLdap = res.next();
+              var dn = fromLdap.getDN();
+
+
+
+              var userDnDigest = DigestUtils.sha1Hex(dn);
+
+              var incidentInfo = {
+                "incident": user.getAttribs().get("incident").getValues().get(0),
+                "taskData": JSON.parse(user.getAttribs().get("task").getValues().get(0)),
+                "createdTs": System.currentTimeMillis(),
+                "cluster" : user.getAttribs().get("cluster").getValues().get(0),
+              }
+
+              strIncidentInfo = JSON.stringify(incidentInfo);
+
+              var ecnryptedIncidentInfo = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().encryptObject(strIncidentInfo);
+              gson = new Gson();
+              var encIncInfoStr = gson.toJson(ecnryptedIncidentInfo);
+              var incBytes = JSUtils.string2bytes(encIncInfoStr);
+              var b64Inc = Base64.getEncoder().encodeToString(incBytes);
+
+              request.put("tremoloio_dn",userDnDigest);
+              request.put("tremoloio_incident",b64Inc);
+              request.put("tremoloio_uuid",UUID.randomUUID().toString());
+              request.put("cluster",incidentInfo.cluster);
+
+              clusterLabel = incidentInfo.cluster.substring(4);
+
+              // log the creation
+              logger = GlobalEntries.getGlobalEntries().get("tremolo.io/privlogger");
+              if (! logger) {
+                logger = Logger.getLogger("com.tremolosecurity.hsbc.PrivilegedAccessLogger");
+                GlobalEntries.getGlobalEntries().set("tremolo.io/privlogger",logger);
+              }
+
+              logger.info(String.format("Start %s for %s - inc=%s task=%s cluster=%s expires=%s",request.get("tremoloio_uuid"),user.getUserID(),incidentInfo.incident,incidentInfo.taskData.pamTaskID,clusterLabel,incidentInfo.taskData.expiryTime));
+
+              return true;
+            }
+
+     - taskType: customTask
+       className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
+       params:
+         targetName: k8s
+         template: |-
+           kind: Secret
+           apiVersion: v1
+           metadata:
+             name: $tremoloio_uuid$
+             namespace: {{ .Release.Namespace }}
+             labels:
+               tremolo.io/user-dn: $tremoloio_dn$
+               tremolo.io/usage: privileged-session-data
+               tremolo.io/cluster: $cluster$
+           data:
+             incident: $tremoloio_incident$
+         srcType: yaml
+
+     - taskType: customTask
+       className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
+       params:
+         target: jitdb
+         name: k8s-cluster-$cluster$-privileged{{ .Values.openunison.naas.groups.internal.suffix }}
+         attributes:
+         - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
+         - unison.group.create.param.2=Temporary privileged access
+
+     - taskType: customTask
+       className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
+       params:
+         targetName: $cluster$
+         template: |-
+           apiVersion: rbac.authorization.k8s.io/v1
+           kind: ClusterRoleBinding
+           metadata:
+             name: {{ .Values.openunison.naas.groups.privilegedAccessGroup }}
+           roleRef:
+             apiGroup: rbac.authorization.k8s.io
+             kind: ClusterRole
+             name: cluster-admin
+           subjects:
+           - apiGroup: rbac.authorization.k8s.io
+             kind: Group
+             name: k8s-cluster-$cluster$-privileged{{ .Values.openunison.naas.groups.internal.suffix }}
+         srcType: yaml
+
+     - taskType: addGroup
+       name: k8s-cluster-$cluster$-privileged{{ .Values.openunison.naas.groups.internal.suffix }}
+       remove: false
+
+     - taskType: provision
+       sync: false
+       target: jitdb
+       setPassword: false
+       onlyPassedInAttributes: false
+       attributes: ["uid"]

@@ -1,0 +1,116 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: clear-admin-sessions
+  namespace: {{ .Release.Namespace }}
+spec:
+  description: Clear admin sessions
+  inList: false
+  label: clear admin session
+  orgId: x
+  tasks: |-
+            - taskType: customTask
+              className: com.tremolosecurity.provisioning.customTasks.JavaScriptTask
+              params: 
+                javaScript: |-
+                  DigestUtils = Java.type("org.apache.commons.codec.digest.DigestUtils");
+                  FilterBuilder = Java.type("org.apache.directory.ldap.client.api.search.FilterBuilder");
+                  GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+                  ArrayList = Java.type("java.util.ArrayList");
+                  Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+                  JString = Java.type("java.lang.String");
+                  System = Java.type("java.lang.System");
+                  Gson = Java.type("com.google.gson.Gson");
+                  JSUtils = Java.type("com.tremolosecurity.util.JSUtils");
+                  Base64 = Java.type("java.util.Base64");
+                  UUID = Java.type("java.util.UUID");
+                  ActionType = Java.type("com.tremolosecurity.provisioning.core.ProvisioningUtil.ActionType");
+
+
+                  function init(task,params) {
+                    state.put("workflow_obj",task.getWorkflow());
+                    state.put("task",task);
+                  }
+                  function reInit(task) {
+                    state.put("workflow_obj",task.getWorkflow());
+                    state.put("task",task);
+                    }
+
+                    function doTask(user,request) {
+                      //System.out.println("Deleting sessions");
+                      var task = state.get("task");
+                      var dnHash = request.get("tremoloio_userhash");
+
+                      //System.out.println("====DN Hash: " + dnHash);
+
+                      var clusterName = request.get("cluster");
+                      if (clusterName != "k8s") {
+                        clusterName = "k8s-" + clusterName;
+                      }
+
+                      k8s = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget(clusterName).getProvider();
+                      con = k8s.createClient();
+
+                      var approvalID = 0;
+                      if (request.containsKey("APPROVAL_ID")) {
+                        approvalID = request.get("APPROVAL_ID");
+                      }
+
+                      try {
+                
+                    
+                      var moreSessions = true;
+                      var sessionsUri = '/apis/openunison.tremolo.io/v2/namespaces/openunison/oidc-sessions?labelSelector=tremolo.io%2Fuser-dn%3D' + dnHash + '&limit=500'
+                      //System.out.println("Looking for " + sessionsUri);
+                      var continueToken = null;
+                      var sessionsProcessed = 0;
+                      var sessionsFound = false;
+
+                      while (moreSessions) {
+                          var sessionsListURL = sessionsUri;
+                          if (continueToken) {
+                              sessionsListURL = sessionsListURL + '&continue=' + continueToken;
+                          }
+                          
+                          var sessionList = JSON.parse(k8s.callWS(k8s.getAuthToken(),con,sessionsListURL));
+                          sessionsProcessed += 500;
+                          if (sessionList.metadata.continue) {
+                              continueToken = sessionList.metadata.continue;
+                              //System.out.println("Sessions retrieved: " + sessionsProcessed + ", Sessions left: " + sessionList.metadata.remainingItemCount);
+                              moreSessions = true;
+                          } else {
+                              moreSessions = false;
+                              continueToken = null;
+                              //System.out.println("Finall session set");
+                          }
+
+                          for (var i = 0;i<sessionList.items.length;i++) {
+                              session = sessionList.items[i];
+                              
+                              
+                              name = session.metadata.name;
+                              
+                                  
+                              sessionUri = '/apis/openunison.tremolo.io/v1/namespaces/openunison/oidc-sessions/' + name;
+                              //System.out.println("deleting session " + sessionUri);
+                              k8s.callWSDelete(k8s.getAuthToken(),con,sessionUri);
+
+                              task.getConfigManager().getProvisioningEngine().logAction("k8s",true,ActionType.Delete,approvalID, task.getWorkflow(),"oidc-session",user.getUserID + '-' + name);
+
+                              
+                          } 
+                      }
+
+                      
+                  } finally {
+                      if (con != null) {
+                          con.getHttp().close();
+                          con.getBcm().close();
+                      }
+
+                      
+                  }
+
+                      return true;
+                    }

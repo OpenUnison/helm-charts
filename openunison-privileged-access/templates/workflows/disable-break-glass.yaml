@@ -1,0 +1,21 @@
+{{ if .Values.openunison.naas.groups.privilegedAccessGroup }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: disable-break-glass
+  namespace: {{ .Release.Namespace }}
+spec:
+  description: Disable cluster break-glass access
+  inList: true
+  label: Disable break glass
+  orgId: 663b4074-eb34-4028-ac09-19de8886f816 
+  tasks: |-
+      - taskType: addAttribute
+        addToRequest: true
+        name: "wfname"
+        value: "disable-break-glass-cluster"
+
+      - taskType: callWorkflow
+        name: exec-break-glass-ops
+{{ end }}

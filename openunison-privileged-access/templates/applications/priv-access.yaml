@@ -1,0 +1,316 @@
+{{- $root := . -}} 
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Application
+metadata:
+  name: priv-access
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-applications
+    app.kubernetes.io/part-of: openunison
+spec:
+  azTimeoutMillis: 3000
+  isApp: true
+  urls:
+  - hosts:
+    - "#[OU_HOST]"
+    filterChain: 
+    - className: com.tremolosecurity.proxy.filters.XForward
+      params:
+        createHeaders: "false"
+    - className: com.tremolosecurity.proxy.filters.SetNoCacheHeaders
+      params: {}
+    - className: com.tremolosecurity.proxy.filters.MapUriRoot
+      params:
+        newRoot: /register
+        paramName: registerURI
+    uri: "/priv-access"
+    proxyTo: http://ouhtml-orchestra-login-portal.{{ .Release.Namespace }}.svc:8080${registerURI}
+    authChain: login-service
+    overrideHost: true
+    overrideReferer: true
+    azRules:
+    - scope: custom
+      constraint: cluster-admin
+    results: 
+      azFail: default-login-failure
+      auFail: default-login-failure
+
+  
+  - hosts:
+    - "#[OU_HOST]"
+    filterChain:
+    - className: com.tremolosecurity.scalejs.register.ws.ScaleRegister
+      params:
+        jsUris:
+          - js/register-functions.js
+          - js-ext/functions.js
+        displayNameAttribute: "sub"
+        frontPage.title: "Privilege Escalation"
+        frontPage.text: "Use this form to request privileged access based on an existing incident"
+        submitButtonText: "Privilege Escalation"
+        submittedText: "Your request has been submitted and approved.  Please logout and log back in in order to get updated tokens to be able to perform your work.  Your access will be revoked when the incident expires.  You'll also be forced to re-login if your privileged credentials are reset."
+        uidAttributeName: uid
+        workflowName: ""
+        logoutURL: "/logout"
+        homeURL: "/"
+        preSetPassword: "false"
+        requireReason: "false"
+        requireReCaptcha: "false"
+        rcSiteKey: ""
+        rcSecret: ""
+        requireTermsAndConditions: "false"
+        reasonIsList: "false"
+        reasons: []
+        termsAndCondisionsText: ""
+        useCallWorkflowClass: "true"
+        callWorkflowClassName: "com.tremolosecurity.scalejs.register.registrators.JavaScriptRegister"
+        submitLoggedInUser: "true"
+        enableThirdColumn: "true"
+        themePrimaryMain: "{{ .Values.openunison.html.theme.colors.primary.main }}"
+        themePrimaryDark: "{{ .Values.openunison.html.theme.colors.primary.dark }}"
+        themePrimaryLight: "{{ .Values.openunison.html.theme.colors.primary.light }}"
+        themeSecondaryMain: "{{ .Values.openunison.html.theme.colors.secondary.main }}"
+        themeSecondaryDark: "{{ .Values.openunison.html.theme.colors.secondary.dark }}"
+        themeSecondaryLight: "{{ .Values.openunison.html.theme.colors.secondary.light }}"
+        errorColor: "{{ .Values.openunison.html.theme.colors.error }}"
+        
+
+
+        attributeNames:
+        - cluster
+        {{ range $attr := .Values.openunison.naas.forms.privileged_access.additional_attributes }}
+        - {{ $attr.name }}
+        {{ end }}
+        
+        
+        cluster.displayName: Cluster
+        cluster.dynamicValueSource.className: com.tremolosecurity.scalejs.register.dynamicSource.JavaScriptSource
+        cluster.maxChars: "63"
+        cluster.minChars: "0"
+        cluster.readOnly: "false"
+        cluster.regEx: .*
+        cluster.regExFailedMsg: Invalid cluster
+        cluster.required: "true"
+        cluster.type: list
+        cluster.unique: "false"
+        cluster.dynamicValueSource.config:
+        - >-
+          javaScript=
+          GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+          HashMap = Java.type("java.util.HashMap");
+          BasicHttpClientConnectionManager = Java.type("org.apache.http.impl.conn.BasicHttpClientConnectionManager");
+          RequestConfig = Java.type("org.apache.http.client.config.RequestConfig");
+          CookieSpecs = Java.type("org.apache.http.client.config.CookieSpecs");
+          HttpClients = Java.type("org.apache.http.impl.client.HttpClients");
+          HttpGet = Java.type("org.apache.http.client.methods.HttpGet");
+          EntityUtils = Java.type("org.apache.http.util.EntityUtils");
+          ProxyConstants = Java.type("com.tremolosecurity.proxy.util.ProxyConstants");
+          ProxySys = Java.type("com.tremolosecurity.proxy.ProxySys");
+          JSUtils = Java.type("com.tremolosecurity.util.JSUtils");
+          BasicHeader = Java.type("org.apache.http.message.BasicHeader");
+          UUID = Java.type("java.util.UUID");
+          NVP = Java.type("com.tremolosecurity.util.NVP");
+          System = Java.type("java.lang.System");
+
+          function init(attribute,config) {
+
+          }
+
+          
+
+          function getSourceList(request) {
+            ArrayList = Java.type('java.util.ArrayList');
+            const clusters = new ArrayList();
+            targets = GlobalEntries.getGlobalEntries().getConfigManager().getCfg().getProvisioning().getTargets().getTarget();
+            
+
+            var userData = (request.getSession().getAttribute(ProxyConstants.AUTH_CTL)).getAuthInfo();
+            var sub = userData.getAttribs().get("sub").getValues().get(0);
+            var groups = userData.getAttribs().get("groups").getValues();
+
+            
+
+            
+
+            for (var i = 0; i < targets.size(); i++) {
+              target = targets.get(i);
+
+              var shouldIgnore = false;
+              if (target.getClassName() == 'com.tremolosecurity.unison.openshiftv3.OpenShiftTarget' ) {
+                targetObj = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget(target.getName()).getProvider();
+                if (target.getLabel() != null) {	
+                    for (var j=0;j<target.getLabel().size(); j++) {
+                        var nv = target.getLabel().get(j);
+                        if (nv.getName() == "tremolo.io/list" && nv.getValue() == "false") {
+                            // this target is not listed in the UI
+                            shouldIgnore = true;
+                        }
+                    }
+                }
+
+                if (! shouldIgnore) {
+                    var internalAdminGroup = "k8s-cluster-" + target.getName() + "-administrators{{ .Values.openunison.naas.groups.internal.suffix }}";
+                    var externalAdminGroup  = "k8s-cluster-" + target.getName() + "-administrators{{ .Values.openunison.naas.groups.external.suffix }}";
+
+                    for (var k=0;k<groups.size();k++) {
+                        var groupName = groups.get(k);
+                        if (groupName == internalAdminGroup || groupName == externalAdminGroup) {
+                            clusters.add(new NVP(targetObj.getLabel(),target.getName()));
+                            
+                        }
+                    }
+                }
+
+
+              }
+
+
+            }
+
+            return clusters;
+            
+
+            
+          }
+
+          function validate(value,request){
+            
+            found = false;
+
+            const clusters = getSourceList(request);
+            for (var i=0;i<clusters.size();i++) {
+              var clusterInfo = clusters.get(i);
+              System.out.println(value + " / " + clusterInfo.getValue());
+              if (clusterInfo.getValue() == value) {
+                found = true;
+              }
+            }
+            
+            if (! found) {
+              return "Cluster is not authorized for privileged access";
+            } else {
+              return null;
+            }
+            
+            
+
+            
+          }
+
+
+        {{ range $attr := .Values.openunison.naas.forms.privileged_access.additional_attributes }}
+        {{ $attr.name }}.displayName: "{{ $attr.displayName }}"
+        {{ $attr.name }}.readOnly: "false"
+        
+        {{ if or (not (hasKey $attr "required")) (eq (coalesce $attr.required false) true) }}
+        {{ $attr.name }}.required: "true"
+        {{ else }}
+        {{ $attr.name }}.required: "false"
+        {{ end }}
+
+        {{ $attr.name }}.regEx: "{{ $attr.regEx }}"
+        {{ $attr.name }}.regExFailedMsg: "{{ $attr.regExFailedMsg }}"
+        {{ $attr.name }}.minChars: "{{ $attr.minChars }}"
+        {{ $attr.name }}.maxChars: "{{ $attr.maxChars }}"
+        {{ $attr.name }}.unique: "{{ $attr.unique }}"
+        {{ $attr.name }}.type: "{{ $attr.type }}"
+        {{ if or $attr.show (not (hasKey $attr "show")) }}
+        {{ $attr.name }}.show: "true"
+        {{ else }}
+        {{ $attr.name }}.show: "false"
+        {{ end }}
+        
+        {{ if $attr.editJavaScriptFunction }}
+        {{ $attr.name }}.editJavaScriptFunction: "{{ $attr.editJavaScriptFunction }}"
+        {{ end }}
+        {{ if $attr.dynamicValueSource }}
+        {{ $attr.name }}.dynamicValueSource.className: "{{ $attr.dynamicValueSource.className }}"
+        {{ $attr.name }}.dynamicValueSource.config:
+            {{ range $key,$value := $attr.dynamicValueSource.config }}
+            - "{{ $key }}={{ $value }}"
+            {{ end }}
+
+        {{ end }}
+        {{ if $attr.values }}
+        {{ $attr.name }}.values:
+        {{ range $key,$value := $attr.values }}
+        - "{{ $value }}"
+        {{ end }}
+        {{ end }}
+
+        {{ end }}
+
+
+        
+        callWorkflowInit:
+        - |-
+            javaScript=
+            
+            
+            function init(config) {
+
+            }
+
+{{ .Values.openunison.naas.forms.privileged_access.submission_javascript | nindent 12  }}
+
+            function createTremoloUser(newUser, errors, userData) {
+              var errFromLocal = validate_submission(newUser, errors, userData);
+
+              if (errFromLocal != null) {
+                errors.add(errFromLocal);
+              }
+
+              const incident = JSON.parse(globals.get("incident_info"));
+              newUser.getAttributes().put("incident",incident["id"]);
+
+              const task = {
+                "expiryTime": incident["expires"],
+                "pamTaskID": incident["task"]
+              }
+
+              newUser.getAttributes().put("task",JSON.stringify(task))
+              {{ if .Values.openunison.naas.forms.privileged_access.test_mode }}
+              return "noop";
+              {{ else if .Values.openunison.naas.forms.privileged_access.manual_approval.enabled }}
+              return "priv-manual-approval";
+              {{ else }}
+              return "request-privilege";
+              {{ end }}
+            }
+
+            function setWorkflowParameters(wfParameters, newUser, userData) {
+              
+              const incident = JSON.parse(globals.get("incident_info"));
+              task = incident["task"];
+              expiry = incident["expires"];
+              cluster = newUser.getAttributes().get("cluster").substring(4);
+
+              wfParameters.put("incident", incident["id"]);
+              wfParameters.put("taskid", task);
+              wfParameters.put("expiry", expiry);
+              wfParameters.put("cluster",cluster);
+              
+              
+            }
+    uri: /priv-access/register
+    azRules:
+    - scope: custom
+      constraint: cluster-admin
+    authChain: login-service
+    results:
+      azFail: default-login-failure
+      auFail: default-login-failure
+  
+  cookieConfig:
+    sessionCookieName: tremolosession
+    domain: "#[OU_HOST]"
+    secure: true
+    httpOnly: true
+    logoutURI: "/logout"
+    keyAlias: session-unison
+    timeout: {{ .Values.network.session_inactivity_timeout_seconds }}
+    scope: -1
+    cookiesEnabled: true

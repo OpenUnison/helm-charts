@@ -1,0 +1,10 @@
+{{ if .Values.openunison.naas.groups.privilegedAccessGroup }}
+apiVersion: openunison.tremolo.io/v1
+kind: GroupMetaData
+metadata:
+  name: {{ .Values.openunison.naas.forms.privileged_access.enable_break_glass.internal_group }}{{ .Values.openunison.naas.groups.external.suffix }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  groupName: {{ .Values.openunison.naas.forms.privileged_access.enable_break_glass.internal_group }}{{ .Values.openunison.naas.groups.external.suffix }}
+  externalName: {{ .Values.openunison.naas.forms.privileged_access.enable_break_glass.external_group }}
+{{ end }}
