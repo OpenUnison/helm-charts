@@ -77,7 +77,7 @@ spec:
               // log the creation
               logger = GlobalEntries.getGlobalEntries().get("tremolo.io/privlogger");
               if (! logger) {
-                logger = Logger.getLogger("com.tremolosecurity.hsbc.PrivilegedAccessLogger");
+                logger = Logger.getLogger("com.tremolosecurity.PrivilegedAccessLogger");
                 GlobalEntries.getGlobalEntries().set("tremolo.io/privlogger",logger);
               }
 
