@@ -160,6 +160,8 @@ spec:
     {{- toYaml .Values.services.affinity | nindent 6 }}
   {{ end }}
   restartPolicy: Never
+  imagePullSecrets:
+  - name: {{ .Values.services.pullSecret }}
   containers:
     
     - name: test-values
