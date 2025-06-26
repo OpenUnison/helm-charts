@@ -89,6 +89,7 @@ spec:
           capabilities:
             drop:
             - "ALL"
+          readOnlyRootFilesystem: true
           {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
           runAsNonRoot: true
           {{ else }}
@@ -180,6 +181,8 @@ spec:
         - mountPath: "/etc/openunison"
           name: secret-volume
           readOnly: true
+        - mountPath: /tmp
+          name: tmp
         {{ if .Values.saml }}
         {{ if .Values.saml.metadata_xml_b64 }}
         - mountPath: "/etc/saml2"
@@ -285,6 +288,8 @@ spec:
         secret:
           defaultMode: 420
           secretName: {{ .Release.Name }}
+      - name: tmp
+        emptyDir: {}
       {{ if .Values.saml }}
       {{ if .Values.saml.metadata_xml_b64 }}
       - name: saml2-metadata
