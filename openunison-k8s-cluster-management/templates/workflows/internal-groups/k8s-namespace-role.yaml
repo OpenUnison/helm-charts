@@ -16,6 +16,7 @@ spec:
   label: {{ $role.workflow.label }}
   orgId: 04901973-5f4c-46d9-9e22-55e88e168776
   tasks: |-
+           {{ if $root.Values.openunison.naas.groups.internal.enabled }}
            - taskType: customTask
              className: com.tremolosecurity.provisioning.tasks.DoesGroupExist
              params:
@@ -42,7 +43,8 @@ spec:
                  name: approvers-k8s-$cluster$-$name$
                  attributes: []
              {{ end }}
-                 
+             
+             {{ if $root.Values.openunison.naas.groups.internal.add_requestor_as_admin}}
              - taskType: customTask
                className: com.tremolosecurity.provisioning.tasks.CopyGroupMembers
                params:
@@ -60,6 +62,8 @@ spec:
                  copyFrom: cn=k8s-cluster-$cluster$-administrators{{ $root.Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
                  uidAttributeName: uid
                  requestor: system
+             {{ end }}
+           {{ end }}
                
            - taskType: customTask
              className: com.tremolosecurity.provisioning.customTasks.LoadAttributes
@@ -79,8 +83,16 @@ spec:
                ${reason}
              label: {{ $role.workflow.approvalLabel }}
              approvers:
+             {{ if $root.Values.openunison.naas.groups.internal.add_requestor_as_admin}}
              - scope: group
                constraint: cn=approvers-k8s-$cluster$-$name$,ou=groups,ou=shadow,o=Tremolo
+            {{ else }}
+             - scope: group
+               constraint: cn=administrators{{ $root.Values.openunison.naas.groups.external.suffix }},ou=groups,ou=shadow,o=Tremolo
+             - scope: group
+               constraint: cn=administrators{{ $root.Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
+            {{ end }}
+             
              onSuccess:
              - taskType: customTask
                className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
