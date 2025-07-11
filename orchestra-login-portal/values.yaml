@@ -151,6 +151,7 @@ openunison:
   management_proxy:
     enabled: false
   naas:
+    groupsFromMyVD: true
     ops:
       searchBases: {}
       approveChecked: false

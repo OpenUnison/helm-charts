@@ -164,6 +164,7 @@ openunison:
         value: "amq-server"
   keys: []
   naas:
+    groupsFromMyVD: true
     forms:
       new_namespace:
         use_default: true

@@ -59,7 +59,7 @@ spec:
     - name: groupsAreDN
       value: "false"
     - name: groupPrefix
-      value: k8s-namespace-administrators-
+      value: "{{ .Values.openunison.naas.groups.external.approversGroup }}"
     - name: groupSuffix
       value: "{{ .Values.openunison.naas.groups.external.suffix }}"
   tasks: |-

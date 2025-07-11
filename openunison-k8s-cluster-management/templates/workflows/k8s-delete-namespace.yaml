@@ -19,6 +19,105 @@ spec:
                  message: in k8s-delete-namespace
 
              - taskType: customTask
+               className: com.tremolosecurity.provisioning.customTasks.JavaScriptTask
+               params: 
+                  javaScript: |-
+                    function init(task,params) {
+                      // nothing to do
+                    }
+    
+                    function reInit(task) {
+                      // do nothing
+                    }
+    
+                    function doTask(user,request) {
+                        var nsUri = '/api/v1/namespaces/' + request.get("nameSpace");
+                        var targetName = request.get("cluster");
+
+                        GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+                        Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+                        System = Java.type("java.lang.System");
+                        UUID = Java.type("java.util.UUID");
+
+                        k8s = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget(targetName).getProvider();
+                        con = k8s.createClient();
+
+                        
+
+                        // get the metadata names
+                        cpK8s = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget("k8s").getProvider();
+
+                        var targetName = request.get("cluster");
+                        var namespace = request.get("nameSpace");
+
+                        cpToken = cpK8s.getAuthToken();
+                        cpCon = cpK8s.createClient();
+                        
+                        try {
+                        
+                        {{ range $role := .Values.openunison.naas.groups.default }}
+                        
+                        
+                        metadataGroupUri = "/apis/openunison.tremolo.io/v1/namespaces/openunison/groupmetadatas?labelSelector=tremolo.io%2Fcluster%3D" + targetName + "%2Ctremolo.io%2Frole%3D" + "{{ $role.name}}" + "%2Ctremolo.io%2Fnamespace%3D" + namespace;
+                        System.out.println("groupmetadataurl: '" + metadataGroupUri + "'");
+                        
+                        metadataGroup = cpK8s.callWS(cpToken,cpCon,metadataGroupUri);
+                        System.out.println("groupmetadatajson: " + metadataGroup);
+                        var items = JSON.parse(metadataGroup)["items"];
+                        
+                        var md = null;
+
+                        if (items) {
+                          md = items[0];
+                        }
+
+                        
+                        if (md != null && md.metadata != null) {
+                          System.out.println("gmd groupmetadata_{{ $role.name }}=" + md.metadata.name);
+                          request.put("groupmetadata_{{ $role.name }}" ,md.metadata.name);
+                        } else {
+                          // there's no metadata group, so lets generate a new uuid
+                          request.put("groupmetadata_{{ $role.name }}" ,"none");
+                        }
+
+                        {{ end }}
+                        {{ range $role := .Values.openunison.naas.groups.roles }}
+                        
+                        
+                        metadataGroupUri = "/apis/openunison.tremolo.io/v1/namespaces/openunison/groupmetadatas?labelSelector=tremolo.io%2Fcluster%3D" + targetName + "%2Ctremolo.io%2Frole%3D" + "{{ $role.name}}" + "%2Ctremolo.io%2Fnamespace%3D" + namespace;
+                        System.out.println("groupmetadataurl: '" + metadataGroupUri + "'");
+                        metadataGroup = cpK8s.callWS(cpToken,cpCon,metadataGroupUri);
+                        var items = JSON.parse(metadataGroup)["items"];
+                        
+                        var md = null;
+
+                        if (items) {
+                          md = items[0];
+                        }
+
+                        if (md != null && md.metadata != null) {
+                          System.out.println("gmd groupmetadata_{{ $role.name }}=" + md.metadata.name);
+                          request.put("groupmetadata_{{ $role.name }}" ,md.metadata.name);
+                        } else {
+                          // there's no metadata group, so lets generate a new uuid
+                          request.put("groupmetadata_{{ $role.name }}" ,"none");
+                        }
+                        
+                        
+
+                        {{ end }}
+                        } finally {
+                          if (cpCon != null) {
+                            cpCon.getHttp().close();
+                            cpCon.getBcm().close();
+                          }
+                        }
+
+                        return true;
+                    }
+
+
+             - taskType: customTask
                className: com.tremolosecurity.provisioning.customTasks.CopyFromUserToRequest
                params:
                  attribute:
@@ -171,14 +270,39 @@ spec:
              {{ end }}
 
              - taskType: customTask
+               className: com.tremolosecurity.provisioning.customTasks.JavaScriptTask
+               params:
+                 javaScript: |-
+                    
+                    function init(task,params) {
+                      // nothing to do
+                    }
+    
+                    function reInit(task) {
+                      // do nothing
+                    }
+    
+                    function doTask(user,request) {
+                      
+                      const group_metadata_name = request.get("groupmetadata_{{ $role.name }}");
+                      if (! group_metadata_name || group_metadata_name == null || group_metadata_name === "") {
+                        group_metadata_name = "none";
+                      }
+                      
+                      request.put("group_metadata_name",group_metadata_name);
+                      
+                      return true;
+                    }
+
+             - taskType: customTask
                className: com.tremolosecurity.provisioning.tasks.DeleteK8sObject
                params:
-                 targetName: $cluster$
+                 targetName: k8s
                  kind:  GroupMetaData
-                 url: /apis/openunison.tremolo.io/v1/namespaces/{{ $root.Release.Namespace }}/groupmetadatas/k8s-namespace-viewer-$cluster$-$nameSpace$
+                 url: /apis/openunison.tremolo.io/v1/namespaces/{{ $root.Release.Namespace }}/groupmetadatas/$group_metadata_name$
                  writeToRequest: "$useGit$"
                  requestAttribute: git-secret-namespace-$cluster$-$nameSpace$
-                 path: /yaml/ns/$nameSpace$/groupmetadatas/k8s-namespace-viewer-$cluster$-$nameSpace$.yaml
+                 path: /yaml/ns/$nameSpace$/groupmetadatas/$group_metadata_name$.yaml
              {{ end }}
 
              {{ range $role := .Values.openunison.naas.groups.roles }}
@@ -195,14 +319,40 @@ spec:
              {{ end }}
 
              - taskType: customTask
+               className: com.tremolosecurity.provisioning.customTasks.JavaScriptTask
+               params:
+                 javaScript: |-
+                    Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+                    UUID = Java.type("java.util.UUID");
+
+                    function init(task,params) {
+                      // nothing to do
+                    }
+    
+                    function reInit(task) {
+                      // do nothing
+                    }
+    
+                    function doTask(user,request) {
+                      const group_metadata_name = request.get("groupmetadata_{{ $role.name }}");
+                      if (! group_metadata_name || group_metadata_name == null || group_metadata_name === "") {
+                        group_metadata_name = "none";
+                      }
+                      
+                      request.put("group_metadata_name",group_metadata_name);
+                      
+                      return true;
+                    }
+
+             - taskType: customTask
                className: com.tremolosecurity.provisioning.tasks.DeleteK8sObject
                params:
-                 targetName: $cluster$
+                 targetName: k8s
                  kind:  GroupMetaData
-                 url: /apis/openunison.tremolo.io/v1/namespaces/{{ $root.Release.Namespace }}/groupmetadatas/k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace$
+                 url: /apis/openunison.tremolo.io/v1/namespaces/{{ $root.Release.Namespace }}/groupmetadatas/$group_metadata_name$
                  writeToRequest: "$useGit$"
                  requestAttribute: git-secret-namespace-$cluster$-$nameSpace$
-                 path: /yaml/ns/$nameSpace$/groupmetadatas/k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace$.yaml
+                 path: /yaml/ns/$nameSpace$/groupmetadatas/$group_metadata_name$.yaml
              {{ end }}
              {{ end }}
              

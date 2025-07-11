@@ -100,10 +100,10 @@ spec:
                sourceType: user
                targetAttributeSource: sn
              onSuccess:
-               - taskType: customTask
-                 className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
-                 params:
-                   message: in-mapping
+               #  - taskType: customTask
+               #    className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
+               #    params:
+               #      message: in-mapping
                - taskType: addGroup
                  name: users
 

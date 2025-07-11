@@ -50,6 +50,7 @@ spec:
                  ArrayList = Java.type("java.util.ArrayList");
                  SetupGroupMetadataWatch = Java.type("com.tremolosecurity.proxy.filters.SetupGroupMetadataWatch");
                  HashMap = Java.type("java.util.HashMap");
+                 BasicDB = Java.type("com.tremolosecurity.provisioning.core.providers.BasicDB");
 
                  function init(task,params) {
                    // nothing to do
@@ -66,6 +67,15 @@ spec:
                    var hasInternal = false;
                    {{ end }}
                    
+
+                   {{ if .Values.openunison.naas.disableJitTransactions }}
+                   request.put(BasicDB.DISABLE_TRANSACTIONS,"true");
+                   {{ else }}
+                   // request.put(BasicDB.DISABLE_TRANSACTIONS,"false");
+                   {{ end }}
+
+
+
                    k8s = task.getConfigManager().getProvisioningEngine().getTarget("k8s").getProvider();
                    request.put("WORKFLOW",task.getWorkflow());
 
@@ -194,10 +204,10 @@ spec:
                sourceType: user
                targetAttributeSource: sn
              onSuccess:
-               - taskType: customTask
-                 className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
-                 params:
-                   message: in-mapping
+               #  - taskType: customTask
+               #    className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
+               #    params:
+               #      message: in-mapping
                - taskType: addGroup
                  name: users
 
