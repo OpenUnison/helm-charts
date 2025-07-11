@@ -171,12 +171,20 @@ spec:
     params: 
       nameAttr: uid
       workflowName: jitdb
+
+
+
 {{ if .Values.openunison.post_jit_workflow }}
   - name: jit
     required: required
     params: 
       nameAttr: uid
       workflowName: "{{ .Values.openunison.post_jit_workflow }}"
+{{ end }}
+{{ if not .Values.openunison.naas.groupsFromMyVD }}
+  - name: portal-groups
+    required: required
+    params: {}
 {{ end }}
   - name: genoidctoken
     required: required

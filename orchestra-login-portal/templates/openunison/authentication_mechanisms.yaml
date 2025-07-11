@@ -232,4 +232,28 @@ spec:
   init: {}
   secretParams: []
   uri: /auth/include
+{{ if not .Values.openunison.naas.groupsFromMyVD }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: AuthenticationMechanism
+metadata:
+  name: portal-groups
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-authmechs
+    app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+spec:
+  className: com.tremolosecurity.proxy.auth.AddPortalRolesToUserData
+  init:
+    extSuffix: "-external"
+    intSuffix: "-internal"
+    k8sTargetName: "k8s"
+    role2label: "{{ range .Values.openunison.naas.groups.default }}{{ .name }}={{ .workflow.org.label }},{{ end }}{{ range .Values.openunison.naas.groups.roles }}{{ .name }}={{ .workflow.org.label }},{{ end }}"
+  secretParams: []
+  uri: /auth/portalgroups
+{{ end }}
 

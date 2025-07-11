@@ -503,10 +503,10 @@ spec:
                - sn
                - mail
 
-           - taskType: customTask
-             className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
-             params:
-               message: pre-email-notification
+           #  - taskType: customTask
+           #    className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
+           #    params:
+           #      message: pre-email-notification
 
            - taskType: notifyUser
              subject: {{ .Values.openunison.naas.workflows.new_namespace.notification.subject }}

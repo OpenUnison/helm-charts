@@ -37,7 +37,11 @@ data:
     server.shadow.weight=0
     server.shadow.entry.className=net.sourceforge.myvd.inserts.RootObject
 
+    {{ if .Values.openunison.naas.groupsFromMyVD }}
     server.shadowUsers.chain=roledata,loadGroups,map,logit,makesub,tremolo
+    {{ else }}
+    server.shadowUsers.chain=loadGroups,map,logit,makesub,tremolo
+    {{ end }}
     server.shadowUsers.nameSpace=ou=users,ou=shadow,o=Tremolo
     server.shadowUsers.weight=0
     server.shadowUsers.enabled=true

@@ -80,7 +80,9 @@ spec:
         themeSecondaryLight: "{{ .Values.openunison.html.theme.colors.secondary.light }}"
         headerTitle: "{{ .Values.openunison.html.theme.headerTitle | default "OpenUnison" }}"
         errorColor: "{{ .Values.openunison.html.theme.colors.error }}"
-        
+        {{ if not .Values.openunison.naas.groupsFromMyVD }}
+        loadPortalGroupsClassName: "com.tremolosecurity.scalejs.LoadClusterGroups"
+        {{ end }}
 
         groupFields:
         {{ if .Values.openunison.groups.fields }}

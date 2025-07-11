@@ -23,7 +23,7 @@ spec:
     value: |-
       function execute(configManager,context) {
         System = Java.type("java.lang.System");
-        System.out.println("here");
+        
 
         ServiceActions = Java.type("com.tremolosecurity.provisioning.service.util.ServiceActions");
         GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
@@ -52,7 +52,7 @@ spec:
                 } else {
                     moreSessions = false;
                     continueToken = null;
-                    System.out.println("Finall session set");
+                    //System.out.println("Finall session set");
                 }
 
                 for (var i = 0;i<sessionList.items.length;i++) {
