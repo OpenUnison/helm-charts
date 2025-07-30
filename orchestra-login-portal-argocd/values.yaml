@@ -7,6 +7,7 @@ network:
   createIngressCertificate: true
   ingress_type: nginx
   ingress_annotations: {}
+  kong: {}
   
 
 cert_template:
@@ -87,8 +88,6 @@ network_policies:
     enabled: false
     labels:
       app.kubernetes.io/name: kube-system
-  namespace_label: kubernetes.io/metadata.name
-      
 
 services:
   enable_tokenrequest: false
@@ -123,27 +122,29 @@ operator:
       cpu: 1.0
 
 openunison:
-  secret_ext: ""
+  jit_grace_period: 0
+  extra_az_groups: []
   apps: []
+  kubeAuth:
+    enabled: true
+  amq:
+    enabled: true
   imagePullPolicy: Always
-  replicas: 1
-  non_secret_data: {}
-  secrets: []
-  role_attribute: portalGroups
-  groups:
-    areJson: "true"
-  env: {}
-  portal_release_name: openunison
   authentication:
     refresh_token:
       grace_period_millis: 0
+  replicas: 1
+  non_secret_data: {}
+  secrets: []
+  role_attribute: groups
+  groups:
+    areJson: "false"
   html:
     image: ghcr.io/openunison/openunison-k8s-react:1.0.1
     legacy: false
     theme:
-      startPage: front-page
-      hidePages: []
       headerTitle: "OpenUnison"
+      startPage: front-page
       colors:
         primary: 
           main: "#AC1622"
@@ -154,6 +155,8 @@ openunison:
           dark: "#0f7870"
           light: "#44bcb3"
         error: "#ff1744"
+        
+
   enable_provisioning: false
   enable_activemq: true
   az_groups: []
@@ -163,13 +166,66 @@ openunison:
   management_proxy:
     enabled: false
   naas:
+    groupsFromMyVD: true
+    ops:
+      searchBases: {}
+      approveChecked: false
+      showPreApprove: true
+      approvedLabel: Approved
+      deniedLabel: Denied
+      reasonApprovedLabel: Reason for approval
+      reasonDeniedLabel: Reason for denial
     forms:
       new_namespace:
         use_default: true
     workflows:
       new_namespace:
         use_default: true
+    
     groups:
+      default:
+      - name: administrators
+        bindings:
+          - type: ClusterRole
+            binding: admins
+            name: admin
+        description: Manage kubernetes namespace $cluster$ $nameSpace$
+        workflow:
+          label: "namespace administrator"
+          displayLabel: $name$ Administrator
+          emailTemplate: Approve administrator access to $cluster$ $name$
+          approvalLabel: Approve administrator access for $cluster$ - $name$
+          userNotification:
+            subject: Admin access to $cluster$ $name$ approved
+            message: Your access has been approved
+          org:
+            label: Administrators
+            description: Namespace Administrators
+        external:
+          fieldName: adminGroup
+          label: "Administrator Group"
+          errorMessage: "Invalid administrator group"
+      - name: viewer
+        description: View kubernetes namespace $cluster$ $nameSpace$
+        bindings:
+          - type: ClusterRole
+            binding: viewers
+            name: view
+        external:
+          fieldName: viewerGroup
+          label: "Viewer Group"
+          errorMessage: "Invalid viewer group"
+        workflow:
+          label: "namespace viewer"
+          displayLabel: $name$ Administrator
+          emailTemplate: Approve viewer access to $cluster$ $name$
+          approvalLabel: Approve viewer access for $cluster$ - $name$
+          userNotification:
+            subject: View access to $cluster$ $name$ approved
+            message: Your access has been approved
+          org:
+            label: Viewers
+            description: Namespace Viewers
       internal:
         enabled: true
         suffix: "-internal"
