@@ -10,6 +10,11 @@ spec:
   label: De-escalate
   orgId: x
   tasks: |-
+    # - taskType: customTask
+    #   className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
+    #   params:
+    #     message: entering depriviliage
+
     - taskType: customTask
       className: com.tremolosecurity.provisioning.customTasks.LoadAttributes
       params:
@@ -41,12 +46,17 @@ spec:
     - taskType: ifAttrExists
       name: tremoloio_has_session
       onSuccess:
+      # - taskType: customTask
+      #   className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
+      #   params:
+      #     message: tremolo_has_session
       - taskType: customTask
         className: com.tremolosecurity.provisioning.tasks.DeleteK8sObject
         params:
           targetName: k8s
           kind:  Secret
           url: /api/v1/namespaces/openunison/secrets/$tremoloio_sessionid$
+
         
 
     - taskType: callWorkflow

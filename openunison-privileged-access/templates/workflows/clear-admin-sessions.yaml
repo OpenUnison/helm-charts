@@ -10,6 +10,11 @@ spec:
   label: clear admin session
   orgId: x
   tasks: |-
+            # - taskType: customTask
+            #   className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
+            #   params:
+            #     message: entering clear admin sessions
+
             - taskType: customTask
               className: com.tremolosecurity.provisioning.customTasks.JavaScriptTask
               params: 
@@ -96,7 +101,7 @@ spec:
                               //System.out.println("deleting session " + sessionUri);
                               k8s.callWSDelete(k8s.getAuthToken(),con,sessionUri);
 
-                              task.getConfigManager().getProvisioningEngine().logAction("k8s",true,ActionType.Delete,approvalID, task.getWorkflow(),"oidc-session",user.getUserID + '-' + name);
+                              task.getConfigManager().getProvisioningEngine().logAction("k8s",true,ActionType.Delete,approvalID, task.getWorkflow(),"oidc-session",user.getUserID() + '-' + name);
 
                               
                           } 
