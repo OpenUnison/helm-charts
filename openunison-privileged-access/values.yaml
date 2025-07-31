@@ -2,6 +2,7 @@ network:
   session_inactivity_timeout_seconds: 3600
 openunison:
   naas:
+    groupsFromMyVD: true
     groups:
       internal:
         suffix: "-internal"
