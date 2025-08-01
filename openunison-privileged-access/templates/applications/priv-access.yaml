@@ -134,7 +134,7 @@ spec:
             
 
             
-
+            {{ if .Values.openunison.naas.groupsFromMyVD }}
             for (var i = 0; i < targets.size(); i++) {
               target = targets.get(i);
 
@@ -169,6 +169,65 @@ spec:
 
 
             }
+            {{ else }}
+            AddPortalRolesToUserData = Java.type("com.tremolosecurity.proxy.auth.AddPortalRolesToUserData");
+            var clusterAz = request.getSession().getAttribute(AddPortalRolesToUserData.NS_SESSION_NAME);
+
+
+            // won't get k8s from the list of targets
+            
+            if (
+              clusterAz['#[K8S_DEPLOYMENT_NAME:Local Deployment]'] && 
+              clusterAz['#[K8S_DEPLOYMENT_NAME:Local Deployment]'].getNamespaces().get("N/A") &&
+              clusterAz['#[K8S_DEPLOYMENT_NAME:Local Deployment]'].getNamespaces().get("N/A") &&
+              clusterAz['#[K8S_DEPLOYMENT_NAME:Local Deployment]'].getNamespaces().get("N/A")["Administrators"]
+            ) {
+              
+              clusters.add(new NVP('#[K8S_DEPLOYMENT_NAME:Local Deployment]','k8s'));
+            }
+
+            for (var i = 0; i < targets.size(); i++) {
+              target = targets.get(i);
+
+              var shouldIgnore = false;
+              if (target.getClassName() == 'com.tremolosecurity.unison.openshiftv3.OpenShiftTarget' ) {
+                targetObj = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget(target.getName()).getProvider();
+                if (target.getLabel() != null) {	
+                    for (var j=0;j<target.getLabel().size(); j++) {
+                        var nv = target.getLabel().get(j);
+                        if (nv.getName() == "tremolo.io/list" && nv.getValue() == "false") {
+                            // this target is not listed in the UI
+                            shouldIgnore = true;
+                        }
+                    }
+                }
+
+                if (! shouldIgnore) {
+                    
+                    
+                    targetName = target.getName();
+                    var clusterName = targetName;
+                    if (targetName.startsWith('k8s-')) {
+                      clusterName = targetName.substring(4);
+                    }
+                    
+                    if (
+                      clusterAz[clusterName] && 
+                      clusterAz[clusterName].getNamespaces().get("N/A") &&
+                      clusterAz[clusterName].getNamespaces().get("N/A") &&
+                      clusterAz[clusterName].getNamespaces().get("N/A")["Administrators"]
+                    ) {
+                      clusters.add(new NVP(targetObj.getLabel(),target.getName()));
+                    }
+                    
+                }
+
+
+              }
+
+
+            }
+            {{ end }}
 
             return clusters;
             

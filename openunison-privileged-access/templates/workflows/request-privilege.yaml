@@ -49,6 +49,11 @@ spec:
               var dn = fromLdap.getDN();
 
 
+              // check if this is for a remote cluster or the control plane
+              if (user.getAttribs().get("cluster").getValues().get(0) != "k8s") {
+                dn = "uid=" + user.getUserID() + ",ou=shadow,o=Tremolo";
+              }
+
 
               var userDnDigest = DigestUtils.sha1Hex(dn);
 

@@ -288,7 +288,18 @@ spec:
             
 
             DigestUtils = Java.type("org.apache.commons.codec.digest.DigestUtils");
-            dnHash = DigestUtils.sha1Hex(memberDn);
+
+            
+            // satellite cluster, need to construct the DN for the remote cluster
+            //System.out.println("cluster : " + clusterName);
+            if (clusterName != "k8s") {
+              uid = memberDn.substring(memberDn.indexOf('=') + 1,memberDn.indexOf(','));
+              //System.out.println("uid");
+              dnHash = DigestUtils.sha1Hex('uid=' + uid + ',ou=shadow,o=Tremolo');
+            } else {
+              //System.out.println("setting to " + memberDn);
+              dnHash = DigestUtils.sha1Hex(memberDn);
+            }
             //System.out.println(dnHash);
 
             // check if there are any Secrets associated with this user
