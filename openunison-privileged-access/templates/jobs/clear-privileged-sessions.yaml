@@ -22,6 +22,7 @@ spec:
   params:
   - name: javaScript
     value: |-
+      OpenShiftTarget = Java.type("com.tremolosecurity.unison.openshiftv3.OpenShiftTarget");
       ProvisioningParams = Java.type("com.tremolosecurity.provisioning.core.ProvisioningParams");
       System = Java.type("java.lang.System");
       User = Java.type("com.tremolosecurity.provisioning.core.User");
@@ -293,7 +294,7 @@ spec:
             // satellite cluster, need to construct the DN for the remote cluster
             //System.out.println("cluster : " + clusterName);
             if (clusterName != "k8s") {
-              uid = memberDn.substring(memberDn.indexOf('=') + 1,memberDn.indexOf(','));
+              uid = OpenShiftTarget.sub2uid(memberDn.substring(memberDn.indexOf('=') + 1,memberDn.indexOf(',')));
               //System.out.println("uid");
               dnHash = DigestUtils.sha1Hex('uid=' + uid + ',ou=shadow,o=Tremolo');
             } else {
