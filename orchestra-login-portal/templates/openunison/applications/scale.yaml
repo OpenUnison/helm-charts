@@ -52,6 +52,12 @@ spec:
   - hosts:
     - "#[OU_HOST]"
     filterChain:
+    {{ if.Values.openunison.enable_end_session  }}
+    - className: com.tremolosecurity.proxy.filters.SetupEndSessionWatch
+      params:
+        k8sTarget: k8s
+        namespace: "{{ .Release.Namespace }}"
+    {{ end }}
     - className: com.tremolosecurity.scalejs.ws.ScaleMain
       params:
         displayNameAttribute: "{{ .Values.openunison.display_name_attribute | default "sub" }}"

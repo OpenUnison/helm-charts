@@ -350,11 +350,50 @@ metadata:
     argocd.argoproj.io/sync-wave: "20"
 rules:
 - apiGroups: ["openunison.tremolo.io"]
-  resources: ["trusts","portalurls","orgs","authmechs","authchains","resultgroups","applications","customazs","targets","workflows","oujobs","reports","groupmetadatas","messagelisteners","javascriptmappings","notifiers","waitforstates"]
+  resources: ["trusts","portalurls","orgs","authmechs","authchains","resultgroups","applications","customazs","targets","workflows","oujobs","reports","groupmetadatas","messagelisteners","javascriptmappings","notifiers","waitforstates","endsessions","namespacegroupmetadatas"]
   verbs:
   - get
   - list
   - watch
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: openunison-endsessions-delete
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+rules:
+- apiGroups: ["openunison.tremolo.io"]
+  resources: ["endsessions"]
+  verbs:
+  - delete
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: openunison-endsessions-delete
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+subjects:
+- kind: ServiceAccount
+  name: openunison-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: openunison-endsessions-delete
+  apiGroup: rbac.authorization.k8s.io
 ---
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1

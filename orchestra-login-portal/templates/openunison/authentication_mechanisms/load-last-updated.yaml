@@ -1,0 +1,13 @@
+{{ if gt (float64 .Values.openunison.jit_grace_period) 0.0 }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: AuthenticationMechanism
+metadata:
+  name: load-last-updated
+  namespace: {{ .Release.Namespace }}
+spec:
+  className: com.tremolosecurity.proxy.auth.LoadLastUpdatedAuth
+  uri: "/auth/loadlastupdated"
+  init: {}
+  secretParams: []
+{{ end }}

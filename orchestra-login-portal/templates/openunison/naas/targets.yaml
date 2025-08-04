@@ -71,4 +71,9 @@ spec:
   - name: lastName
     source: lastName
     sourceType: user
+  {{ if gt (float64 .Values.openunison.jit_grace_period) 0.0 }}
+  - name: lastUpdated
+    source: lastUpdated
+    sourceType: user
+  {{ end }}
 {{ end }}
