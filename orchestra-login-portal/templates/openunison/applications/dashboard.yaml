@@ -173,6 +173,12 @@ spec:
         - "custom;require-session"
         azFail: "force-logout"
     {{ end }}
+    {{ if .Values.openunison.enable_end_session  }}
+    - className: com.tremolosecurity.proxy.filters.SetupEndSessionWatch
+      params:
+        k8sTarget: k8s
+        namespace: "{{ .Release.Namespace }}"
+    {{ end }}
     {{ if .Values.enable_impersonation }}
     - className: com.tremolosecurity.proxy.filters.K8sInjectImpersonation
       params:
@@ -328,6 +334,12 @@ spec:
     filterChain: 
     - className: com.tremolosecurity.proxy.filters.SetNoCacheHeaders
       params: {}
+    {{ if .Values.openunison.enable_end_session  }}
+    - className: com.tremolosecurity.proxy.filters.SetupEndSessionWatch
+      params:
+        k8sTarget: k8s
+        namespace: "{{ .Release.Namespace }}"
+    {{ end }}
     {{ if .Values.dashboard.require_session }}
     - className: com.tremolosecurity.proxy.filters.AzFilter
       params:
@@ -407,6 +419,12 @@ spec:
     filterChain: 
     - className: com.tremolosecurity.proxy.filters.SetNoCacheHeaders
       params: {}
+    {{ if .Values.openunison.enable_end_session  }}
+    - className: com.tremolosecurity.proxy.filters.SetupEndSessionWatch
+      params:
+        k8sTarget: k8s
+        namespace: "{{ .Release.Namespace }}"
+    {{ end }}
     {{ if .Values.dashboard.require_session }}
     - className: com.tremolosecurity.proxy.filters.AzFilter
       params:
@@ -506,6 +524,12 @@ spec:
     filterChain: 
     - className: com.tremolosecurity.proxy.filters.SetNoCacheHeaders
       params: {}
+    {{ if .Values.openunison.enable_end_session  }}
+    - className: com.tremolosecurity.proxy.filters.SetupEndSessionWatch
+      params:
+        k8sTarget: k8s
+        namespace: "{{ .Release.Namespace }}"
+    {{ end }}
     {{ if .Values.dashboard.require_session }}
     - className: com.tremolosecurity.proxy.filters.AzFilter
       params:
@@ -582,6 +606,12 @@ spec:
   - hosts:
     - "{{ .Values.network.dashboard_host }}"
     filterChain:
+    {{ if .Values.openunison.enable_end_session  }}
+    - className: com.tremolosecurity.proxy.filters.SetupEndSessionWatch
+      params:
+        k8sTarget: k8s
+        namespace: "{{ .Release.Namespace }}"
+    {{ end }}
     - className: com.tremolosecurity.prelude.filters.StopProcessing
       params: {}
     uri: /logout
@@ -626,6 +656,12 @@ spec:
   - hosts:
     - "{{ .Values.network.dashboard_host }}"
     filterChain: 
+    {{ if .Values.openunison.enable_end_session  }}
+    - className: com.tremolosecurity.proxy.filters.SetupEndSessionWatch
+      params:
+        k8sTarget: k8s
+        namespace: "{{ .Release.Namespace }}"
+    {{ end }}
     - className: com.tremolosecurity.proxy.filters.SetNoCacheHeaders
       params: {}
     {{ if .Values.dashboard.require_session }}
@@ -702,6 +738,12 @@ spec:
   - hosts:
     - "{{ .Values.network.dashboard_host }}"
     filterChain:
+    {{ if .Values.openunison.enable_end_session  }}
+    - className: com.tremolosecurity.proxy.filters.SetupEndSessionWatch
+      params:
+        k8sTarget: k8s
+        namespace: "{{ .Release.Namespace }}"
+    {{ end }}
     - className: com.tremolosecurity.prelude.filters.StopProcessing
       params: {}
     uri: /logout

@@ -18,7 +18,7 @@ cert_template:
   c: "MyCountry"
 
 image: "ghcr.io/openunison/openunison-k8s:1.0.42"
-amq_image: "ghcr.io/tremolosecurity/activemq-docker:5.0.16"
+amq_image: "ghcr.io/tremolosecurity/activemq-docker:5.16.6"
 myvd_config_path: "WEB-INF/myvd.conf"
 k8s_cluster_name: kubernetes
 enable_impersonation: true
@@ -34,6 +34,7 @@ dashboard:
   api_service_name: kubernetes-dashboard-api
   web_service_name: kubernetes-dashboard-web
   enabled: true
+  
 certs:
   use_k8s_cm: false
 
@@ -108,6 +109,7 @@ services:
   - "alive"
 
 openunison:
+  jit_grace_period: 0
   extra_az_groups: []
   apps: []
   kubeAuth:

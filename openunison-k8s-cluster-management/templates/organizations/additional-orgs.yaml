@@ -45,3 +45,36 @@ spec:
   uuid: added-org-{{ $org.name }}-ra
 {{ end }}
 {{ end }}
+{{ if .Values.openunison.naas.enable_security_org  }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Org
+metadata:
+  name: openunison-security
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: openunison-orgs
+    app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
+spec:
+  label: "OpenUnison Security Operations"
+  azRules:
+  - scope: group
+    constraint: cn=administrators{{ .Values.openunison.naas.groups.external.suffix }},ou=groups,ou=shadow,o=Tremolo
+  - scope: group  
+    constraint: cn=administrators{{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
+  - scope: group
+    constraint: cn=security{{ .Values.openunison.naas.groups.external.suffix }},ou=groups,ou=shadow,o=Tremolo
+  - scope: group  
+    constraint: cn=security{{ .Values.openunison.naas.groups.internal.suffix }},ou=groups,ou=shadow,o=Tremolo
+  
+  description: "Security focussed workflows and reports"
+  parent: B158BD40-0C1B-11E3-8FFD-0800200C9A66
+  showInPortal: false
+  showInReports: true
+  showInRequestAccess: true
+  uuid: 91c584e2-d965-4228-99a2-e774b1d6d871
+{{ end }}

@@ -61,6 +61,7 @@ spec:
             - "ALL"
             add:
             - "NET_BIND_SERVICE"
+          readOnlyRootFilesystem: true
           {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
           runAsNonRoot: true
           {{ else }}
@@ -111,7 +112,11 @@ spec:
           {{ end }}
         {{ end }}
         
-        volumeMounts: {{ if not ( or .Values.openunison.html.logosConfigMap .Values.openunison.html.registerFunctionsConfigMap)  }}[]{{ end }}
+        volumeMounts:
+        - mountPath: /var/log/nginx
+          name: nginx-logs
+        - mountPath: /tmp
+          name: tmp
         {{ if .Values.openunison.html.logosConfigMap }}
         - mountPath: /var/www/html/scale/logos
           name: custom-logos-scale
@@ -143,7 +148,11 @@ spec:
           name: register-functions
           readOnly: true
         {{ end }}  
-      volumes: {{ if not ( or  .Values.openunison.html.logosConfigMap .Values.openunison.html.registerFunctionsConfigMap) }}[]{{ end }}
+      volumes:
+      - name: nginx-logs
+        emptyDir: {}
+      - name: tmp
+        emptyDir: {}
       {{ if .Values.openunison.html.logosConfigMap }}
       - name: custom-logos-scale
         configMap:

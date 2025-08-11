@@ -71,4 +71,7 @@ spec:
       idpName: k8sidp
       trustName: kubernetes
       overrideURL: "https://#[OU_HOST]/auth/idp/k8sIdp"
+      {{ if .Values.openunison.enable_end_session  }}
+      doNotTieSession: "true"
+      {{ end }}
 {{ end }}

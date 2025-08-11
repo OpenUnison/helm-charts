@@ -23,12 +23,6 @@ spec:
     className: ""
     params: []
   tasks: |-
-           
-           - taskType: customTask
-             className: com.tremolosecurity.provisioning.customTasks.PrintUserInfo
-             params:
-               message: enter-workflow
-
            - taskType: customTask
              className: com.tremolosecurity.provisioning.customTasks.LoadGroups
              params:
@@ -117,6 +111,13 @@ spec:
                        return true;
                      }
 
+               {{ if gt (float64 .Values.openunison.jit_grace_period) 0.0 }}
+               - taskType: customTask
+                 className: com.tremolosecurity.provisioning.customTasks.AddTimestampToUser
+                 params:
+                   attributeName: lastUpdated
+               {{ end }}
+               
                - taskType: provision
                  sync: true
                  target: jitdb
@@ -127,6 +128,9 @@ spec:
                  - mail
                  - firstName
                  - lastName
+                 {{ if gt (float64 .Values.openunison.jit_grace_period) 0.0 }}
+                 - lastUpdated
+                 {{ end }}
                {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
                - taskType: provision
                  sync: true

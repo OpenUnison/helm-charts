@@ -11,7 +11,12 @@ spec:
   urls:
   - hosts:
     - "#[OU_HOST]"
-    filterChain: []
+    {{ if .Values.cluster.limitGroups }}
+    filterChain:
+    - className: com.tremolosecurity.proxy.filters.ClusterGroups2Attribute
+      params:
+        clusterName: {{ .Values.cluster.name }}
+    {{ end }}
     uri: "/auth/idp/cluster-idp-{{ .Values.cluster.name }}"
     azRules:
     {{ $length := len .Values.cluster.az_groups }}
@@ -42,6 +47,9 @@ spec:
         sessionStoreClassName: "com.tremolosecurity.oidc.k8s.K8sSessionStore"
         k8sTarget: "k8s"
         k8sNameSpace: "#[K8S_OPENUNISON_NS:openunison]"
+        {{ if .Values.cluster.limitGroups }}
+        updateClaimsClassName: com.tremolosecurity.oidc.k8s.AddClusterGroupsToClaims
+        {{ end }}
       mappings:
         strict: true
         map:
@@ -57,9 +65,14 @@ spec:
         - targetAttributeName: email
           targetAttributeSource: mail
           sourceType: user
+        - targetAttributeName: cluster
+          targetAttributeSource: "{{ .Values.cluster.name }}"
+          sourceType: static
+        {{ if not .Values.cluster.limitGroups }}
         - targetAttributeName: groups
           targetAttributeSource: groups
           sourceType: user
+        {{ end }}
       trusts:
       - name: "cluster-idp-{{ .Values.cluster.name }}"
         params:

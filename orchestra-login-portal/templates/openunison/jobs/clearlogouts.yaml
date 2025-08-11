@@ -1,0 +1,25 @@
+{{ if.Values.openunison.enable_end_session  }}
+apiVersion: openunison.tremolo.io/v1
+kind: OUJob
+metadata:
+  name: clear-logouts
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+spec:
+  cronSchedule:
+    seconds: "0"
+    minutes: "*"
+    hours: "*"
+    dayOfMonth: "*"
+    month: "*"
+    dayOfWeek: "?"
+    year: "*"
+  className: com.tremolosecurity.jobs.ClearLogouts
+  group: admin-local
+  params:
+    - name: targetName
+      value: k8s
+    - name: namespace
+      value: {{ .Release.Namespace }}
+{{ end }}

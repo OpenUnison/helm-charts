@@ -3,6 +3,42 @@
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
+  name: endsessions.openunison.tremolo.io
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: crd
+    app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  group: openunison.tremolo.io
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                dn:
+                  type: string
+  conversion:
+    strategy: None
+  scope: Namespaced
+  names:
+    plural: endsessions
+    singular: endsession
+    kind: EndSession
+    shortNames:
+    - es
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
   name: users.openunison.tremolo.io
   labels:
     app.kubernetes.io/name: openunison
@@ -3680,6 +3716,59 @@ spec:
     kind: GroupMetaData
     shortNames:
     - gmd
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: namespacegroupmetadatas.openunison.tremolo.io
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: crd
+    app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  group: openunison.tremolo.io
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          description: Stores mapping from an external group to an internal group for the roles of a namespace.  Can also be used to create a group in the database without executing SQL
+          properties:
+            spec:
+              type: object
+              properties:
+                namespace:
+                  type: string
+                  description: the name of the namespace for this mapping
+                cluster:
+                  type: string
+                  description: the name of the cluster holding the namespace
+                mappings:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      groupName:
+                        type: string
+                        description: The name of the group to create
+                      externalName:
+                        type: string
+                        description: "**Optional** - the name of the external group to map to"
+                      roleName:
+                        type: string
+                        description: "**Optional** - describes the role for this mapping"
+  scope: Namespaced
+  names:
+    plural: namespacegroupmetadatas
+    singular: namespacegroupmetadata
+    kind: NamespaceGroupMetaData
+    shortNames:
+    - nsgmd
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition

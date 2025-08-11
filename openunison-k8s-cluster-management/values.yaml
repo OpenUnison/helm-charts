@@ -9,6 +9,7 @@ impersonation:
   orchestra_release_name: orchestra
 
 openunison:
+  jit_grace_period: 0
   orchestra_login_portal_name: orchestra-login-portal
   kubeAuth:
     enabled: true

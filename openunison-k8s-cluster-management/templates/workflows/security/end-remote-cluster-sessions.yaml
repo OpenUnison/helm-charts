@@ -1,0 +1,65 @@
+{{ if .Values.openunison.naas.enable_security_org  }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: end-remote-cluster-sessions
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
+spec:
+  description: Ends all oidc and web sessions on the remote cluster
+  inList: false
+  label: End sessions in remote cluster
+  orgId: 91c584e2-d965-4228-99a2-e774b1d6d871
+  tasks: |-
+    # Delete the oidc-sessions in the remote cluster
+    - taskType: customTask
+      className: com.tremolosecurity.provisioning.tasks.DeleteK8sObject
+      params:
+            targetName: k8s-$clusterName$
+            kind:  OidcSession
+            url: /apis/openunison.tremolo.io/v1/namespaces/{{ .Release.Namespace }}/oidc-sessions?labelSelector=tremolo.io%2Fuser-dn%3D$user_sat_dn_hash$
+
+
+    {{ if .Values.openunison.enable_end_session }}
+
+    - taskType: mapping
+      strict: true
+      map:
+        - targetAttributeName: uid
+          targetAttributeSource: uid
+          sourceType: user
+        - targetAttributeName: sub
+          targetAttributeSource: sub
+          sourceType: user
+      onSuccess:
+        # check if the remote target has EndSessions enabled
+        - taskType: customTask
+          className: com.tremolosecurity.provisioning.tasks.CheckApiExists
+          params:
+            apiGroup: openunison.tremolo.io/v1
+            apiKind: EndSession
+            cluster: k8s-$clusterName$
+            attribute: api_enabled
+
+        - taskType: ifAttrExists
+          name: api_enabled
+          onSuccess:
+          # create an EndSession object
+          - taskType: customTask
+            className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
+            params:
+              targetName: k8s-$clusterName$
+              template: |-
+                  kind: EndSession
+                  apiVersion: openunison.tremolo.io/v1
+                  metadata:
+                    name: x$delete_name$x
+                    namespace: {{ .Release.Namespace }}
+                  spec:
+                    dn: $user_sat_dn_hash$
+              
+              srcType: yaml
+  {{ end }}
+{{ end }}
