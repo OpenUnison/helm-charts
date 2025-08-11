@@ -191,6 +191,9 @@ spec:
     params:
       idpName: k8sidp
       trustName: kubernetes
+      {{ if .Values.openunison.enable_end_session  }}
+      doNotTieSession: "true"
+      {{ end }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: AuthenticationChain
@@ -296,3 +299,6 @@ spec:
     params:
       idpName: k8sidp
       trustName: kubernetes
+      {{ if .Values.openunison.enable_end_session  }}
+      doNotTieSession: "true"
+      {{ end }}

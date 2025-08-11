@@ -39,58 +39,6 @@ spec:
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: namespacegroupmetadatas.openunison.tremolo.io
-spec:
-  conversion:
-    strategy: None
-  group: openunison.tremolo.io
-  names:
-    kind: NamespaceGroupMetaData
-    listKind: NamespaceGroupMetaDataList
-    plural: namespacegroupmetadatas
-    shortNames:
-    - nsgmd
-    singular: namespacegroupmetadata
-  scope: Namespaced
-  versions:
-  - name: v1
-    schema:
-      openAPIV3Schema:
-        description: Stores mapping from an external group to an internal group for
-          the roles of a namespace.  Can also be used to create a group in the database
-          without executing SQL
-        properties:
-          spec:
-            properties:
-              cluster:
-                description: the name of the cluster holding the namespace
-                type: string
-              mappings:
-                items:
-                  properties:
-                    externalName:
-                      description: '**Optional** - the name of the external group
-                        to map to'
-                      type: string
-                    groupName:
-                      description: The name of the group to create
-                      type: string
-                    roleName:
-                      description: '**Optional** - describes the role for this mapping'
-                      type: string
-                  type: object
-                type: array
-              namespace:
-                description: the name of the namespace for this mapping
-                type: string
-            type: object
-        type: object
-    served: true
-    storage: true
----
-apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
-metadata:
   name: users.openunison.tremolo.io
   labels:
     app.kubernetes.io/name: openunison
