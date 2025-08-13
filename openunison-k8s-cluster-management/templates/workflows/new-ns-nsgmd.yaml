@@ -1,0 +1,176 @@
+{{- $root := . -}}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: new-ns-nsgmd
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
+spec:
+  description: creates legacy group metadata objects
+  inList: false
+  label: Create namespace namespacegroupmetadata objects
+  orgId: 04901973-5f4c-46d9-9e22-55e88e168776
+  tasks: |-
+           {{ range $role := .Values.openunison.naas.groups.default }}
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.JavaScriptTask
+             params:
+               javaScript: |-
+                 Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+                 UUID = Java.type("java.util.UUID");
+
+                 function init(task,params) {
+                   // nothing to do
+                 }
+ 
+                 function reInit(task) {
+                   // do nothing
+                 }
+ 
+                 function doTask(user,request) {
+                   if (! user.getAttribs().get("{{ $role.external.fieldName }}")) {
+                     user.getAttribs().put("{{$role.external.fieldName}}",new Attribute("{{$role.external.fieldName}}",""));
+                   }
+
+                   return true;
+                 }
+
+           - taskType: ifAttrHasValue
+             name: {{ $role.external.fieldName }}
+             value: ""
+             onFailure:
+              - taskType: customTask
+                className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
+                params:
+                  target: jitdb
+                  name: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.external.suffix }}
+                  attributes:
+                  - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
+                  - unison.group.create.param.2={{ $role.description }}
+              {{ if $root.Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+              - taskType: customTask
+                className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
+                params:
+                  target: k8s
+                  name: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.external.suffix }}
+                  attributes: []
+              {{ end }}
+           {{ end }}
+           {{ range $role := .Values.openunison.naas.groups.roles }}
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.JavaScriptTask
+             params:
+               javaScript: |-
+                 Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+                 UUID = Java.type("java.util.UUID");
+
+                 function init(task,params) {
+                   // nothing to do
+                 }
+ 
+                 function reInit(task) {
+                   // do nothing
+                 }
+ 
+                 function doTask(user,request) {
+                   if (! user.getAttribs().get("{{ $role.external.fieldName }}")) {
+                     user.getAttribs().put("{{$role.external.fieldName}}",new Attribute("{{$role.external.fieldName}}",""));
+                   }
+
+                   
+                   return true;
+                 }
+           
+           - taskType: ifAttrHasValue
+             name: {{ $role.external.fieldName }}
+             value: ""
+             onFailure:
+              - taskType: customTask
+                className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
+                params:
+                  target: jitdb
+                  name: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.external.suffix }}
+                  attributes:
+                  - unison.group.create.sql=INSERT INTO localGroups (name,description) VALUES (?,?)
+                  - unison.group.create.param.2={{ $role.description }}
+              {{ if $root.Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+              - taskType: customTask
+                className: com.tremolosecurity.provisioning.customTasks.AddGroupToStore
+                params:
+                  target: k8s
+                  name: k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.external.suffix }}
+                  attributes: []
+              {{ end }}
+           {{ end }}
+
+           # create a namespacegroupmetadata object
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.customTasks.JavaScriptTask
+             params:
+               javaScript: |-
+                 Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+                 UUID = Java.type("java.util.UUID");
+                 DigestUtils = Java.type("org.apache.commons.codec.digest.DigestUtils");
+
+                 function init(task,params) {
+                   // nothing to do
+                 }
+ 
+                 function reInit(task) {
+                   // do nothing
+                 }
+ 
+                 function doTask(user,request) {
+                   // generate a sha256 of the cluster name and namespace
+                   var compositeName = request.get("cluster") + request.get("nameSpace");
+                   var digest = "x" + DigestUtils.sha1Hex(compositeName) + "x";
+
+                   request.put("compositeName",digest);
+
+
+
+                   return true;
+                 }
+
+           # create ns group mapping
+           - taskType: customTask
+             className: com.tremolosecurity.provisioning.tasks.CreateK8sObject
+             params:
+               targetName: k8s
+               template: |-
+                   kind: NamespaceGroupMetaData
+                   apiVersion: openunison.tremolo.io/v1
+                   metadata:
+                     name: $compositeName$
+                     namespace: {{ $root.Release.Namespace }}
+                     labels:
+                       name: $compositeName$
+                       app.kubernetes.io/name: openunison
+                       app.kubernetes.io/instance: openunison-{{ $root.Release.Name }}
+                       app.kubernetes.io/component: openunison-namespacegroupmetadata
+                       app.kubernetes.io/part-of: openunison
+                       tremolo.io/cluster: "$cluster$"
+                       tremolo.io/namespace: "$namespace$"
+ 
+                     annotations:
+                       tremolo.io/managedByGit: "$useGit$"
+                   spec:
+                     cluster: "$cluster$"
+                     namespace: "$nameSpace$"
+                     mappings:
+                     {{ range $role := .Values.openunison.naas.groups.default }}
+                     - externalName: "${{ $role.external.fieldName }}$"
+                       groupName: "k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.external.suffix }}"
+                       roleName: "{{ $role.name }}"
+                     {{ end }}
+                     {{ range $role := .Values.openunison.naas.groups.roles }}
+                     - externalName: "${{ $role.external.fieldName }}$"
+                       groupName: "k8s-namespace-{{ $role.name }}-$cluster$-$nameSpace${{ $root.Values.openunison.naas.groups.external.suffix }}"
+                       roleName: "{{ $role.name }}"
+                     {{ end }}
+               srcType: yaml
+               writeToRequest: "$useGit$"
+               requestAttribute: git-secret-cluster-k8s-$nameSpace$
+               path: {{ $root.Values.openunison.naas.git.prefix }}/{{ $root.Release.Namespace }}/namespacegroupmetadatas/$compositeName$.yaml

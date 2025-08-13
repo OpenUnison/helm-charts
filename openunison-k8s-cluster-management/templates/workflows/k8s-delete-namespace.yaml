@@ -355,6 +355,47 @@ spec:
                  path: /yaml/ns/$nameSpace$/groupmetadatas/$group_metadata_name$.yaml
              {{ end }}
              {{ end }}
+
+             {{ if $root.Capabilities.APIVersions.Has "openunison.tremolo.io/v1/NamespaceGroupMetaData" }}
+             # create a namespacegroupmetadata object
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.customTasks.JavaScriptTask
+               params:
+                  javaScript: |-
+                    Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+                    UUID = Java.type("java.util.UUID");
+                    DigestUtils = Java.type("org.apache.commons.codec.digest.DigestUtils");
+
+                    function init(task,params) {
+                      // nothing to do
+                    }
+    
+                    function reInit(task) {
+                      // do nothing
+                    }
+    
+                    function doTask(user,request) {
+                      // generate a sha256 of the cluster name and namespace
+                      var compositeName = request.get("cluster") + request.get("nameSpace");
+                      var digest = "x" + DigestUtils.sha1Hex(compositeName) + "x";
+
+                      request.put("compositeName",digest);
+
+
+
+                      return true;
+                    }
+            
+             - taskType: customTask
+               className: com.tremolosecurity.provisioning.tasks.DeleteK8sObject
+               params:
+                 targetName: $cluster$
+                 kind: Namespace
+                 url: /apis/openunison.tremolo.io/v1/namespaces/{{ .Release.Namespace }}/namespacegroupmetadatas/$compositeName$
+                 writeToRequest: "$useGit$"
+                 requestAttribute: git-secret-cluster-$cluster$-$nameSpace$
+                 path: /yaml/ns/$nameSpace$/namespacegroupmetadatas/$compositeName$.yaml
+             {{ end }}
              
              - taskType: customTask
                className: com.tremolosecurity.provisioning.tasks.DeleteK8sObject
