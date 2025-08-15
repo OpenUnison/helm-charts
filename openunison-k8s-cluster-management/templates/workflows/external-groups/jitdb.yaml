@@ -211,6 +211,13 @@ spec:
                - taskType: addGroup
                  name: users
 
+               {{ if gt (float64 .Values.openunison.jit_grace_period) 0.0 }}
+               - taskType: customTask
+                 className: com.tremolosecurity.provisioning.customTasks.AddTimestampToUser
+                 params:
+                   attributeName: lastUpdated
+               {{ end }}
+               
                - taskType: provision
                  sync: true
                  target: jitdb
@@ -221,6 +228,9 @@ spec:
                  - mail
                  - firstName
                  - lastName
+                 {{ if gt (float64 .Values.openunison.jit_grace_period) 0.0 }}
+                 - lastUpdated
+                 {{ end }}
                {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
                - taskType: provision
                  sync: true
