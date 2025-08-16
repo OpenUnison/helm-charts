@@ -84,6 +84,7 @@ spec:
         imagePullPolicy: {{ .Values.openunison.imagePullPolicy }}
         readOnlyRootFilesystem: true
         securityContext:
+          readOnlyRootFilesystem: true
           allowPrivilegeEscalation: false
           capabilities:
             drop:

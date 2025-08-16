@@ -83,8 +83,8 @@ spec:
           - "---token-passthrough-audiences={{ .Values.impersonation.passthroughAudience }}"
           {{ end }}
         imagePullPolicy: {{ .Values.openunison.imagePullPolicy }}
-        readOnlyRootFilesystem: true
         securityContext:
+          readOnlyRootFilesystem: true
           allowPrivilegeEscalation: false
           capabilities:
             drop:

@@ -67,6 +67,7 @@ spec:
           {{ end }}
         imagePullPolicy: {{ .Values.cicd_proxy.imagePullPolicy }}
         securityContext:
+          readOnlyRootFilesystem: true
           allowPrivilegeEscalation: false
           capabilities:
             drop:

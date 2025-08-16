@@ -190,6 +190,7 @@ spec:
           {{ end }}
         imagePullPolicy: {{ .Values.openunison.imagePullPolicy }}
         securityContext:
+          readOnlyRootFilesystem: true
           capabilities:
             drop:
             - "ALL"
