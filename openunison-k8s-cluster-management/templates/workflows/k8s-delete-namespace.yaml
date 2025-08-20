@@ -389,7 +389,7 @@ spec:
              - taskType: customTask
                className: com.tremolosecurity.provisioning.tasks.DeleteK8sObject
                params:
-                 targetName: $cluster$
+                 targetName: k8s
                  kind: Namespace
                  url: /apis/openunison.tremolo.io/v1/namespaces/{{ .Release.Namespace }}/namespacegroupmetadatas/$compositeName$
                  writeToRequest: "$useGit$"
