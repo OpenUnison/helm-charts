@@ -1,0 +1,286 @@
+{{- $root := . -}}
+{{ range $sts := .Values.sts.endpoints  }}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Application
+metadata:
+  name: sts-injector-{{ $root.Release.Name }}-{{ $sts.name }}
+  namespace: {{ $root.Release.Namespace }}
+spec:
+  azTimeoutMillis: 3000
+  isApp: true
+
+  urls:
+  - hosts:
+    - "openunison-{{ $root.Values.sts.openunison.name }}.{{ $root.Values.sts.openunison.namespace }}.svc"
+    filterChain:
+    - className: com.tremolosecurity.proxy.filters.JavaScriptFilter
+      params:
+        javaScript: |-
+          GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+          HashMap = Java.type("java.util.HashMap");
+          System = Java.type("java.lang.System");
+          JwtClaims = Java.type("org.jose4j.jwt.JwtClaims");
+          JsonWebSignature = Java.type("org.jose4j.jws.JsonWebSignature");
+          ProxyConstants = Java.type("com.tremolosecurity.proxy.util.ProxyConstants");
+          AlgorithmIdentifiers = Java.type("org.jose4j.jws.AlgorithmIdentifiers");
+          Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+          ProxySys = Java.type("com.tremolosecurity.proxy.ProxySys");
+          JString = Java.type("java.lang.String");
+          JSUtils = Java.type("com.tremolosecurity.util.JSUtils");
+          Base64 = Java.type("java.util.Base64");
+
+          function initFilter(config) {
+
+          }
+
+          function doFilter(request,response,chain) {
+            json = new JString(request.getAttribute(ProxySys.MSG_BODY));
+            //System.out.println(json);
+
+            var admissionRequest = JSON.parse(json);
+            var pod = admissionRequest.request.object;
+
+            //System.out.println(JSON.stringify(pod));
+
+            var metadata = pod.metadata;
+
+            var injectAws = false;
+            var injectAwsMounts = true;
+            var awsRole = "";
+
+            if (metadata && metadata.annotations && metadata.annotations["tremolo.io/{{ $sts.injector.label }}"]  ) {
+                injectAws = true;
+                awsRole = metadata.annotations["tremolo.io/{{ $sts.injector.label }}"];
+            } else {
+                injectAws = false;
+            }
+
+            
+            //System.out.println("Inject AWS: " + injectAws);
+            
+            var admissionResp = {
+                "apiVersion": "admission.k8s.io/v1",
+                "kind": "AdmissionReview",
+                "response": {
+                    "uid": admissionRequest.request.uid,
+                    "allowed": true
+                }
+            };
+
+            
+
+            if (injectAws) {
+                var patches = [];
+                // add kerberos mounts and to each container
+                
+                
+                for (var i=0;i<pod.spec.containers.length;i++) {
+                    env = pod.spec.containers[i].env;
+                    op = "replace";
+                    if (! env) {
+                        env = [];
+                        op = "add";
+                    }
+
+                    env.push({"name":"{{ $sts.injector.token_environment_variable_name }}","value":"/tokens/token.jwt"});
+                    env.push({"name":"{{ $sts.injector.label_value_environment_variable_name }}","value":awsRole});
+
+                    patches.push(
+                        {
+                            "op":op,
+                            "path":"/spec/containers/" + i + "/env",
+                            "value": env
+                        }
+                    );
+
+                    
+                    op = "replace";
+                    var volumeMounts = pod.spec.containers[i].volumeMounts;
+                    if (! volumeMounts) {
+                        op = "add";
+                        volumeMounts = [];
+                    }
+                    volumeMounts.push(
+                        {
+                            "mountPath":"/tokens",
+                            "name": "sts-tokens",
+                            "readOnly": true
+                        }
+                    );
+                    
+
+                    patches.push(
+                        {
+                            "op":op,
+                            "path":"/spec/containers/" + i + "/volumeMounts",
+                            "value": volumeMounts
+                        }
+                    );
+                    
+
+
+
+                }
+
+                // add sidecar
+
+                var k8s = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget("k8s").getProvider();
+                var con = k8s.createClient();
+
+                /*
+                var principal = "";
+
+                if (injectAwsMounts) {
+                    try {
+                        
+                    } finally {
+                        if (con != null) {
+                            con.getHttp().close();
+                            con.getBcm().close()
+                        }
+                    }
+                }*/
+
+                var sideCar = {
+                    "image": "{{ $root.Values.sts.image }}",
+                    "name": "sts-creds-sidecar",
+                    "args": [
+                      "exchange",
+                      {{ if $sts.injector.explicit_certificate_trust }}
+                      "--cacert-path=/certs/ca.crt",
+                      {{ else }}
+                      "--cacert-path=/etc/ssl/certs/ca-certificates.crt",
+                      {{ end }}
+                      "/var/run/secrets/kubernetes.io/serviceaccount/token",
+                      "https://#[OU_HOST]{{ $sts.path }}/token/user",
+                      "/tokens"
+                    ],
+                    "securityContext": {
+                        "allowPrivilegeEscalation": false,
+                        "capabilities": {
+                            "drop": [
+                                "all"
+                            ]
+                        }
+                    },
+                    "env": [
+                        
+                    ],
+                    "restartPolicy": "Always",
+                    "volumeMounts": [
+                        {
+                            "mountPath":"/tokens",
+                            "name": "sts-tokens",
+                            "readOnly": false
+                        }
+                        {{ if $sts.injector.explicit_certificate_trust }}
+                        ,
+                        {
+                          "name":"certs",
+                          "mountPath":"/certs"
+                        }
+                        {{ end }}
+                        
+                    ]
+
+
+
+                };
+
+                
+                var initContainers = pod.spec.initContainers;
+                if (! initContainers) {
+                    patches.push(
+                        {
+                            "op":"add",
+                            "path":"/spec/initContainers",
+                            "value": []
+                        }
+                    );
+                }
+
+                patches.push(
+                    {
+                        "op":"add",
+                        "path":"/spec/initContainers/-",
+                        "value": sideCar
+                    }
+                );
+
+
+
+                // add volumes
+                var volumes = pod.spec.volumes;
+                var op = "replace";
+                if (!volumes) {
+                    volumes = [];
+                    op = "add";
+                }
+
+                volumes.push(
+                    {
+                        "name": "sts-tokens",
+                        "emptyDir": {
+                            
+                        }
+                    }
+                );
+
+                {{ if $sts.injector.explicit_certificate_trust }}
+                volumes.push(
+                    {
+                        "name": "certs",
+                        "configMap": {
+                            "name": "ouca"
+                        }
+                    }
+                );
+                {{ end }}
+
+                
+                patches.push(
+                    {
+                        "op":op,
+                        "path":"/spec/volumes",
+                        "value": volumes
+                    }
+                );
+
+                
+                admissionResp.response["patch"] = Base64.getEncoder().encodeToString(JSUtils.string2bytes(JSON.stringify(patches)));
+                admissionResp.response.patchType = "JSONPatch";
+                
+                
+
+                
+            }
+
+            response.setStatus(200);
+            response.setContentType("application/json");
+            //System.out.println(JSON.stringify(admissionResp));
+            response.getWriter().println(JSON.stringify(admissionResp));
+
+
+          }
+
+    
+    uri: /k8s/webhooks/v1/injector-{{ $sts.name }}
+    overrideHost: true 
+    overrideReferer: true
+    azRules:
+    - scope: dn
+      constraint: o=Tremolo
+    authChain: anon
+    results: {}
+  cookieConfig:
+    sessionCookieName: tremolosession
+    domain: "#[OU_HOST]"
+    secure: true
+    httpOnly: true
+    logoutURI: "/logout"
+    keyAlias: session-unison
+    timeout: 900
+    scope: -1
+    cookiesEnabled: false 
+{{ end }}

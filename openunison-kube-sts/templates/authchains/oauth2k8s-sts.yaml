@@ -1,0 +1,27 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: AuthenticationChain
+metadata:
+  name: oauth2k8s-sts
+  namespace: openunison
+spec:
+  authMechs:
+  - name: oauth2k8s
+    params:
+      defaultObjectClass: inetOrgPerson
+      k8sTarget: k8s
+      linkToDirectory: "false"
+      lookupFilter: (uid=${sub})
+      noMatchOU: oauth2
+      realm: kubernetes
+      scope: auth
+      uidAttr: username
+    required: required
+    secretParams: []
+  - name: k8ssa2claims
+    params:
+      cluster: "#[K8S_CLUSTER_NAME]"
+    required: required
+    secretParams: []
+  level: 20
+  root: o=Tremolo

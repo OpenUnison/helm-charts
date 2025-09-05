@@ -1,0 +1,18 @@
+sts:
+  image: ghcr.io/mlbiam/openunison-cli:1.1.0-7dfa6a
+  openunison:
+    name: orchestra
+    namespace: openunison
+  endpoints: []
+  # - name: aws 
+  #   audience: sts.aws.com
+  #   path: /aws
+  #   issuer:
+  #     host: ""
+  #     keypair: "unison-saml2-rp-sig"
+  #   injector:
+  #     label: aws-role
+  #     token_environment_variable_name: "AWS_WEB_IDENTITY_TOKEN_FILE"
+  #     label_value_environment_variable_name: "AWS_ROLE_ARN"
+  #     explicit_certificate_trust: false
+  

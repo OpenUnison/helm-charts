@@ -1,0 +1,147 @@
+{{- $root := . -}}
+{{ range $sts := .Values.sts.endpoints  }}
+apiVersion: openunison.tremolo.io/v2
+kind: Application
+metadata:
+  labels:
+    app.kubernetes.io/component: openunison-applications
+    app.kubernetes.io/instance: openunison-sts
+    app.kubernetes.io/name: sts-token
+    app.kubernetes.io/part-of: openunison
+  name: sts-token-{{ $root.Release.Name }}-{{ $sts.name }}
+  namespace: {{ $root.Release.Namespace }}
+spec:
+  azTimeoutMillis: 3000
+  cookieConfig:
+    cookiesEnabled: false
+    domain: '#[OU_HOST]'
+    httpOnly: true
+    keyAlias: session-unison
+    logoutURI: /logout
+    scope: -1
+    secure: true
+    sessionCookieName: tremolosession
+    timeout: 900
+  isApp: true
+  urls:
+  - authChain: anon
+    azRules:
+    - constraint: o=Tremolo
+      scope: dn
+    filterChain:
+    - className: com.tremolosecurity.proxy.filters.JavaScriptFilter
+      params:
+        javaScript: |-
+          GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+          ProxyConstants = Java.type("com.tremolosecurity.proxy.util.ProxyConstants");
+          System = Java.type("java.lang.System");
+          JwtClaims = Java.type("org.jose4j.jwt.JwtClaims");
+          JsonWebSignature = Java.type("org.jose4j.jws.JsonWebSignature");
+          AlgorithmIdentifiers = Java.type("org.jose4j.jws.AlgorithmIdentifiers");
+          IdpMappingType = Java.type("com.tremolosecurity.config.xml.IdpMappingType");
+          ProvisionMappingType = Java.type("com.tremolosecurity.config.xml.ProvisionMappingType");
+          MapIdentity = Java.type("com.tremolosecurity.provisioning.mapping.MapIdentity");
+          HttpServletRequestWrapper = Java.type("jakarta.servlet.http.HttpServletRequestWrapper");
+          OpenIDConnectConfig = Java.type("com.tremolosecurity.idp.providers.oidc.model.OpenIDConnectConfig");
+          GsonBuilder = Java.type("com.google.gson.GsonBuilder");
+          JsonWebKey = Java.type("org.jose4j.jwk.JsonWebKey");
+          JsonWebKeySet = Java.type("org.jose4j.jwk.JsonWebKeySet");
+          StringBuffer = Java.type("java.lang.StringBuffer");
+
+          function initFilter(config) {
+
+          }
+
+
+
+          function doFilter(request,response,chain) {
+
+            idmappings = new IdpMappingType();
+            idmappings.setStrict(true);
+            m = new ProvisionMappingType();
+            m.setTargetAttributeName("sub");
+            m.setSourceType("user");
+            idmappings.getMapping().add(m);
+
+            m = new ProvisionMappingType();
+            m.setTargetAttributeName("cluster");
+            m.setSourceType("user");
+            idmappings.getMapping().add(m);
+
+            m = new ProvisionMappingType();
+            m.setTargetAttributeName("namespace");
+            m.setSourceType("user");
+            idmappings.getMapping().add(m);
+
+            m = new ProvisionMappingType();
+            m.setTargetAttributeName("saname");
+            m.setSourceType("user");
+            idmappings.getMapping().add(m);
+
+            mapid = new MapIdentity(idmappings);
+
+            gson = new GsonBuilder().setPrettyPrinting().create();
+
+            oidcDiscovery = new OpenIDConnectConfig("https://{{ $sts.issuer.host }}", null ,mapid);
+
+            cert = GlobalEntries.getGlobalEntries().getConfigManager().getCertificate("{{ $sts.issuer.keypair }}");
+            jwk = JsonWebKey.Factory.newJwk(cert.getPublicKey());
+
+            b = new StringBuffer();
+            b.append(cert.getSubjectDN().getName()).append('-').append(cert.getIssuerDN().getName()).append('-').append(cert.getSerialNumber().toString());
+
+            keyID = b.toString();
+            jwk.setKeyId(keyID);
+            jwk.setUse("sig");
+            jwk.setAlgorithm("RS256");
+
+
+
+            issuerdocs = {
+              "discovery": gson.toJson(oidcDiscovery),
+              "keys": new JsonWebKeySet(jwk).toJson()
+            };
+
+            response.getWriter().println(JSON.stringify(issuerdocs));
+
+          }
+    hosts:
+    - '#[OU_HOST]'
+    results: {}
+    uri: {{ $sts.path }}/issuer-docs
+  - authChain: oauth2k8s-sts
+    azRules:
+    {{ if not (empty $sts.azRules) }}
+    {{ range $sts.azRules }}
+    - scope: {{ .scope }}
+      constraint: {{ .constraint }}
+    {{ end }}
+    {{ else }}
+    - constraint: o=Tremolo
+      scope: dn
+    {{ end }}
+    filterChain:
+    - className: com.tremolosecurity.scalejs.token.ws.ScaleToken
+      params:
+        additionalClaims:
+        - cluster
+        - namespace
+        - saname
+        audience: {{ $sts.audience }}
+        displayNameAttribute: token_sub
+        expiresSeconds: "900"
+        frontPage.text: STS Token
+        frontPage.title: STS Token
+        homeURL: /scale/
+        issuer: https://{{ $sts.issuer.host }}
+        keyName: {{ $sts.issuer.keypair }}
+        logoutURL: /logout
+        minAlive: "15"
+        minutesTTL: "15"
+        tokenClassName: com.tremolosecurity.scalejs.token.sts.StsToken
+        warnMinutesLeft: "5"
+    hosts:
+    - '#[OU_HOST]'
+    results: {}
+    uri: {{ $sts.path }}/token
+{{ end }}
