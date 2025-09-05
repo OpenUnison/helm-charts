@@ -1,0 +1,31 @@
+{{- $root := . -}}
+{{ range $sts := .Values.sts.endpoints  }}
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: injector-{{ $sts.name }}
+  labels:
+    app: injector-{{ $sts.name }}
+webhooks:
+  - name: injector-{{ $sts.name }}.tremolo.io
+    clientConfig:
+      caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVBekNDQXV1Z0F3SUJBZ0lHQVpoQ3M1VnVNQTBHQ1NxR1NJYjNEUUVCQ3dVQU1JR0hNU3d3S2dZRFZRUUQKRENOdmNHVnVkVzVwYzI5dUxXOXlZMmhsYzNSeVlTNXZjR1Z1ZFc1cGMyOXVMbk4yWXpFVE1CRUdBMVVFQ3d3SwpTM1ZpWlhKdVpYUmxjekVPTUF3R0ExVUVDZ3dGVFhsUGNtY3hFekFSQmdOVkJBY01DazE1SUVOc2RYTjBaWEl4CkNUQUhCZ05WQkFnTUFERVNNQkFHQTFVRUJoTUpUWGxEYjNWdWRISjVNQjRYRFRJMU1EY3lOVEUzTkRnME1Wb1gKRFRJMk1EY3lOVEUzTkRnME1Wb3dnWWN4TERBcUJnTlZCQU1NSTI5d1pXNTFibWx6YjI0dGIzSmphR1Z6ZEhKaApMbTl3Wlc1MWJtbHpiMjR1YzNaak1STXdFUVlEVlFRTERBcExkV0psY201bGRHVnpNUTR3REFZRFZRUUtEQVZOCmVVOXlaekVUTUJFR0ExVUVCd3dLVFhrZ1EyeDFjM1JsY2pFSk1BY0dBMVVFQ0F3QU1SSXdFQVlEVlFRR0V3bE4KZVVOdmRXNTBjbmt3Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLQW9JQkFRQ3VQV0hRK0ZFKworNCtiVVhGWWRyMUc5Z0VoM3UyYlVBT3NOMUt4Zk5sMWZuTkF2Wk4vZDh1UUlwTXZKQytKTFBUZlNXakNaOEtECmVEdU5PQmFSaHlkT0xhN1ZUQmNDRUhKL0xtcTUxN2N6SXRBWklibjlWOEN3VC93SE1LL3pIcE45Vk05SzloSzcKTnZ0dUdyVmdFNnVsTURqSUhIcDJ6OFlFUEZaV282OEN3TCtyRVNIY1puMU96QzZ6MzRPakE0QmU5NW0zemdMcgp1ZUxKalk3NVdEMHhob21YdlJodVFQSU5JR1N3SUFpSWc4TGFiUk5teUduRlJGdyswY2NkRVRzd20wNDVXTHF2ClFzZU9GUkxHOW9JajhLdjZQZFlrdVVwOHV3QjZUSHlsdThwZkJMZ21TNkRtM3lXVzZ2L3M3NDBVMFNsa09WcGUKWmEyOVNSV2FlUWh2QWdNQkFBR2pjekJ4TUE0R0ExVWREd0VCL3dRRUF3SUNCREFTQmdOVkhTVUJBZjhFQ0RBRwpCZ1JWSFNVQU1Fc0dBMVVkRVFSRU1FS0NJMjl3Wlc1MWJtbHpiMjR0YjNKamFHVnpkSEpoTG05d1pXNTFibWx6CmIyNHVjM1pqZ2h0ck9ITmhjR2t1TVRreUxURTJPQzB5TFRFME9DNXVhWEF1YVc4d0RRWUpLb1pJaHZjTkFRRUwKQlFBRGdnRUJBSEkvQVR6c2tVSmZYWkNpUnlpZnJna0VTc3NjVGUxNk1seEJ4NmxKQUVGTEYxdEtzQVgzV000NQplTjBXbkFUM000ckhRSWhhNGlBMGFvSThDR3pJSEVnZWVrUjZ1Vmhhb2tOWTBBVkhtVUUrcm1QZTJBbDNuN2lkCkNOS09EZkRVKzFycTF3ZGpwYU5zT2JLMmNMSGcxU3RsQmc5KzVqTmd1TFh3alN3anhHeEplT1lkM29HQ3hrZkUKRHhFVlNKSlhCZXdFaXo1UTVVQTRQVVFVeWZJbld0TjVVa0w4WEFoWVpJR3FOWTdQMTlmOFN2Y3RlZHRYbTlPNgpndHk5ekt4Zzl6SjkvWmg5WjNrSmpDOEd3SHduZmxEZ3hMMGtrc2JhSlhvK1FNWmN6RnlaUUJlN1NoT2p6UHhxClNaR0UzOERxYWVxb210YjdJZXlpZjB4WjVVUU5CSmM9Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+      service:
+        name: openunison-{{ $root.Values.sts.openunison.name }}
+        namespace: {{ $root.Values.sts.openunison.namespace }}
+        path: "/k8s/webhooks/v1/injector-{{ $sts.name }}"
+    failurePolicy: Ignore
+    rules:
+      - operations: ["CREATE","UPDATE"]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+    sideEffects: NoneOnDryRun
+    admissionReviewVersions:
+    - v1
+    objectSelector:
+      matchExpressions:
+        - key: tremolo.io/{{ $sts.injector.label }}
+          operator: Exists
+{{ end }}

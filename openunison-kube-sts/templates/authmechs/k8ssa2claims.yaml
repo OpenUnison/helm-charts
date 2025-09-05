@@ -1,0 +1,11 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: AuthenticationMechanism
+metadata:
+  name: k8ssa2claims
+  namespace: openunison
+spec:
+  className: com.tremolosecurity.proxy.auth.ServiceAccount2Claims
+  init: {}
+  secretParams: []
+  uri: /auth/k8ssa2claims
