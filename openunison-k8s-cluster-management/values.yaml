@@ -98,6 +98,8 @@ openunison:
         enabled: true
         suffix: "-internal"
         add_requestor_as_admin: true
+        lookupPre: "select sub from localUsers inner join userGroups on userGroups.userId=localUsers.userId inner join localGroups on localGroups.groupId=userGroups.groupId where localGroups.name like '%"
+        lookupPost: "%-internal'  group by sub "
         isolateRequestAccess:
           enabled: false
           

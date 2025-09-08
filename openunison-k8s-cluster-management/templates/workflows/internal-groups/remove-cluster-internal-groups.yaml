@@ -35,8 +35,11 @@ spec:
 
                         if (tt.getClassName() == "com.tremolosecurity.unison.openshiftv3.OpenShiftTarget") {
                             var target = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget(tt.getName()).getProvider();
+                            
+                            var sqlPre = "{{ .Values.openunison.naas.groups.internal.lookupPre }}";
+                            var sqlPost = "{{ .Values.openunison.naas.groups.internal.lookupPost }}";
 
-                            rs = stmt.executeQuery("select sub from localUsers inner join userGroups on userGroups.userId=localUSers.userId inner join localGroups on localGroups.groupId=userGroups.groupId where localGroups.name like '%" + target.getName() + "%-internal'  group by sub ");
+                            rs = stmt.executeQuery(sqlPre + target.getName() + sqlPost);
                             if (rs.next()) {
                                 var newwf = new HashMap();
                                 newwf.put("cluster",target.getName());
