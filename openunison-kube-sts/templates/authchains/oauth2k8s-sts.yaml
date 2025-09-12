@@ -4,6 +4,8 @@ kind: AuthenticationChain
 metadata:
   name: oauth2k8s-sts
   namespace: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   authMechs:
   - name: oauth2k8s
