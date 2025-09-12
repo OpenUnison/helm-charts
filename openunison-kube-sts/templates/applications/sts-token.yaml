@@ -3,6 +3,8 @@
 apiVersion: openunison.tremolo.io/v2
 kind: Application
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
   labels:
     app.kubernetes.io/component: openunison-applications
     app.kubernetes.io/instance: openunison-sts

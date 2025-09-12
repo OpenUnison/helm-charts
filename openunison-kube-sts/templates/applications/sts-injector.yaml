@@ -6,6 +6,8 @@ kind: Application
 metadata:
   name: sts-injector-{{ $root.Release.Name }}-{{ $sts.name }}
   namespace: {{ $root.Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   azTimeoutMillis: 3000
   isApp: true
