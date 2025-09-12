@@ -1,5 +1,6 @@
 {{- $root := . -}}
 {{ range $sts := .Values.sts.endpoints  }}
+---
 apiVersion: openunison.tremolo.io/v2
 kind: Application
 metadata:

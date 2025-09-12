@@ -17,7 +17,7 @@ webhooks:
         path: "/k8s/webhooks/v1/injector-{{ $sts.name }}"
     failurePolicy: Ignore
     rules:
-      - operations: ["CREATE","UPDATE"]
+      - operations: ["CREATE"]
         apiGroups: [""]
         apiVersions: ["v1"]
         resources: ["pods"]
