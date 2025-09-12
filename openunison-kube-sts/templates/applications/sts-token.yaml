@@ -8,7 +8,6 @@ metadata:
   labels:
     app.kubernetes.io/component: openunison-applications
     app.kubernetes.io/instance: openunison-sts
-    app.kubernetes.io/name: sts-token
     app.kubernetes.io/part-of: openunison
   name: sts-token-{{ $root.Release.Name }}-{{ $sts.name }}
   namespace: {{ $root.Release.Namespace }}
