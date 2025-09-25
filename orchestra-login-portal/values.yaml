@@ -33,6 +33,7 @@ dashboard:
   auth_service_name: kubernetes-dashboard-auth
   api_service_name: kubernetes-dashboard-api
   web_service_name: kubernetes-dashboard-web
+  require_session: false
   enabled: true
   
 certs:
@@ -109,6 +110,7 @@ services:
   - "alive"
 
 openunison:
+  enable_end_session: true
   jit_grace_period: 0
   extra_az_groups: []
   apps: []

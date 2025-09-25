@@ -35,6 +35,7 @@ dashboard:
   api_service_name: kubernetes-dashboard-api
   web_service_name: kubernetes-dashboard-web
   enabled: true
+  require_session: false
   
 certs:
   use_k8s_cm: false
@@ -122,6 +123,7 @@ operator:
       cpu: 1.0
 
 openunison:
+  enable_end_session: true
   jit_grace_period: 0
   extra_az_groups: []
   apps: []
