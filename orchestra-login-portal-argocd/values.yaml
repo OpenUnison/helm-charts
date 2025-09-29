@@ -17,7 +17,7 @@ cert_template:
   st: "State of Cluster"
   c: "MyCountry"
 
-image: "ghcr.io/openunison/openunison-k8s:1.0.42"
+image: "ghcr.io/openunison/openunison-k8s:1.0.43"
 amq_image: "ghcr.io/tremolosecurity/activemq-docker:5.16.6"
 cert_update_image: "ghcr.io/openunison/openunison-kubernetes-operator:1.0.7"
 myvd_config_path: "WEB-INF/myvd.conf"
@@ -35,6 +35,7 @@ dashboard:
   api_service_name: kubernetes-dashboard-api
   web_service_name: kubernetes-dashboard-web
   enabled: true
+  require_session: false
   
 certs:
   use_k8s_cm: false
@@ -122,6 +123,7 @@ operator:
       cpu: 1.0
 
 openunison:
+  enable_end_session: true
   jit_grace_period: 0
   extra_az_groups: []
   apps: []
@@ -140,7 +142,7 @@ openunison:
   groups:
     areJson: "false"
   html:
-    image: ghcr.io/openunison/openunison-k8s-react:1.0.1
+    image: ghcr.io/openunison/openunison-k8s-react:1.0.2
     legacy: false
     theme:
       headerTitle: "OpenUnison"
