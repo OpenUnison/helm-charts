@@ -36,6 +36,12 @@ spec:
                         if (tt.getClassName() == "com.tremolosecurity.unison.openshiftv3.OpenShiftTarget") {
                             var target = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget(tt.getName()).getProvider();
                             
+                            {{ if .Values.openunison.naas.groups.internal.lookupAll }}
+                                var newwf = new HashMap();
+                                newwf.put("cluster",target.getName());
+                                newwf.put("clusterlabel",target.getLabel());
+                                workflows.add(newwf);
+                            {{ else }}
                             var sqlPre = "{{ .Values.openunison.naas.groups.internal.lookupPre }}";
                             var sqlPost = "{{ .Values.openunison.naas.groups.internal.lookupPost }}";
 
@@ -46,6 +52,7 @@ spec:
                                 newwf.put("clusterlabel",target.getLabel());
                                 workflows.add(newwf);
                             }
+                            {{ end }}
                             
                         }
                     }
@@ -100,7 +107,10 @@ spec:
                     
                     var sql = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget("jitdb").getProvider().getDS().getConnection();
                     try {
-                        rs = sql.createStatement().executeQuery("select sub from localUsers inner join userGroups on userGroups.userId=localUSers.userId inner join localGroups on localGroups.groupId=userGroups.groupId where localGroups.name like '%" + request.get("cluster") + "%-internal'  group by sub ");
+                        var sqlPre = "{{ .Values.openunison.naas.groups.internal.lookupPre }}";
+                        var sqlPost = "{{ .Values.openunison.naas.groups.internal.lookupPost }}";
+
+                        rs = sql.createStatement().executeQuery(sqlPre + request.get("cluster") + sqlPost);
                         while (rs.next()) {
                             var sub = rs.getString("sub");
                             
