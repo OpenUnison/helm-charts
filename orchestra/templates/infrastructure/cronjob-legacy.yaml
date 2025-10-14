@@ -60,7 +60,6 @@ spec:
             image: {{ .Values.cert_update_image | default "docker.io/tremolosecurity/kubernetes-artifact-deployment:1.1.0" }}
             imagePullPolicy: IfNotPresent
             name: check-certs-{{ .Release.Name }}
-            resources: {}
             terminationMessagePath: /dev/termination-log
             terminationMessagePolicy: File
             volumeMounts:
