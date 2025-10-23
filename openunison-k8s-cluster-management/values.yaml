@@ -34,6 +34,7 @@ openunison:
       enable_byo: true
     jobs:
       rebase:
+        enabled: true
         queuename: rebase-queue
     orgs: []
     forms:

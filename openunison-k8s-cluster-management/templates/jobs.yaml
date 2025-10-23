@@ -1,4 +1,4 @@
-{{ if .Values.openunison.naas.groups.internal.enabled }}
+{{ if (and .Values.openunison.naas.groups.internal.enabled .Values.openunison.naas.jobs.rebase.enabled ) }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: OUJob

@@ -1,0 +1,11 @@
+apiVersion: openunison.tremolo.io/v1
+kind: Notifier
+metadata:
+  name: noop
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+spec:
+    className: com.tremolosecurity.notifications.NoNotifications
+    params: []
+    secretParams: []
