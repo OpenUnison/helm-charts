@@ -91,7 +91,6 @@ spec:
         - /etc/extraMaps
         imagePullPolicy: Always
         name: openunison-operator
-        resources: {}
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
         volumeMounts:

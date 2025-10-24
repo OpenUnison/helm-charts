@@ -76,7 +76,6 @@ spec:
             image: "{{ .Values.cert_update_image }}"
             imagePullPolicy: {{ .Values.openunison.imagePullPolicy }}
             name: check-certs-{{ .Release.Name }}
-            resources: {}
             terminationMessagePath: /dev/termination-log
             terminationMessagePolicy: File
             {{ if .Values.services.resources }}

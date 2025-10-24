@@ -2311,6 +2311,40 @@ spec:
                 verifyRedirect:
                   type: boolean
                   description: If true, verifies if the redirect is accurate.  Should only be false in development environments.
+                enableClientCredentialsGrant:
+                  type: boolean
+                  description: Optional.  If true, this client supports the client credentials grant
+                isSts:
+                  type: boolean
+                  description: Optional.  If true, the Trust is a Security Token Service (STS).
+                stsImpersonation:
+                  type: boolean
+                  description: Required for STS, determines if this STS supports impersonation
+                stsDelegation:
+                  type: boolean
+                  description: Required for STS, determines if this STS supports delegation
+                clientAzRules:
+                  type: array
+                  description: Required for STS, if the authenticated client is authorized to use this STS
+                  items:
+                    type: string
+                authorizedAudiences:
+                  type: array
+                  description: Required for STS, which clients this STS can delegate to
+                  items:
+                    type: string
+                subjectAzRules:
+                  type: array
+                  description: Required for STS, if the subject being impersonated is authorized to use this STS
+                  items:
+                    type: string
+                tokenCookieName:
+                  type: string
+                  description: Optional. If set, an encrypted cookie with the access_token's id that can be used with the com.tremolosecurity.proxy.auth.CheckTokenCookie authentication mechanism
+                
+                
+                
+                
   scope: Namespaced
   names:
     plural: trusts
