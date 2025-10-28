@@ -118,7 +118,7 @@ spec:
   entryPoints:
     - {{ .Values.network.traefik.entrypoints.plaintext }}
   routes:
-    - match: HostRegexp(`{{ .Values.network.openunison_host }}`)
+    - match: Host(`{{ .Values.network.openunison_host }}`)
       kind: Rule 
       services:
         - name: openunison-{{ .Release.Name }}
@@ -128,7 +128,7 @@ spec:
           namespace: {{ .Release.Namespace }}
     {{- $root := . -}}
     {{ range $app := $root.Values.openunison.apps }}
-    - match: HostRegexp(`{{ (urlParse $app.badgeUrl).host }}`)
+    - match: Host(`{{ (urlParse $app.badgeUrl).host }}`)
       kind: Rule 
       services:
         - name: openunison-{{ $root.Release.Name }}
@@ -138,7 +138,7 @@ spec:
           namespace: {{ $root.Release.Namespace }}
     {{ end }}
     {{ if .Values.dashboard.enabled }}
-    - match: HostRegexp(`{{ .Values.network.dashboard_host }}`)
+    - match: Host(`{{ .Values.network.dashboard_host }}`)
       kind: Rule 
       services:
         - name: openunison-{{ .Release.Name }}
