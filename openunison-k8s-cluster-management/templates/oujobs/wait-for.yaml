@@ -15,7 +15,7 @@ spec:
     hours: '*'
     minutes: '*'
     month: '*'
-    seconds: '*/10'
+    seconds: '0'
     year: '*'
   group: admin-local
   params:
