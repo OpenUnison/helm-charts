@@ -1,0 +1,105 @@
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Workflow
+metadata:
+  name: clear-main-scheduler
+  namespace: {{ .Release.Namespace }}
+spec:
+  description: Clear all data from the quartz scheduler
+  inList: true
+  label: Clear all data from the quartz scheduler
+  orgId: ca5ad0bb-b207-41ad-93e4-cffab65dd37c
+  dynamicConfiguration:
+    dynamic: false
+    params: []
+  tasks: |-
+      - taskType: customTask
+        className: com.tremolosecurity.provisioning.customTasks.JavaScriptTask
+        params:
+            uidAttribute: uid
+            javaScript: |-
+                // if there's any pre-initialization code, you can put it here
+                ArrayList = Java.type("java.util.ArrayList");
+                System = Java.type("java.lang.System");
+                GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+                TremoloUser = Java.type("com.tremolosecurity.provisioning.service.util.TremoloUser");
+                Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+                HashSet = Java.type("java.util.HashSet");
+                HashMap = Java.type("java.util.HashMap");
+                WFCall = Java.type("com.tremolosecurity.provisioning.service.util.WFCall");
+                ProvisioningParams = Java.type("com.tremolosecurity.provisioning.core.ProvisioningParams");
+
+                ServiceActions = Java.type("com.tremolosecurity.provisioning.service.util.ServiceActions");
+                
+                // the init function is called when the workflow is loaded
+                // it is meant for loading configuration options.
+                // task - com.tremolosecurity.provisioning.core.WorkflowTask
+                // params - Map<String, Attribute>
+                function init(task,params) {
+                    state.put("workflow_obj",task.getWorkflow());
+                    state.put("task",task);
+                }
+
+                function reInit(task) {
+                    state.put("workflow_obj",task.getWorkflow());
+                    state.put("task",task);
+                }
+
+                // doTask is where you will do your work.  
+                // user - com.tremolosecurity.provisioning.core.User
+                // request - Map<String, Object>
+                function doTask(user,request) {
+                    
+                    var sql = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget("jitdb").getProvider().getDS().getConnection();
+                    try {
+                        stmt = sql.createStatement();
+                        stmt.executeUpdate("DELETE FROM QRTZ_FIRED_TRIGGERS");
+                        stmt.executeUpdate("DELETE FROM QRTZ_PAUSED_TRIGGER_GRPS");
+                        stmt.executeUpdate("DELETE FROM QRTZ_SCHEDULER_STATE");
+                        stmt.executeUpdate("DELETE FROM QRTZ_LOCKS");
+                        stmt.executeUpdate("DELETE FROM QRTZ_SIMPROP_TRIGGERS");
+                        stmt.executeUpdate("DELETE FROM QRTZ_CRON_TRIGGERS");
+                        stmt.executeUpdate("DELETE FROM QRTZ_BLOB_TRIGGERS");
+                        stmt.executeUpdate("DELETE FROM QRTZ_TRIGGERS");
+                        stmt.executeUpdate("DELETE FROM QRTZ_JOB_DETAILS");
+                        stmt.executeUpdate("DELETE FROM QRTZ_CALENDARS");
+
+                        {{- if and (hasKey .Values.openunison "non_secret_data") (hasKey (index .Values.openunison "non_secret_data") "tremolo.io/localscheduler.table.prefix") }}
+                            {{- $localschedulerPrefix := index .Values.openunison.non_secret_data "tremolo.io/localscheduler.table.prefix" }}
+                            stmt.executeUpdate("DELETE FROM {{ $localschedulerPrefix }}FIRED_TRIGGERS");
+                            stmt.executeUpdate("DELETE FROM {{ $localschedulerPrefix }}PAUSED_TRIGGER_GRPS");
+                            stmt.executeUpdate("DELETE FROM {{ $localschedulerPrefix }}SCHEDULER_STATE");
+                            stmt.executeUpdate("DELETE FROM {{ $localschedulerPrefix }}LOCKS");
+                            stmt.executeUpdate("DELETE FROM {{ $localschedulerPrefix }}SIMPROP_TRIGGERS");
+                            stmt.executeUpdate("DELETE FROM {{ $localschedulerPrefix }}CRON_TRIGGERS");
+                            stmt.executeUpdate("DELETE FROM {{ $localschedulerPrefix }}BLOB_TRIGGERS");
+                            stmt.executeUpdate("DELETE FROM {{ $localschedulerPrefix }}TRIGGERS");
+                            stmt.executeUpdate("DELETE FROM {{ $localschedulerPrefix }}JOB_DETAILS");
+                            stmt.executeUpdate("DELETE FROM {{ $localschedulerPrefix }}CALENDARS");
+                        {{ end }}
+
+                        {{- if and (hasKey .Values.openunison "non_secret_data") (hasKey (index .Values.openunison "non_secret_data") "tremolo.io/otherschedulers.table.prefix") }}
+                            {{- $prefixlist := index .Values.openunison.non_secret_data "tremolo.io/otherschedulers.table.prefix" }}
+                            {{- $prefixes := splitList " " $prefixlist }}
+                            {{- range $prefixes }}
+                            stmt.executeUpdate("DELETE FROM {{ . }}FIRED_TRIGGERS");
+                            stmt.executeUpdate("DELETE FROM {{ . }}PAUSED_TRIGGER_GRPS");
+                            stmt.executeUpdate("DELETE FROM {{ . }}SCHEDULER_STATE");
+                            stmt.executeUpdate("DELETE FROM {{ . }}LOCKS");
+                            stmt.executeUpdate("DELETE FROM {{ . }}SIMPROP_TRIGGERS");
+                            stmt.executeUpdate("DELETE FROM {{ . }}CRON_TRIGGERS");
+                            stmt.executeUpdate("DELETE FROM {{ . }}BLOB_TRIGGERS");
+                            stmt.executeUpdate("DELETE FROM {{ . }}TRIGGERS");
+                            stmt.executeUpdate("DELETE FROM {{ . }}JOB_DETAILS");
+                            stmt.executeUpdate("DELETE FROM {{ . }}CALENDARS");
+                            {{ end }}
+                        {{ end }}
+
+                        System.out.println("All Quartz scheduler data cleared successfully.");
+                    } finally {
+                        if (sql) {
+                            sql.close();
+                        }
+                    }
+                    return true;
+                }
