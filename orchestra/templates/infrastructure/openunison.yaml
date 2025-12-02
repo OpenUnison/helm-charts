@@ -7,7 +7,13 @@ metadata:
   namespace: {{ .Release.Namespace }}
   annotations:
     argocd.argoproj.io/sync-wave: "20"
+    {{ if .Values.openunison.auto_timestamp }}
     helm-update: {{ now | date "Jan 2 15:04:05 2006 MST" }}
+    {{ end }}
+
+    {{ if .Values.openunison.force_update }}
+    tremolo.io/force-update-from-chart: "{{ .Values.openunison.force_update }}"
+    {{ end }}
   labels:
     app.kubernetes.io/name: openunison
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
