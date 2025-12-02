@@ -16,7 +16,11 @@ spec:
   azTimeoutMillis: 3000
   cookieConfig:
     cookiesEnabled: false
+    {{ if $sts.host_in_openunison }}
+    domain: "{{ $sts.issuer.host }}"
+    {{ else }}
     domain: '#[OU_HOST]'
+    {{ end }}
     httpOnly: true
     keyAlias: session-unison
     logoutURI: /logout
@@ -98,19 +102,35 @@ spec:
             jwk.setAlgorithm("RS256");
 
 
-
+            {{ if $sts.host_in_openunison  }}
+            if (request.getRequestURI() == "/.well-known/openid-configuration") {
+              response.getWriter().println(gson.toJson(oidcDiscovery));  
+            } else if (request.getRequestURI() == "/certs") {
+              response.getWriter().println(new JsonWebKeySet(jwk).toJson());  
+            }
+            {{ else }}
             issuerdocs = {
               "discovery": gson.toJson(oidcDiscovery),
               "keys": new JsonWebKeySet(jwk).toJson()
             };
 
             response.getWriter().println(JSON.stringify(issuerdocs));
+            {{ end }}
 
           }
     hosts:
+    {{ if $sts.host_in_openunison }}
+    - "{{ $sts.issuer.host }}"
+    {{ else }}
     - '#[OU_HOST]'
+    {{ end }}
+    
     results: {}
+    {{ if $sts.host_in_openunison }}
+    uri: /
+    {{ else }}
     uri: {{ $sts.path }}/issuer-docs
+    {{ end }}
   - authChain: oauth2k8s-sts
     azRules:
     {{ if not (empty $sts.azRules) }}
