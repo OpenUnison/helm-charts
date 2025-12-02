@@ -31,6 +31,7 @@ spec:
           JString = Java.type("java.lang.String");
           JSUtils = Java.type("com.tremolosecurity.util.JSUtils");
           Base64 = Java.type("java.util.Base64");
+          Integer = Java.type("java.lang.Integer");
 
           function initFilter(config) {
 
@@ -73,9 +74,15 @@ spec:
             
 
             if (injectAws) {
+
                 var patches = [];
                 // add kerberos mounts and to each container
                 
+                if (metadata && metadata.annotations && metadata.annotations["tremolo.io/create-volume"] && metadata.annotations["tremolo.io/create-volume"] == "false"  ) {
+                    injectAwsMounts = false;
+                } else {
+                    injectAwsMounts = true;
+                }
                 
                 for (var i=0;i<pod.spec.containers.length;i++) {
                     env = pod.spec.containers[i].env;
@@ -97,6 +104,8 @@ spec:
                     );
 
                     
+                    
+
                     op = "replace";
                     var volumeMounts = pod.spec.containers[i].volumeMounts;
                     if (! volumeMounts) {
@@ -110,6 +119,8 @@ spec:
                             "readOnly": true
                         }
                     );
+
+                    
                     
 
                     patches.push(
@@ -130,19 +141,17 @@ spec:
                 var k8s = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget("k8s").getProvider();
                 var con = k8s.createClient();
 
-                /*
-                var principal = "";
+                var userid = 0;
+                var groupid = 0;
+                
+                if (metadata && metadata.annotations && metadata.annotations["tremolo.io/user"]   ) {
+                    userid = Integer.parseInt(metadata.annotations["tremolo.io/user"]);
+                } 
 
-                if (injectAwsMounts) {
-                    try {
-                        
-                    } finally {
-                        if (con != null) {
-                            con.getHttp().close();
-                            con.getBcm().close()
-                        }
-                    }
-                }*/
+                if (metadata && metadata.annotations && metadata.annotations["tremolo.io/group"]   ) {
+                    groupid = Integer.parseInt(metadata.annotations["tremolo.io/group"]);
+                } 
+
 
                 var sideCar = {
                     "image": "{{ $root.Values.sts.image }}",
@@ -190,9 +199,18 @@ spec:
 
                 };
 
+                if (userid > 0) {
+                    sideCar.securityContext.runAsUser = userid;
+                }
+
+                if (groupid > 0) {
+                    sideCar.securityContext.runAsGroup = groupid;
+                }
+
                 
                 var initContainers = pod.spec.initContainers;
                 if (! initContainers) {
+                    System.out.println("NO INIT CONTAINERS!!!!!");
                     patches.push(
                         {
                             "op":"add",
@@ -200,6 +218,59 @@ spec:
                             "value": []
                         }
                     );
+                } else {
+                    // need to add the sts token volume to all of the init containers/side cars
+                    System.out.println("there are init containers!!!!");
+                    for (var i=0;i<initContainers.length;i++) {
+                        env = initContainers[i].env;
+                        op = "replace";
+                        if (! env) {
+                            env = [];
+                            op = "add";
+                        }
+
+                        env.push({"name":"{{ $sts.injector.token_environment_variable_name }}","value":"/tokens/token.jwt"});
+                        env.push({"name":"{{ $sts.injector.label_value_environment_variable_name }}","value":awsRole});
+
+                        
+                        patches.push(
+                            {
+                                "op":op,
+                                "path":"/spec/initContainers/" + i + "/env",
+                                "value": env
+                            }
+                        );
+
+                        
+                        op = "replace";
+                        var volumeMounts = pod.spec.containers[i].volumeMounts;
+                        if (! volumeMounts) {
+                            op = "add";
+                            volumeMounts = [];
+                        }
+                        volumeMounts.push(
+                            {
+                                "mountPath":"/tokens",
+                                "name": "sts-tokens",
+                                "readOnly": true
+                            }
+                        );
+                        
+
+                        patches.push(
+                            {
+                                "op":op,
+                                "path":"/spec/initContainers/" + i + "/volumeMounts",
+                                "value": volumeMounts
+                            }
+                        );
+                        
+
+
+
+                    }
+                    
+                
                 }
 
                 patches.push(
@@ -213,6 +284,7 @@ spec:
 
 
                 // add volumes
+                
                 var volumes = pod.spec.volumes;
                 var op = "replace";
                 if (!volumes) {
@@ -220,14 +292,16 @@ spec:
                     op = "add";
                 }
 
-                volumes.push(
-                    {
-                        "name": "sts-tokens",
-                        "emptyDir": {
-                            
+                if (injectAwsMounts) {
+                    volumes.push(
+                        {
+                            "name": "sts-tokens",
+                            "emptyDir": {
+                                
+                            }
                         }
-                    }
-                );
+                    );
+                }
 
                 {{ if $sts.injector.explicit_certificate_trust }}
                 volumes.push(
@@ -240,14 +314,15 @@ spec:
                 );
                 {{ end }}
 
-                
-                patches.push(
-                    {
-                        "op":op,
-                        "path":"/spec/volumes",
-                        "value": volumes
-                    }
-                );
+                if (volumes.length > 0) {
+                    patches.push(
+                        {
+                            "op":op,
+                            "path":"/spec/volumes",
+                            "value": volumes
+                        }
+                    );
+                }
 
                 
                 admissionResp.response["patch"] = Base64.getEncoder().encodeToString(JSUtils.string2bytes(JSON.stringify(patches)));
