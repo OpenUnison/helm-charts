@@ -112,6 +112,11 @@ spec:
           - "#[K8S_URL]/redirect_uri"
           - "http://localhost:8000"
           - "http://localhost:18000"
+          {{ if .Values.openunison.k8sidp_additional_redirects }}
+          {{ range .Values.openunison.k8sidp_additional_redirects }}
+          - "{{ . }}"
+          {{ end }}
+          {{ end }}
           codeLastMileKeyName: lastmile-oidc
           authChainName: login-service
           codeTokenSkewMilis: "#[K8S_TOKEN_LIFE_MILLIS:60000]"

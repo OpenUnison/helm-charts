@@ -41,6 +41,9 @@ certs:
 
 trusted_certs: []
 
+headlamp:
+  enabled: false
+  service_name: headlamp
 
 #active_directory:
 #  base: cn=users,dc=ent2k12,dc=domain,dc=com
