@@ -1,0 +1,110 @@
+{{ if .Values.headlamp.enabled }}
+{{- $root := . -}}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Application
+metadata:
+  name: apis
+  namespace: {{ $root.Release.Namespace }}
+spec:
+  azTimeoutMillis: 3000
+  isApp: true
+  urls:
+  - hosts:
+    - "#[OU_HOST]"
+    filterChain:
+    - className: com.tremolosecurity.proxy.filters.JavaScriptFilter
+      params:
+        javaScript: |-
+          GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+          HashMap = Java.type("java.util.HashMap");
+          System = Java.type("java.lang.System");
+          JwtClaims = Java.type("org.jose4j.jwt.JwtClaims");
+          JsonWebSignature = Java.type("org.jose4j.jws.JsonWebSignature");
+          ProxyConstants = Java.type("com.tremolosecurity.proxy.util.ProxyConstants");
+          AlgorithmIdentifiers = Java.type("org.jose4j.jws.AlgorithmIdentifiers");
+          Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+
+          
+          function initFilter(config) {
+
+          }
+
+          function doFilter(request,response,chain) {
+            var url = request.getRequestURL();
+
+            var userData = (request.getSession().getAttribute(ProxyConstants.AUTH_CTL)).getAuthInfo();
+            var sub = userData.getAttribs().get("sub").getValues().get(0);
+            var groups = userData.getAttribs().get("groups").getValues();
+
+            var allowedNamespaces = [];
+
+            AddPortalRolesToUserData = Java.type("com.tremolosecurity.proxy.auth.AddPortalRolesToUserData");
+            var clusterAz = request.getSession().getAttribute(AddPortalRolesToUserData.NS_SESSION_NAME);
+
+            System.out.println("******************" + clusterAz);
+            
+
+            
+            
+            // get the local cluster only
+            var localDeployment = clusterAz["#[K8S_DEPLOYMENT_NAME:Local Deployment]"];
+            System.out.println(localDeployment);
+
+            // check if the user is an administrator
+            var clusterLevel = localDeployment.getNamespaces().get("N/A");
+            
+
+            if (clusterLevel != null && clusterLevel.get("Administrators")) {
+              allowedNamespaces = [];
+            } else {
+              it = localDeployment.getNamespaces().keySet().iterator();
+              while (it.hasNext()) {
+                  const ns = it.next();
+                  if (ns != "N/A") {
+                      allowedNamespaces.push(ns);
+                  }
+                  
+              }
+
+              if (allowedNamespaces.length == 0) {
+                // there are no allowed namespaces, add a fake one
+                allowedNamespaces.push("this!is!not!a!real!namespace");
+              }
+            }
+            
+            response.getWriter().print(JSON.stringify({"namespaces":allowedNamespaces}));
+            
+
+          }
+    uri: "/apis/namespaces"
+    proxyTo: ""
+    authChain: login-service
+    azRules:
+    {{ if .Values.openunison.naas.azRules }}
+    {{ range .Values.openunison.naas.azRules }}
+    - scope: {{ .scope }}
+      constraint: {{ .constraint }}
+    {{ end }}
+    {{ else }}
+    - scope: dn
+      constraint: o=Tremolo
+    {{ end }}
+    {{ $length := len .Values.openunison.extra_az_groups }}
+    {{ if eq $length 0 }}
+    {{ else }}
+    {{ range $az_group := .Values.openunison.extra_az_groups }}
+    - scope: filter
+      constraint: (groups={{ $az_group }})
+    {{ end }}
+    {{ end }}
+
+  cookieConfig:
+    sessionCookieName: tremolosession
+    domain: "#[OU_HOST]"
+    secure: true
+    httpOnly: true
+    logoutURI: "/logout"
+    timeout: {{ $root.Values.network.session_inactivity_timeout_seconds }}
+    keyAlias: session-unison
+{{ end }}

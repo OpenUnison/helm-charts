@@ -188,6 +188,33 @@ spec:
           tls_secret_name: {{ .Values.dashboard.cert_name }}
           replace_if_exists: true
         {{ end }}
+        {{ if .Values.headlamp.enabled }}
+        - create_data:
+            {{ if .Values.certs.use_k8s_cm }}
+            ca_cert: false
+            {{ else }}
+            ca_cert: true
+            {{ end }}
+            key_size: 2048
+            server_name: {{ .Values.headlamp.service_name }}.{{ .Release.Namespace }}.svc
+            sign_by_k8s_ca: {{ .Values.certs.use_k8s_cm }}
+            subject_alternative_names: []
+            target_namespace: {{ .Release.Namespace }}
+            secret_info:
+              type_of_secret: Opaque
+              cert_name: tls.crt
+              key_name: tls.key
+            delete_pods_labels:
+            - app.kubernetes.io/name=headlamp
+          {{ if .Values.certs.use_k8s_cm  }}
+          import_into_ks: "none"
+          {{ else }}
+          import_into_ks: "certificate"
+          {{ end }}
+          name: headlamp
+          tls_secret_name: {{ .Values.headlamp.cert_name }}
+          replace_if_exists: true
+        {{ end }}
         - create_data:
             ca_cert: true
             key_size: 2048

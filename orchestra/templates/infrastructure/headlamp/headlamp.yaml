@@ -1,0 +1,183 @@
+{{ if .Values.headlamp.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: headlamp
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: headlamp
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
+  namespace: {{ .Release.Namespace }}
+spec:
+  progressDeadlineSeconds: 600
+  replicas: {{ .Values.openunison.replicas }}
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: headlamp
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app.kubernetes.io/name: headlamp
+    spec:
+      automountServiceAccountToken: true
+      containers:
+      - args:
+        - -in-cluster
+        - -plugins-dir=/headlamp/plugins
+        - -base-url=/headlamp
+        - -tls-cert-path=/etc/tls-keys/tls.crt
+        - -tls-key-path=/etc/tls-keys/tls.key
+        image: {{ .Values.headlamp.image }}
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: tls-keys
+          mountPath: "/etc/tls-keys"
+          readOnly: true
+        - name: homedir
+          mountPath: /home/headlamp/.config
+        - name: tmpdir
+          mountPath: /tmp
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /headlamp/
+            port: http
+            scheme: HTTPS
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: headlamp
+        ports:
+        - containerPort: 4466
+          name: http
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /headlamp/
+            port: http
+            scheme: HTTPS
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        {{ if .Values.services.resources }}
+        resources:
+          {{ if .Values.services.resources.requests }}
+          requests: 
+            {{ if .Values.services.resources.requests.memory }}
+            memory: {{ .Values.services.resources.requests.memory | quote }}
+            {{ end }}
+            
+            {{ if .Values.services.resources.requests.cpu }}
+            cpu: {{ .Values.services.resources.requests.cpu | quote }}
+            {{ end }}
+          
+          {{ end }}
+
+          {{ if .Values.services.resources.limits }}
+          limits: 
+            {{ if .Values.services.resources.limits.memory }}
+            memory: {{ .Values.services.resources.limits.memory | quote }}
+            {{ end }}
+            
+            {{ if .Values.services.resources.limits.cpu }}
+            cpu: {{ .Values.services.resources.limits.cpu | quote }}
+            {{ end }}
+          
+          {{ end }}
+        {{ end }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - "ALL"
+          readOnlyRootFilesystem: true
+          privileged: false
+          {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+          runAsNonRoot: true
+          {{ else }}
+          seccompProfile:
+            type: RuntimeDefault
+          runAsNonRoot: true
+          runAsUser: 100
+          runAsGroup: 101
+          {{ end }}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      securityContext: {}
+      serviceAccount: headlamp
+      serviceAccountName: headlamp
+      terminationGracePeriodSeconds: 30
+      {{- if .Values.services.tolerations }}
+      tolerations:
+      {{- range .Values.services.tolerations }}
+      - {{- if .key }}
+        key: {{ .key }}
+        {{- end }}
+        {{- if .effect }}
+        effect: {{ .effect }}
+        {{- end }}
+        {{- if .operator }}
+        operator: {{ .operator }}
+        {{- end }}
+        {{- if .value }}
+        value: {{ .value }}
+        {{- end }}
+      {{- end }}
+      {{- end }}
+      {{ $length := len .Values.services.node_selectors }}
+      {{ if eq $length 0  }}
+      nodeSelector: {}
+      {{ else }}
+      nodeSelector: {{ range $key,$value := .Values.services.node_selectors }}
+        {{ $key }}: {{ $value | quote }}
+      {{ end }}
+      {{ end }}
+      {{ if .Values.services.pullSecret }}
+      imagePullSecrets:
+      - name: {{  .Values.services.pullSecret | quote }}
+      {{ end }}
+      {{ if .Values.services.affinity }}
+      affinity:
+        {{- toYaml .Values.services.affinity | nindent 8 }}
+      {{ end }}
+      {{ if .Values.network.enableHostNetwork }}
+      hostNetwork: true
+      {{ else }}
+      hostNetwork: false
+      {{ end }}
+      volumes:
+      - name: tls-keys
+        secret:
+            secretName: headlamp-tls
+      - name: homedir
+        emptyDir: {}
+      - name: tmpdir
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.headlamp.service_name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 4466
+  selector:
+    app.kubernetes.io/name: headlamp
+{{ end }}
