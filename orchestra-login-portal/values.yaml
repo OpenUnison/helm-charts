@@ -113,6 +113,7 @@ services:
   - "alive"
 
 openunison:
+  additional_api_servers: []
   enable_end_session: true
   jit_grace_period: 0
   extra_az_groups: []
