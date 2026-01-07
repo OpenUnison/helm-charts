@@ -181,7 +181,7 @@ spec:
       nameAttr: uid
       workflowName: "{{ .Values.openunison.post_jit_workflow }}"
 {{ end }}
-{{ if not .Values.openunison.naas.groupsFromMyVD }}
+{{ if and ( not .Values.openunison.naas.groupsFromMyVD )  .Values.openunison.enable_provisioning }}
   - name: portal-groups
     required: required
     params: {}

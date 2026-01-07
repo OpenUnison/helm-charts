@@ -1,0 +1,62 @@
+{{ if .Values.headlamp.enabled }}
+{{- $root := . -}}
+---
+apiVersion: openunison.tremolo.io/v1
+kind: Application
+metadata:
+  name: headlamp
+  namespace: {{ $root.Release.Namespace }}
+spec:
+  azTimeoutMillis: 3000
+  isApp: true
+  urls:
+  - hosts:
+    - "#[OU_HOST]"
+    filterChain:
+    - className: com.tremolosecurity.proxy.filters.HideCookie
+    - className: com.tremolosecurity.proxy.filters.SetNoCacheHeaders
+    
+    {{ if $root.Values.enable_impersonation }}
+    - className: com.tremolosecurity.proxy.filters.K8sInjectImpersonation
+      params:
+        targetName: k8s
+        userNameAttribute: sub
+        useLdapGroups: "false"
+        groupAttribute: groups
+    {{ end }}
+    uri: "/headlamp"
+    proxyTo: https://{{ .Values.headlamp.service_name }}.{{ .Release.Namespace}}.svc${fullURI}
+    authChain: login-service
+    azRules:
+    {{ if .Values.openunison.naas.azRules }}
+    {{ range .Values.openunison.naas.azRules }}
+    - scope: {{ .scope }}
+      constraint: {{ .constraint }}
+    {{ end }}
+    {{ else }}
+    - scope: dn
+      constraint: o=Tremolo
+    {{ end }}
+    {{ $length := len .Values.openunison.extra_az_groups }}
+    {{ if eq $length 0 }}
+    {{ else }}
+    {{ range $az_group := .Values.openunison.extra_az_groups }}
+    - scope: filter
+      constraint: (groups={{ $az_group }})
+    {{ end }}
+    {{ end }}
+
+{{ if not $root.Values.enable_impersonation }}
+    results:
+      azSuccess: oauth2bearer
+{{ end }}
+
+  cookieConfig:
+    sessionCookieName: tremolosession
+    domain: "#[OU_HOST]"
+    secure: true
+    httpOnly: true
+    logoutURI: "/logout"
+    timeout: {{ $root.Values.network.session_inactivity_timeout_seconds }}
+    keyAlias: session-unison
+{{ end }}

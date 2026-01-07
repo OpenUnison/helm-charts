@@ -37,6 +37,12 @@ enable_impersonation: true
 myvd_configmap: myvd
 cert_update_image: "ghcr.io/openunison/openunison-kubernetes-operator:1.0.7"
 
+headlamp:
+  enabled: false
+  service_name: headlamp
+  cert_name: headlamp-tls
+  image: ghcr.io/headlamp-k8s/headlamp:v0.38.0
+
 dashboard:
   namespace: "kubernetes-dashboard"
   cert_name: "kubernetes-dashboard-certs"
