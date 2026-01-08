@@ -72,28 +72,34 @@ spec:
             {{ if .Values.services.resources }}
             resources:
               {{ if .Values.services.resources.requests }}
-              requests: 
+              requests:
                 {{ if .Values.services.resources.requests.memory }}
                 memory: {{ .Values.services.resources.requests.memory | quote }}
                 {{ end }}
-                
+
                 {{ if .Values.services.resources.requests.cpu }}
                 cpu: {{ .Values.services.resources.requests.cpu | quote }}
                 {{ end }}
-              
+
+              {{ else }}
+              requests: {}
               {{ end }}
 
               {{ if .Values.services.resources.limits }}
-              limits: 
+              limits:
                 {{ if .Values.services.resources.limits.memory }}
                 memory: {{ .Values.services.resources.limits.memory | quote }}
                 {{ end }}
-                
+
                 {{ if .Values.services.resources.limits.cpu }}
                 cpu: {{ .Values.services.resources.limits.cpu | quote }}
                 {{ end }}
-              
+
+              {{ else }}
+              limits: {}
               {{ end }}
+            {{ else }}
+            resources: {}
             {{ end }}
           dnsPolicy: ClusterFirst
           restartPolicy: Never
