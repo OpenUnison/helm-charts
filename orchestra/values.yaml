@@ -41,7 +41,15 @@ headlamp:
   enabled: false
   service_name: headlamp
   cert_name: headlamp-tls
-  image: ghcr.io/headlamp-k8s/headlamp:v0.38.0
+  image: ghcr.io/headlamp-k8s/headlamp:v0.39.0
+  config:
+    enableHelm: true
+  pluginConfig:
+    enabled: false
+  pluginsManager:
+    enabled: false
+    baseImage: node:lts-alpine
+    version: latest
 
 dashboard:
   namespace: "kubernetes-dashboard"

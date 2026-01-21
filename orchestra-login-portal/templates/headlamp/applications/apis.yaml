@@ -10,6 +10,7 @@ spec:
   azTimeoutMillis: 3000
   isApp: true
   urls:
+  {{ if $root.Values.openunison.enable_provisioning }}
   - hosts:
     - "#[OU_HOST]"
     filterChain:
@@ -98,7 +99,69 @@ spec:
       constraint: (groups={{ $az_group }})
     {{ end }}
     {{ end }}
+  {{ end }}
+  - hosts:
+    - "#[OU_HOST]"
+    filterChain:
+    - className: com.tremolosecurity.proxy.filters.JavaScriptFilter
+      params:
+        javaScript: |-
+          GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+          HashMap = Java.type("java.util.HashMap");
+          System = Java.type("java.lang.System");
+          JwtClaims = Java.type("org.jose4j.jwt.JwtClaims");
+          JsonWebSignature = Java.type("org.jose4j.jws.JsonWebSignature");
+          ProxyConstants = Java.type("com.tremolosecurity.proxy.util.ProxyConstants");
+          AlgorithmIdentifiers = Java.type("org.jose4j.jws.AlgorithmIdentifiers");
+          Attribute = Java.type("com.tremolosecurity.saml.Attribute");
 
+          
+          function initFilter(config) {
+
+          }
+
+          function doFilter(request,response,chain) {
+            var url = request.getRequestURL();
+
+            var userData = (request.getSession().getAttribute(ProxyConstants.AUTH_CTL)).getAuthInfo();
+            var sub = userData.getAttribs().get("sub").getValues().get(0);
+            var groups = userData.getAttribs().get("groups").getValues();
+
+            const groupsList = [];
+
+            groups.forEach(group => groupsList.push(group));
+
+            const me = {
+              "user": sub,
+              "preferred_username": sub,
+              "groups": groupsList
+            };
+            
+            response.getWriter().print(JSON.stringify(me));
+            
+
+          }
+    uri: "/apis/me"
+    proxyTo: ""
+    authChain: login-service
+    azRules:
+    {{ if .Values.openunison.naas.azRules }}
+    {{ range .Values.openunison.naas.azRules }}
+    - scope: {{ .scope }}
+      constraint: {{ .constraint }}
+    {{ end }}
+    {{ else }}
+    - scope: dn
+      constraint: o=Tremolo
+    {{ end }}
+    {{ $length := len .Values.openunison.extra_az_groups }}
+    {{ if eq $length 0 }}
+    {{ else }}
+    {{ range $az_group := .Values.openunison.extra_az_groups }}
+    - scope: filter
+      constraint: (groups={{ $az_group }})
+    {{ end }}
+    {{ end }}
   cookieConfig:
     sessionCookieName: tremolosession
     domain: "#[OU_HOST]"

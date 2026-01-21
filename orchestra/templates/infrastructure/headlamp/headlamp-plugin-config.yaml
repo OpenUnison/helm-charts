@@ -1,0 +1,9 @@
+{{- if .Values.headlamp.pluginsManager.enabled -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: headlamp-plugin-config
+  namespace: {{ .Release.Namespace }}
+data:
+  plugin.yml: |{{ .Values.headlamp.pluginsManager.configContent | nindent 4 }}
+{{- end }}
