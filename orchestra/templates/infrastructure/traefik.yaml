@@ -1,102 +1,93 @@
 {{ if eq .Values.network.ingress_type "traefik" }}
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
 metadata:
-  annotations:
-    argocd.argoproj.io/sync-wave: "20"
-    traefik.ingress.kubernetes.io/router.entrypoints: "{{ .Values.network.traefik.entrypoints.tls }}"
-    traefik.ingress.kubernetes.io/router.tls: "true"
-    {{ range $key,$value := .Values.network.ingress_annotations }}
-    {{ $key }}: {{ quote $value }}
-    {{ end }}
-  name: openunison-{{ .Release.Name }}
+  name: sticky-cookie
   namespace: {{ .Release.Namespace }}
-  labels:
-    app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
-    app.kubernetes.io/component: ingress-traefik
-    app.kubernetes.io/part-of: openunison
 spec:
-  ingressClassName: traefik
-  rules:
-  - host: {{ .Values.network.openunison_host }}
-    http:
-      paths:
-      - backend:
-          service:
-            name: openunison-{{ .Release.Name }}
-            port:
-              {{ if .Values.network.traefik.secure }} 
-              
-              name: https-{{ .Release.Name }}
-              {{ else }}
-              number: 80
-              {{ end }}
-        path: "/"
-        pathType: Prefix
-  {{ if .Values.dashboard.enabled }}
-  - host: {{ .Values.network.dashboard_host }}
-    http:
-      paths:
-      - backend:
-          service:
-            name: openunison-{{ .Release.Name }}
-            port:
-              {{ if .Values.network.traefik.secure }} 
-              
-              name: https-{{ .Release.Name }}
-              {{ else }}
-              number: 80
-              {{ end }}
-        path: "/"
-        pathType: Prefix
-  {{ end }}
-  {{- $root := . -}}
-  {{ range $app := $root.Values.openunison.apps }}
-  - host: {{ (urlParse $app.badgeUrl).host }}
-    http:
-      paths:
-      - backend:
-          service:
-            name: openunison-{{ $root.Release.Name }}
-            port:
-              {{ if $root.Values.network.traefik.secure }} 
-              
-              name: https-{{ $root.Release.Name }}
-              {{ else }}
-              number: 80
-              {{ end }}
-        path: "/"
-        pathType: Prefix
-  {{ end }}
-  {{ if eq .Values.enable_impersonation true }}
-  - host: {{ .Values.network.api_server_host }}
-    http:
-      paths:
-      - backend:
-          service:
-            {{ if eq .Values.impersonation.use_jetstack true }}
-            name: kube-oidc-proxy-{{ .Release.Name }}
-            {{ else }}
-            name: openunison-{{ .Release.Name }}
-            {{ end }}
-            port:
-              number: 443
-        path: "/"
-        pathType: Prefix
-  {{ end }}
+  stickySession:
+    cookie:
+      name: openunison_sticky
+      httpOnly: true
+      secure: true
+      sameSite: none
+      path: /
+---
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: reencrypt
+  namespace: {{ .Release.Namespace }}
+spec:
+  insecureSkipVerify: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: https-openunison-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  entryPoints:
+    - {{ .Values.network.traefik.entrypoints.tls }}
   tls:
-  - hosts:
-    - {{ .Values.network.openunison_host }}
-    - {{ .Values.network.dashboard_host }}
-    {{ if eq .Values.enable_impersonation true }}
-    - {{ .Values.network.api_server_host }}
-    {{ end }}
-    {{ range $app := $root.Values.openunison.apps }}
-    - {{ (urlParse $app.badgeUrl).host }}
-    {{ end }}
     secretName: ou-tls-certificate
+  routes:
+    - match: Host(`{{ .Values.network.openunison_host }}`)
+      kind: Rule 
+      services:
+        - name: openunison-{{ .Release.Name }}
+          port: 443
+          scheme: https
+          serversTransport: reencrypt
+          sticky:
+            cookie:
+              secure: true 
+              httpOnly: true 
+              sameSite: "none"
+    {{- $root := . -}}
+    {{ range $app := $root.Values.openunison.apps }}
+    - match: Host(`{{ (urlParse $app.badgeUrl).host }}`)
+      kind: Rule 
+      services:
+        - name: openunison-{{ $root.Release.Name }}
+          port: 443
+          scheme: https
+          serversTransport: reencrypt
+          sticky:
+            cookie:
+              secure: true 
+              httpOnly: true 
+              sameSite: "none"
+    {{ end }}
+    {{ if .Values.dashboard.enabled }}
+    - match: Host(`{{ .Values.network.dashboard_host }}`)
+      kind: Rule 
+      services:
+        - name: openunison-{{ .Release.Name }}
+          port: 443
+          scheme: https
+          serversTransport: reencrypt
+          sticky:
+            cookie:
+              secure: true 
+              httpOnly: true 
+              sameSite: "none"
+    {{ end }}
+    {{ if eq .Values.enable_impersonation true }}
+    - match: Host(`{{ .Values.network.api_server_host }}`)
+      kind: Rule 
+      services:
+        {{ if eq .Values.impersonation.use_jetstack true }}
+        - name: kube-oidc-proxy-{{ .Release.Name }}
+        {{ else }}
+        - name: openunison-{{ .Release.Name }}
+        {{ end }}
+          port: 443
+          scheme: https
+          serversTransport: reencrypt
+    {{ end }}
+
 ---
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
@@ -108,6 +99,7 @@ spec:
     scheme: https
     permanent: true
     port: "443"
+
 ---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
@@ -118,7 +110,7 @@ spec:
   entryPoints:
     - {{ .Values.network.traefik.entrypoints.plaintext }}
   routes:
-    - match: HostRegexp(`{{ .Values.network.openunison_host }}`)
+    - match: Host(`{{ .Values.network.openunison_host }}`)
       kind: Rule 
       services:
         - name: openunison-{{ .Release.Name }}
@@ -128,7 +120,7 @@ spec:
           namespace: {{ .Release.Namespace }}
     {{- $root := . -}}
     {{ range $app := $root.Values.openunison.apps }}
-    - match: HostRegexp(`{{ (urlParse $app.badgeUrl).host }}`)
+    - match: Host(`{{ (urlParse $app.badgeUrl).host }}`)
       kind: Rule 
       services:
         - name: openunison-{{ $root.Release.Name }}
@@ -138,7 +130,7 @@ spec:
           namespace: {{ $root.Release.Namespace }}
     {{ end }}
     {{ if .Values.dashboard.enabled }}
-    - match: HostRegexp(`{{ .Values.network.dashboard_host }}`)
+    - match: Host(`{{ .Values.network.dashboard_host }}`)
       kind: Rule 
       services:
         - name: openunison-{{ .Release.Name }}
