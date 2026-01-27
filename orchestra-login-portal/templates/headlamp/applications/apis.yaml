@@ -10,6 +10,7 @@ spec:
   azTimeoutMillis: 3000
   isApp: true
   urls:
+  {{ if $root.Values.openunison.enable_provisioning }}
   - hosts:
     - "#[OU_HOST]"
     filterChain:
@@ -42,14 +43,14 @@ spec:
             AddPortalRolesToUserData = Java.type("com.tremolosecurity.proxy.auth.AddPortalRolesToUserData");
             var clusterAz = request.getSession().getAttribute(AddPortalRolesToUserData.NS_SESSION_NAME);
 
-            System.out.println("******************" + clusterAz);
+            
             
 
             
             
             // get the local cluster only
             var localDeployment = clusterAz["#[K8S_DEPLOYMENT_NAME:Local Deployment]"];
-            System.out.println(localDeployment);
+            
 
             // check if the user is an administrator
             var clusterLevel = localDeployment.getNamespaces().get("N/A");
@@ -98,7 +99,507 @@ spec:
       constraint: (groups={{ $az_group }})
     {{ end }}
     {{ end }}
+  {{ else if $root.Values.headlamp.namespace_api.test.enabled }}
 
+  - hosts:
+    - "#[OU_HOST]"
+    filterChain:
+    {{ if $root.Values.enable_impersonation }}
+    - className: com.tremolosecurity.proxy.filters.K8sInjectImpersonation
+      params:
+        targetName: k8s
+        userNameAttribute: sub
+        useLdapGroups: "false"
+        groupAttribute: groups
+    {{ end }}
+    - className: com.tremolosecurity.proxy.filters.JavaScriptFilter
+      params:
+        javaScript: |-
+          GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+          HashMap = Java.type("java.util.HashMap");
+          System = Java.type("java.lang.System");
+          JwtClaims = Java.type("org.jose4j.jwt.JwtClaims");
+          JsonWebSignature = Java.type("org.jose4j.jws.JsonWebSignature");
+          ProxyConstants = Java.type("com.tremolosecurity.proxy.util.ProxyConstants");
+          AlgorithmIdentifiers = Java.type("org.jose4j.jws.AlgorithmIdentifiers");
+          Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+          ArrayList = Java.type("java.util.ArrayList");
+          
+          function initFilter(config) {
+
+          }
+
+          function loadResourceAsUser(req,url) {
+            const HttpClient = Java.type('java.net.http.HttpClient');
+            const HttpRequest = Java.type('java.net.http.HttpRequest');
+            const HttpResponse = Java.type('java.net.http.HttpResponse');
+            const URI = Java.type('java.net.URI');
+            const Duration = Java.type('java.time.Duration');
+
+            /*if (typeof req === 'undefined' || req === null) {
+              throw new Error("Missing global 'req' (HttpServletRequest)");
+            }
+            if (typeof url !== 'string' || !url) {
+              throw new Error("Missing global 'url' (string)");
+            }
+            if (typeof json !== 'string') {
+              throw new Error("Missing global 'json' (string containing JSON)");
+            }*/
+
+            // Build HttpClient
+            const client = HttpClient.newBuilder()
+              .connectTimeout(Duration.ofSeconds(10))
+              .followRedirects(HttpClient.Redirect.NEVER)
+              .build();
+
+            // Build request
+            let builder = HttpRequest.newBuilder()
+              .uri(URI.create(url))
+              .timeout(Duration.ofSeconds(30))
+              .header('Accept', 'application/json')
+              .GET();
+
+            // Forward Authorization header (if present)
+            // Use getHeader() to preserve original casing/format.
+            const auth = req.getHeader('Authorization');
+            
+            if (auth) {
+              builder = builder.header('Authorization', auth.getValues().get(0));
+            }
+
+            // Forward Impersonate* headers (case-insensitive check)
+            // This will include e.g.:
+            //   Impersonate-User, Impersonate-Group, Impersonate-Extra-*, etc.
+            const headerNamesEnum = req.getHeaderNames();
+            while (headerNamesEnum.hasNext()) {
+              const name = String(headerNamesEnum.next());
+              if (name.toLowerCase().startsWith('impersonate')) {
+                const valuesEnum = req.getHeader(name);
+                valuesEnum.getValues().forEach(v => {
+                  // Multiple values for same header are allowed; Java HttpRequest supports repeated header() calls.
+                  builder = builder.header(name, v);
+                });
+              }
+            }
+
+            const request = builder.build();
+
+            // Send request (synchronous)
+            const response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            // Return a simple JS object
+            const headersMap = {};
+            const javaHeaders = response.headers().map(); // Map<String, List<String>>
+            const it = javaHeaders.entrySet().iterator();
+            while (it.hasNext()) {
+              const e = it.next();
+              headersMap[String(e.getKey())] = Java.from(e.getValue()); // convert List<String> -> JS array
+            }
+
+            return {
+              status: response.statusCode(),
+              headers: headersMap,
+              body: response.body()
+            };
+          }
+
+          function doFilter(request,response,chain) {
+            var url = request.getRequestURL();
+
+            var userData = (request.getSession().getAttribute(ProxyConstants.AUTH_CTL)).getAuthInfo();
+            var sub = userData.getAttribs().get("sub").getValues().get(0);
+            var groups = userData.getAttribs().get("groups") != null ? userData.getAttribs().get("groups").getValues() : new ArrayList();
+
+            var allowedNamespaces = [];
+
+            // first check if the user is a member of any administrator groups
+            const adminGroupSet = {};
+            {{ range .Values.headlamp.namespace_api.test.admin_groups }}
+            adminGroupSet["{{ . }}"] = "x";
+            {{ end }}
+
+            var foundAdmin = false;
+
+            groups.forEach(group => {
+              if (adminGroupSet[group]) {
+                foundAdmin = true;
+              }
+            })
+
+            // user is not an admin, let's test the namespaces
+            if (! foundAdmin) {
+              const k8s = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget("k8s").getProvider();
+              const http = k8s.createClient();
+
+              var foundAllowedNs = false;
+
+              try {
+                const nsUri = '/api/v1/namespaces';
+                var namespaces = JSON.parse(k8s.callWS(k8s.getAuthToken(),http,nsUri));
+                namespaces.items.forEach(ns => {
+                  const nsName = ns.metadata.name;
+                  
+
+                  const testUri = k8s.getUrl() + "/api/v1/namespaces/" + nsName + "/configmaps/kube-root-ca.crt";
+                  checkResp = loadResourceAsUser(request,testUri);
+            
+            
+                  if (checkResp.status != 401 && checkResp.status != 403) {
+                    allowedNamespaces.push(nsName);
+                    foundAllowedNs = true;
+                  }
+                });
+              } finally {
+                if (http != null) {
+                  http.getHttp().close();
+                  http.getBcm().close();
+                }
+              }
+
+              if (! foundAllowedNs) {
+                allowedNamespaces.push("no allowed namespaces");
+              }
+
+            
+            }
+            
+            response.getWriter().print(JSON.stringify({"namespaces":allowedNamespaces}));
+            
+
+          }
+    uri: "/apis/namespaces"
+    proxyTo: ""
+    authChain: login-service
+    {{ if not $root.Values.enable_impersonation }}
+    results:
+      azSuccess: oauth2bearer
+    {{ end }}
+    azRules:
+    {{ if .Values.openunison.naas.azRules }}
+    {{ range .Values.openunison.naas.azRules }}
+    - scope: {{ .scope }}
+      constraint: {{ .constraint }}
+    {{ end }}
+    {{ else }}
+    - scope: dn
+      constraint: o=Tremolo
+    {{ end }}
+    {{ $length := len .Values.openunison.extra_az_groups }}
+    {{ if eq $length 0 }}
+    {{ else }}
+    {{ range $az_group := .Values.openunison.extra_az_groups }}
+    - scope: filter
+      constraint: (groups={{ $az_group }})
+    {{ end }}
+    {{ end }}
+  
+  {{ else if $root.Values.headlamp.namespace_api.all_namespaces.enabled }}
+
+  - hosts:
+    - "#[OU_HOST]"
+    filterChain:
+    - className: com.tremolosecurity.proxy.filters.JavaScriptFilter
+      params:
+        javaScript: |-
+          GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+          HashMap = Java.type("java.util.HashMap");
+          System = Java.type("java.lang.System");
+          JwtClaims = Java.type("org.jose4j.jwt.JwtClaims");
+          JsonWebSignature = Java.type("org.jose4j.jws.JsonWebSignature");
+          ProxyConstants = Java.type("com.tremolosecurity.proxy.util.ProxyConstants");
+          AlgorithmIdentifiers = Java.type("org.jose4j.jws.AlgorithmIdentifiers");
+          Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+          ArrayList = Java.type("java.util.ArrayList");
+          
+          function initFilter(config) {
+
+          }
+
+          
+
+          function doFilter(request,response,chain) {
+            var url = request.getRequestURL();
+
+            var userData = (request.getSession().getAttribute(ProxyConstants.AUTH_CTL)).getAuthInfo();
+            var sub = userData.getAttribs().get("sub").getValues().get(0);
+            var groups = userData.getAttribs().get("groups") != null ? userData.getAttribs().get("groups").getValues() : new ArrayList();
+
+            var allowedNamespaces = [];
+
+            
+
+            
+            const k8s = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget("k8s").getProvider();
+            const http = k8s.createClient();
+
+            var foundAllowedNs = false;
+
+            try {
+              const nsUri = '/api/v1/namespaces';
+              var namespaces = JSON.parse(k8s.callWS(k8s.getAuthToken(),http,nsUri));
+              namespaces.items.forEach(ns => {
+                const nsName = ns.metadata.name;
+                allowedNamespaces.push(nsName);
+              });
+            } finally {
+              if (http != null) {
+                http.getHttp().close();
+                http.getBcm().close();
+              }
+            }
+            
+            response.getWriter().print(JSON.stringify({"namespaces":allowedNamespaces}));
+            
+
+          }
+    uri: "/apis/namespaces"
+    proxyTo: ""
+    authChain: login-service
+    azRules:
+    {{ if .Values.openunison.naas.azRules }}
+    {{ range .Values.openunison.naas.azRules }}
+    - scope: {{ .scope }}
+      constraint: {{ .constraint }}
+    {{ end }}
+    {{ else }}
+    - scope: dn
+      constraint: o=Tremolo
+    {{ end }}
+    {{ $length := len .Values.openunison.extra_az_groups }}
+    {{ if eq $length 0 }}
+    {{ else }}
+    {{ range $az_group := .Values.openunison.extra_az_groups }}
+    - scope: filter
+      constraint: (groups={{ $az_group }})
+    {{ end }}
+    {{ end }}
+
+  {{ else if $root.Values.headlamp.namespace_api.no_namespaces.enabled }}
+
+  - hosts:
+    - "#[OU_HOST]"
+    filterChain:
+    - className: com.tremolosecurity.proxy.filters.JavaScriptFilter
+      params:
+        javaScript: |-
+          GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+          HashMap = Java.type("java.util.HashMap");
+          System = Java.type("java.lang.System");
+          JwtClaims = Java.type("org.jose4j.jwt.JwtClaims");
+          JsonWebSignature = Java.type("org.jose4j.jws.JsonWebSignature");
+          ProxyConstants = Java.type("com.tremolosecurity.proxy.util.ProxyConstants");
+          AlgorithmIdentifiers = Java.type("org.jose4j.jws.AlgorithmIdentifiers");
+          Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+          ArrayList = Java.type("java.util.ArrayList");
+          
+          function initFilter(config) {
+
+          }
+
+          
+
+          function doFilter(request,response,chain) {
+            var allowedNamespaces = [];
+            response.getWriter().print(JSON.stringify({"namespaces":allowedNamespaces}));
+          }
+    uri: "/apis/namespaces"
+    proxyTo: ""
+    authChain: login-service
+    azRules:
+    {{ if .Values.openunison.naas.azRules }}
+    {{ range .Values.openunison.naas.azRules }}
+    - scope: {{ .scope }}
+      constraint: {{ .constraint }}
+    {{ end }}
+    {{ else }}
+    - scope: dn
+      constraint: o=Tremolo
+    {{ end }}
+    {{ $length := len .Values.openunison.extra_az_groups }}
+    {{ if eq $length 0 }}
+    {{ else }}
+    {{ range $az_group := .Values.openunison.extra_az_groups }}
+    - scope: filter
+      constraint: (groups={{ $az_group }})
+    {{ end }}
+    {{ end }}
+
+  {{ end }}
+  - hosts:
+    - "#[OU_HOST]"
+    filterChain:
+    {{ if $root.Values.enable_impersonation }}
+    - className: com.tremolosecurity.proxy.filters.K8sInjectImpersonation
+      params:
+        targetName: k8s
+        userNameAttribute: sub
+        useLdapGroups: "false"
+        groupAttribute: groups
+    {{ end }}
+    - className: com.tremolosecurity.proxy.filters.JavaScriptFilter
+      params:
+        javaScript: |-
+          GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+          HashMap = Java.type("java.util.HashMap");
+          System = Java.type("java.lang.System");
+          JwtClaims = Java.type("org.jose4j.jwt.JwtClaims");
+          JsonWebSignature = Java.type("org.jose4j.jws.JsonWebSignature");
+          ProxyConstants = Java.type("com.tremolosecurity.proxy.util.ProxyConstants");
+          AlgorithmIdentifiers = Java.type("org.jose4j.jws.AlgorithmIdentifiers");
+          Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+          ArrayList = Java.type("java.util.ArrayList");
+          AzSys = Java.type("com.tremolosecurity.proxy.auth.AzSys");
+
+          
+          function initFilter(config) {
+
+          }
+
+          function postSelfSubjectReview(req,url,json) {
+            const HttpClient = Java.type('java.net.http.HttpClient');
+            const HttpRequest = Java.type('java.net.http.HttpRequest');
+            const HttpResponse = Java.type('java.net.http.HttpResponse');
+            const URI = Java.type('java.net.URI');
+            const Duration = Java.type('java.time.Duration');
+
+            /*if (typeof req === 'undefined' || req === null) {
+              throw new Error("Missing global 'req' (HttpServletRequest)");
+            }
+            if (typeof url !== 'string' || !url) {
+              throw new Error("Missing global 'url' (string)");
+            }
+            if (typeof json !== 'string') {
+              throw new Error("Missing global 'json' (string containing JSON)");
+            }*/
+
+            // Build HttpClient
+            const client = HttpClient.newBuilder()
+              .connectTimeout(Duration.ofSeconds(10))
+              .followRedirects(HttpClient.Redirect.NEVER)
+              .build();
+
+            // Build request
+            let builder = HttpRequest.newBuilder()
+              .uri(URI.create(url))
+              .timeout(Duration.ofSeconds(30))
+              .header('Content-Type', 'application/json')
+              .header('Accept', 'application/json')
+              .POST(HttpRequest.BodyPublishers.ofString(json));
+
+            
+            {{ if .Values.enable_impersonation }}
+            // Forward Authorization header (if present)
+            // Use getHeader() to preserve original casing/format.
+            const auth = req.getHeader('Authorization');
+            
+            if (auth) {
+              builder = builder.header('Authorization', auth.getValues().get(0));
+            }
+
+            // Forward Impersonate* headers (case-insensitive check)
+            // This will include e.g.:
+            //   Impersonate-User, Impersonate-Group, Impersonate-Extra-*, etc.
+            const headerNamesEnum = req.getHeaderNames();
+            while (headerNamesEnum.hasNext()) {
+              const name = String(headerNamesEnum.next());
+              if (name.toLowerCase().startsWith('impersonate')) {
+                const valuesEnum = req.getHeader(name);
+                valuesEnum.getValues().forEach(v => {
+                  // Multiple values for same header are allowed; Java HttpRequest supports repeated header() calls.
+                  builder = builder.header(name, v);
+                });
+              }
+            }
+            {{ else }}
+            const fromResults = req.getAttribute(AzSys.AUTO_IDM_HTTP_HEADERS);
+            const auth = fromResults.get("Authorization");
+            if (auth) {
+              builder = builder.header('Authorization', auth.getValues().get(0));
+            }
+            {{ end }}
+
+            const request = builder.build();
+
+            // Send request (synchronous)
+            const response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            // Return a simple JS object
+            const headersMap = {};
+            const javaHeaders = response.headers().map(); // Map<String, List<String>>
+            const it = javaHeaders.entrySet().iterator();
+            while (it.hasNext()) {
+              const e = it.next();
+              headersMap[String(e.getKey())] = Java.from(e.getValue()); // convert List<String> -> JS array
+            }
+
+            return {
+              status: response.statusCode(),
+              headers: headersMap,
+              body: response.body()
+            };
+          }
+
+          function doFilter(request,response,chain) {
+            var url = request.getRequestURL();
+
+            var userData = (request.getSession().getAttribute(ProxyConstants.AUTH_CTL)).getAuthInfo();
+            var sub = userData.getAttribs().get("sub").getValues().get(0);
+            var groups = userData.getAttribs().get("groups") != null ? userData.getAttribs().get("groups").getValues() : new ArrayList();
+
+            const groupsList = [];
+
+            groups.forEach(group => groupsList.push(group));
+
+            const me = {
+              "user": sub,
+              "preferred_username": sub,
+              "groups": groupsList
+            };
+
+            const k8s = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget("k8s").getProvider();
+            const apiServerUrl = k8s.getUrl();
+            const selfServiceUrl = apiServerUrl + '/apis/authentication.k8s.io/v1/selfsubjectreviews';
+
+            selfServiceResp = postSelfSubjectReview(request,selfServiceUrl,JSON.stringify({apiVersion: 'authentication.k8s.io/v1',kind: 'SelfSubjectReview',spec: {}}));
+            
+            
+            if (selfServiceResp.status == 201) {
+              const userInfo = JSON.parse(selfServiceResp.body).status.userInfo;
+              me["userInfo"] = userInfo;
+            } else {
+              System.out.println("selfsubjectreview failed : " + JSON.stringify(selfServiceResp));
+            }
+            
+            response.getWriter().print(JSON.stringify(me));
+            
+            
+
+          }
+    uri: "/apis/me"
+    proxyTo: ""
+    authChain: login-service
+    azRules:
+    {{ if .Values.openunison.naas.azRules }}
+    {{ range .Values.openunison.naas.azRules }}
+    - scope: {{ .scope }}
+      constraint: {{ .constraint }}
+    {{ end }}
+    {{ else }}
+    - scope: dn
+      constraint: o=Tremolo
+    {{ end }}
+    {{ $length := len .Values.openunison.extra_az_groups }}
+    {{ if eq $length 0 }}
+    {{ else }}
+    {{ range $az_group := .Values.openunison.extra_az_groups }}
+    - scope: filter
+      constraint: (groups={{ $az_group }})
+    {{ end }}
+    {{ end }}
+    {{ if not $root.Values.enable_impersonation }}
+    results:
+      azSuccess: oauth2bearer
+    {{ end }}
   cookieConfig:
     sessionCookieName: tremolosession
     domain: "#[OU_HOST]"

@@ -38,6 +38,13 @@ spec:
         - -base-url=/headlamp
         - -tls-cert-path=/etc/tls-keys/tls.crt
         - -tls-key-path=/etc/tls-keys/tls.key
+        {{- with .Values.headlamp.config.enableHelm }}
+        - "-enable-helm"
+        {{- end }}
+        {{- if .Values.headlamp.config.watchPlugins }}
+        - "-watch-plugins-changes"
+        {{- end }}
+        
         image: {{ .Values.headlamp.image }}
         imagePullPolicy: IfNotPresent
         volumeMounts:
@@ -48,6 +55,15 @@ spec:
           mountPath: /home/headlamp/.config
         - name: tmpdir
           mountPath: /tmp
+        {{ if .Values.headlamp.pluginsManager.enabled }}
+        - name: plugins-dir
+          mountPath: /headlamp/plugins
+        {{ end }}
+        - name: openunison-headlamp-plugin
+          mountPath: /headlamp/plugins/openunison-headlamp-plugin
+        {{- with .Values.headlamp.volumeMounts}}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
         livenessProbe:
           failureThreshold: 3
           httpGet:
@@ -71,31 +87,9 @@ spec:
           periodSeconds: 10
           successThreshold: 1
           timeoutSeconds: 1
-        {{ if .Values.services.resources }}
+        {{ if .Values.headlamp.resources }}
         resources:
-          {{ if .Values.services.resources.requests }}
-          requests: 
-            {{ if .Values.services.resources.requests.memory }}
-            memory: {{ .Values.services.resources.requests.memory | quote }}
-            {{ end }}
-            
-            {{ if .Values.services.resources.requests.cpu }}
-            cpu: {{ .Values.services.resources.requests.cpu | quote }}
-            {{ end }}
-          
-          {{ end }}
-
-          {{ if .Values.services.resources.limits }}
-          limits: 
-            {{ if .Values.services.resources.limits.memory }}
-            memory: {{ .Values.services.resources.limits.memory | quote }}
-            {{ end }}
-            
-            {{ if .Values.services.resources.limits.cpu }}
-            cpu: {{ .Values.services.resources.limits.cpu | quote }}
-            {{ end }}
-          
-          {{ end }}
+          {{- toYaml .Values.headlamp.resources | nindent 12 }}
         {{ end }}
         securityContext:
           allowPrivilegeEscalation: false
@@ -115,6 +109,59 @@ spec:
           {{ end }}
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
+      {{- if .Values.headlamp.pluginsManager.enabled }}
+      - name: headlamp-plugin
+        image: {{ .Values.headlamp.pluginsManager.baseImage }}
+        command: ["/bin/sh", "-c"]
+        {{- if .Values.headlamp.pluginsManager.env }}
+        env:
+          {{- toYaml .Values.headlamp.pluginsManager.env | nindent 10 }}
+        {{- end }}
+        args:
+          - |
+            if [ -f "/config/plugin.yml" ]; then
+              echo "Installing plugins from config..."
+              cat /config/plugin.yml
+              # Use a writable cache directory
+              export NPM_CONFIG_CACHE=/tmp/npm-cache
+              # Use a writable config directory
+              export NPM_CONFIG_USERCONFIG=/tmp/npm-userconfig
+              mkdir -p /tmp/npm-cache /tmp/npm-userconfig
+              npx --yes @headlamp-k8s/pluginctl@{{ .Values.headlamp.pluginsManager.version }} install --config /config/plugin.yml --folderName /headlamp/plugins --watch
+            fi
+        volumeMounts:
+          - name: plugins-dir
+            mountPath: /headlamp/plugins
+          - name: plugin-config
+            mountPath: /config
+          - name: plugin-tmp
+            mountPath: /tmp
+          - name: openunison-headlamp-plugin
+            mountPath: /headlamp/plugins/openunison-headlamp-plugin
+          {{- with .Values.headlamp.pluginsManager.volumeMounts }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        {{ if .Values.headlamp.pluginsManager.resources}}
+        resources:
+          {{- toYaml .Values.headlamp.pluginsManager.resources | nindent 10 }}
+        {{ end }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - "ALL"
+          readOnlyRootFilesystem: true
+          privileged: false
+          {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
+          runAsNonRoot: true
+          {{ else }}
+          seccompProfile:
+            type: RuntimeDefault
+          runAsNonRoot: true
+          runAsUser: 100
+          runAsGroup: 101
+          {{ end }}
+      {{- end }}
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       securityContext: {}
@@ -167,6 +214,22 @@ spec:
         emptyDir: {}
       - name: tmpdir
         emptyDir: {}
+      # openunison headlamp plugin
+      - name: openunison-headlamp-plugin
+        configMap:
+          name: openunison-headlamp-plugin
+      {{ if .Values.headlamp.pluginsManager.enabled }}
+      - name: plugin-tmp
+        emptyDir: {}
+      - name: plugins-dir
+        emptyDir: {}
+      - name: plugin-config
+        configMap:
+          name: headlamp-plugin-config
+      {{- with .Values.headlamp.volumes}}
+        {{- toYaml . | nindent 6 }}
+      {{- end }}
+      {{ end }}
 ---
 apiVersion: v1
 kind: Service

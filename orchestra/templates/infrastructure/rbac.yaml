@@ -266,6 +266,12 @@ metadata:
     argocd.argoproj.io/sync-wave: "20"
   name: audit2rbac:system:serviceaccount:openunison:openunison-{{ .Release.Name }}
 rules:
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs:
+  - get
+  - list
+  - watch
 - apiGroups:
   - authentication.k8s.io
   resources:

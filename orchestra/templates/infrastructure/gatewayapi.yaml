@@ -1,0 +1,126 @@
+{{ if eq .Values.network.ingress_type "gatewayapi" }}
+{{- $root := . -}}
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: openunison-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  {{ if and .Values.network.ingress_annotations (gt (len .Values.network.ingress_annotations) 0) }}
+  annotations:
+    {{ range $key,$value := .Values.network.ingress_annotations }}
+    {{ $key }}: {{ quote $value }}
+    {{ end }}
+  {{ end }}
+spec:
+  gatewayClassName: {{ .Values.network.gatewayapi.class }}
+  listeners:
+    - name: openunison
+      protocol: HTTPS
+      port: 443
+      hostname: {{ .Values.network.openunison_host }}
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: ou-tls-certificate
+    {{ range $app := .Values.openunison.apps }}
+    - name: {{ $app.name }}
+      protocol: HTTPS
+      port: 443
+      hostname: {{ (urlParse $app.badgeUrl).host }}
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: ou-tls-certificate
+    {{ end }}
+    {{ if eq .Values.enable_impersonation true }}
+    {{ if eq .Values.impersonation.use_jetstack true }}
+    - name: kube-oidc-proxy
+      protocol: TLS
+      port: 443
+      hostname: {{ .Values.network.api_server_host }}
+      tls:
+        mode: Passthrough
+    {{ else }}
+    - name: kube-oidc-proxy
+      protocol: HTTPS
+      port: 443
+      hostname: {{ .Values.network.api_server_host }}
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: ou-tls-certificate
+    {{ end }}
+    {{ end }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: openunison-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  parentRefs:
+  - name: openunison-{{ .Release.Name }}
+  hostnames:
+  - {{ .Values.network.openunison_host }}
+  {{ if eq .Values.enable_impersonation true }}
+  {{ if eq .Values.impersonation.use_jetstack false }}
+  - {{ .Values.network.api_server_host }}
+  {{ end }}
+  {{ end }}
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - name: openunison-{{ .Release.Name }}
+      port: 80
+{{ range $app := .Values.openunison.apps }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ $app.name }}-{{ $root.Release.Name }}
+  namespace: {{ $root.Release.Namespace }}
+spec:
+  parentRefs:
+  - name: openunison-{{ $root.Release.Name }}
+    sectionName: {{ $app.name }}
+  hostnames:
+  - {{ (urlParse $app.badgeUrl).host }}
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - name: openunison-{{ $root.Release.Name }}
+      port: 80
+{{ end }}
+{{ if eq .Values.enable_impersonation true }}
+{{ if eq .Values.impersonation.use_jetstack true }}
+---
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: TLSRoute
+metadata:
+  name: kube-oidc-proxy-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  parentRefs:
+    - name: openunison-{{ .Release.Name }}
+      sectionName: kube-oidc-proxy
+      namespace: {{ .Release.Namespace }}
+  hostnames:
+    - {{ .Values.network.api_server_host }}
+  rules:
+    - backendRefs:
+        - name: kube-oidc-proxy-{{ .Release.Name }}
+          port: 443
+{{ end }}
+{{ end }}
+
+
+{{ end }}
