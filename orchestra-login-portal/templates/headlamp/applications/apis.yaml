@@ -448,6 +448,7 @@ spec:
           AlgorithmIdentifiers = Java.type("org.jose4j.jws.AlgorithmIdentifiers");
           Attribute = Java.type("com.tremolosecurity.saml.Attribute");
           ArrayList = Java.type("java.util.ArrayList");
+          AzSys = Java.type("com.tremolosecurity.proxy.auth.AzSys");
 
           
           function initFilter(config) {
@@ -485,6 +486,8 @@ spec:
               .header('Accept', 'application/json')
               .POST(HttpRequest.BodyPublishers.ofString(json));
 
+            
+            {{ if .Values.enable_impersonation }}
             // Forward Authorization header (if present)
             // Use getHeader() to preserve original casing/format.
             const auth = req.getHeader('Authorization');
@@ -507,6 +510,13 @@ spec:
                 });
               }
             }
+            {{ else }}
+            const fromResults = req.getAttribute(AzSys.AUTO_IDM_HTTP_HEADERS);
+            const auth = fromResults.get("Authorization");
+            if (auth) {
+              builder = builder.header('Authorization', auth.getValues().get(0));
+            }
+            {{ end }}
 
             const request = builder.build();
 
@@ -556,6 +566,8 @@ spec:
             if (selfServiceResp.status == 201) {
               const userInfo = JSON.parse(selfServiceResp.body).status.userInfo;
               me["userInfo"] = userInfo;
+            } else {
+              System.out.println("selfsubjectreview failed : " + JSON.stringify(selfServiceResp));
             }
             
             response.getWriter().print(JSON.stringify(me));

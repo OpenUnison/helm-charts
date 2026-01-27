@@ -14,11 +14,11 @@ type: application
 
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
-version: 1.0.15
+version: 1.0.16
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application.
-appVersion: 1.0.43.1
+appVersion: 1.0.44
 home: https://github.com/OpenUnison/openunison-k8s-activedirectory
 icon: https://nexus.tremolo.io/repository/images/shield.png
 sources:
