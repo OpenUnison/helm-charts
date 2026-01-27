@@ -59,6 +59,8 @@ spec:
         - name: plugins-dir
           mountPath: /headlamp/plugins
         {{ end }}
+        - name: openunison-headlamp-plugin
+          mountPath: /headlamp/plugins/openunison-headlamp-plugin
         {{- with .Values.headlamp.volumeMounts}}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -134,6 +136,8 @@ spec:
             mountPath: /config
           - name: plugin-tmp
             mountPath: /tmp
+          - name: openunison-headlamp-plugin
+            mountPath: /headlamp/plugins/openunison-headlamp-plugin
           {{- with .Values.headlamp.pluginsManager.volumeMounts }}
           {{- toYaml . | nindent 10 }}
           {{- end }}
@@ -210,7 +214,10 @@ spec:
         emptyDir: {}
       - name: tmpdir
         emptyDir: {}
-      
+      # openunison headlamp plugin
+      - name: openunison-headlamp-plugin
+        configMap:
+          name: openunison-headlamp-plugin
       {{ if .Values.headlamp.pluginsManager.enabled }}
       - name: plugin-tmp
         emptyDir: {}

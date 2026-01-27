@@ -44,6 +44,15 @@ trusted_certs: []
 headlamp:
   enabled: false
   service_name: headlamp
+  namespace_api:
+    test:
+      enabled: false
+    all_namespaces:
+      enabled: true
+    no_namespaces:
+      enabled: false
+  
+      
 
 #active_directory:
 #  base: cn=users,dc=ent2k12,dc=domain,dc=com

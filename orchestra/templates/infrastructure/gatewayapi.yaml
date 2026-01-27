@@ -5,6 +5,12 @@ kind: Gateway
 metadata:
   name: openunison-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
+  {{ if and .Values.network.ingress_annotations (gt (len .Values.network.ingress_annotations) 0) }}
+  annotations:
+    {{ range $key,$value := .Values.network.ingress_annotations }}
+    {{ $key }}: {{ quote $value }}
+    {{ end }}
+  {{ end }}
 spec:
   gatewayClassName: {{ .Values.network.gatewayapi.class }}
   listeners:
