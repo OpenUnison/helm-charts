@@ -60,6 +60,28 @@ spec:
       app: {{ .Values.openunison.html.prefix }}-{{ .Values.openunison.portal_release_name }}
   policyTypes:
   - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: openunison-to-headlamp
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: network-policeis
+    app.kubernetes.io/part-of: openunison
+spec:
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          {{ .Values.network_policies.namespace_label }}: {{ .Release.Namespace }}
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: headlamp
+  policyTypes:
+  - Ingress
 {{ if .Values.network_policies.ingress.enabled }}
 ---
 apiVersion: networking.k8s.io/v1
