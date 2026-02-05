@@ -16,6 +16,7 @@ webhooks:
         namespace: {{ $root.Values.sts.openunison.namespace }}
         path: "/k8s/webhooks/v1/injector-{{ $sts.name }}"
     failurePolicy: Ignore
+    reinvocationPolicy: IfNeeded
     rules:
       - operations: ["CREATE"]
         apiGroups: [""]

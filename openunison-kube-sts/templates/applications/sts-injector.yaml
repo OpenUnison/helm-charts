@@ -37,6 +37,8 @@ spec:
 
           }
 
+          
+
           function doFilter(request,response,chain) {
             json = new JString(request.getAttribute(ProxySys.MSG_BODY));
             //System.out.println(json);
@@ -74,7 +76,9 @@ spec:
             
 
             if (injectAws) {
-
+                var sideCarAlreadyThere = false;
+                var sideCarIndex = 0;
+                var currentSideCar = {};
                 var patches = [];
                 // add kerberos mounts and to each container
                 
@@ -108,28 +112,39 @@ spec:
 
                     op = "replace";
                     var volumeMounts = pod.spec.containers[i].volumeMounts;
+                    var volumeMountsExist = false;
                     if (! volumeMounts) {
                         op = "add";
                         volumeMounts = [];
+                    } else {
+                        volumeMounts.forEach(volumeMount => {
+                            if (volumeMount.name == 'sts-tokens') {
+                                volumeMountsExist = true;
+                            }
+                        })
                     }
-                    volumeMounts.push(
-                        {
-                            "mountPath":"/tokens",
-                            "name": "sts-tokens",
-                            "readOnly": true
-                        }
-                    );
+
+                    if (!volumeMountsExist) {
+                        volumeMounts.push(
+                            {
+                                "mountPath":"/tokens",
+                                "name": "sts-tokens",
+                                "readOnly": true
+                            }
+                        );
+                    
 
                     
                     
 
-                    patches.push(
-                        {
-                            "op":op,
-                            "path":"/spec/containers/" + i + "/volumeMounts",
-                            "value": volumeMounts
-                        }
-                    );
+                        patches.push(
+                            {
+                                "op":op,
+                                "path":"/spec/containers/" + i + "/volumeMounts",
+                                "value": volumeMounts
+                            }
+                        );
+                    }
                     
 
 
@@ -210,7 +225,7 @@ spec:
                 
                 var initContainers = pod.spec.initContainers;
                 if (! initContainers) {
-                    System.out.println("NO INIT CONTAINERS!!!!!");
+                    //System.out.println("NO INIT CONTAINERS!!!!!");
                     patches.push(
                         {
                             "op":"add",
@@ -220,8 +235,17 @@ spec:
                     );
                 } else {
                     // need to add the sts token volume to all of the init containers/side cars
-                    System.out.println("there are init containers!!!!");
+                    //System.out.println("there are init containers!!!!");
                     for (var i=0;i<initContainers.length;i++) {
+                        const ic = initContainers[i];
+                        if (ic.name == 'sts-creds-sidecar') {
+                            // if the side car is our credentials sidecar, lets skip
+                            sideCarAlreadyThere = true;
+                            sideCarIndex = i;
+                            currentSideCar = ic;
+                            continue;
+                        
+                        }
                         env = initContainers[i].env;
                         op = "replace";
                         if (! env) {
@@ -243,28 +267,38 @@ spec:
 
                         
                         op = "replace";
+                        var foundVolumeMounts = false;
                         var volumeMounts = pod.spec.containers[i].volumeMounts;
                         if (! volumeMounts) {
                             op = "add";
                             volumeMounts = [];
+                        } else {
+                            volumeMounts.forEach(volumeMount => {
+                                if (volumeMount.name == 'sts-tokens') {
+                                    foundVolumeMounts = true;
+                                }
+                            })
+                        
                         }
-                        volumeMounts.push(
-                            {
-                                "mountPath":"/tokens",
-                                "name": "sts-tokens",
-                                "readOnly": true
-                            }
-                        );
+                        if (! foundVolumeMounts) {
+                            volumeMounts.push(
+                                {
+                                    "mountPath":"/tokens",
+                                    "name": "sts-tokens",
+                                    "readOnly": true
+                                }
+                            );
+                        
                         
 
-                        patches.push(
-                            {
-                                "op":op,
-                                "path":"/spec/initContainers/" + i + "/volumeMounts",
-                                "value": volumeMounts
-                            }
-                        );
-                        
+                            patches.push(
+                                {
+                                    "op":op,
+                                    "path":"/spec/initContainers/" + i + "/volumeMounts",
+                                    "value": volumeMounts
+                                }
+                            );
+                        }
 
 
 
@@ -273,10 +307,22 @@ spec:
                 
                 }
 
+                
+                if (sideCarAlreadyThere) {
+                    patches.push(
+                        {
+                            "op":"remove",
+                            "path":"/spec/initContainers/" + sideCarIndex
+                        }
+                    );
+
+                    sideCar = currentSideCar;
+                }
+
                 patches.push(
                     {
                         "op":"add",
-                        "path":"/spec/initContainers/-",
+                        "path":"/spec/initContainers/0",
                         "value": sideCar
                     }
                 );
@@ -286,42 +332,56 @@ spec:
                 // add volumes
                 
                 var volumes = pod.spec.volumes;
+                var volumesExist = false;
+                // check if the volumes are there or not
+
+
+            
+
                 var op = "replace";
                 if (!volumes) {
                     volumes = [];
                     op = "add";
+                } else {
+                    volumes.forEach(volume => {
+                        if (volume.name == 'sts-tokens') {
+                            volumesExist = true;
+                        }
+                    });
                 }
 
-                if (injectAwsMounts) {
+                if (!volumesExist) {
+                    if (injectAwsMounts) {
+                        volumes.push(
+                            {
+                                "name": "sts-tokens",
+                                "emptyDir": {
+                                    
+                                }
+                            }
+                        );
+                    }
+
+                    {{ if $sts.injector.explicit_certificate_trust }}
                     volumes.push(
                         {
-                            "name": "sts-tokens",
-                            "emptyDir": {
-                                
+                            "name": "certs",
+                            "configMap": {
+                                "name": "ouca"
                             }
                         }
                     );
-                }
+                    {{ end }}
 
-                {{ if $sts.injector.explicit_certificate_trust }}
-                volumes.push(
-                    {
-                        "name": "certs",
-                        "configMap": {
-                            "name": "ouca"
-                        }
+                    if (volumes.length > 0) {
+                        patches.push(
+                            {
+                                "op":op,
+                                "path":"/spec/volumes",
+                                "value": volumes
+                            }
+                        );
                     }
-                );
-                {{ end }}
-
-                if (volumes.length > 0) {
-                    patches.push(
-                        {
-                            "op":op,
-                            "path":"/spec/volumes",
-                            "value": volumes
-                        }
-                    );
                 }
 
                 
