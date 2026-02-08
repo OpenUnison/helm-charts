@@ -1,5 +1,5 @@
 {{ if not .Values.enable_wait_for_job }}
-{{ if and (eq .Values.enable_impersonation true) (eq .Values.impersonation.use_jetstack true)  }}
+{{ if and (eq .Values.enable_impersonation true) (eq .Values.impersonation.use_jetstack true) (eq .Values.openunison.kubeAuth.enabled true)  }}
 {{- $root := . -}}
 {{ $foundUnisonCa := false }}
 {{ range $.Values.trusted_certs }}
