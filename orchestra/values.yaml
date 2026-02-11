@@ -98,7 +98,7 @@ monitoring:
 
 impersonation:
   use_jetstack: true
-  jetstack_oidc_proxy_image: ghcr.io/tremolosecurity/kube-oidc-proxy:1.0.9
+  jetstack_oidc_proxy_image: ghcr.io/tremolosecurity/kube-oidc-proxy:1.0.10
   explicit_certificate_trust: true
   ca_secret_name: ou-tls-certificate
 
