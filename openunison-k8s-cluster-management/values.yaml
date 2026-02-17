@@ -3,6 +3,9 @@ primaryCluster:
   description: Central control plane cluster used to manage other clusters
 
 dashboard:
+  enabled: false
+
+headlamp:
   enabled: true
 
 impersonation:
