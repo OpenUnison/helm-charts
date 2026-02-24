@@ -2,7 +2,7 @@ vcluster:
   replicas: 1
   job_image: ghcr.io/tremolosecurity/vcluster-onboard:1.0.0
   openunison_k8s_image: ghcr.io/openunison/openunison-k8s:1.0.44
-  kube_oidc_proxy_image: ghcr.io/tremolosecurity/kube-oidc-proxy:1.0.10
+  kube_oidc_proxy_image: ghcr.io/tremolosecurity/kube-oidc-proxy:1.0.11
   openunison_k8s_html_image: ghcr.io/openunison/openunison-k8s-html:1.0.1
   helm_repo_url: https://nexus.tremolo.io/repository/helm/
   kubernetes_dashboard_helm_repo_url: https://kubernetes.github.io/dashboard/
