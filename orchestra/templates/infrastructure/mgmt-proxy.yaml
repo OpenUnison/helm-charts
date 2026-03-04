@@ -102,7 +102,7 @@ subjects:
 - apiGroup: rbac.authorization.k8s.io
   kind: User
   name: openunison-control-plane
-{{ if .Values.openunison.management_proxy.external_admin_group  }}
+{{ if and .Values.openunison.management_proxy.external_admin_group (not .Values.openunison.management_proxy.nobinding) }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
