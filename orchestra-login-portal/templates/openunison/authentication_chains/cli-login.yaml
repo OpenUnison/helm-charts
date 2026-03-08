@@ -1,3 +1,4 @@
+{{ if .Values.openunison.enable_portal }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: AuthenticationChain
@@ -176,3 +177,4 @@ spec:
       cookieName: "tremoloLoginChoice"
       cookieDays: "30"
     secretParams: []
+{{ end }}

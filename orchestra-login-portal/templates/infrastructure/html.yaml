@@ -1,3 +1,4 @@
+{{ if .Values.openunison.enable_portal }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -255,3 +256,4 @@ spec:
     app: ouhtml-{{ .Release.Name }}
   sessionAffinity: None
   type: ClusterIP
+{{ end }}
