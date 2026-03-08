@@ -1,4 +1,4 @@
-{{ if .Values.headlamp.enabled }}
+{{ if and .Values.headlamp.enabled .Values.openunison.enable_portal }}
 {{- $root := . -}}
 ---
 apiVersion: openunison.tremolo.io/v1

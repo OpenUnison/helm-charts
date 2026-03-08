@@ -135,6 +135,7 @@ services:
   - "https://127.0.0.1:8443/check_alive"
   - "alive"
 openunison:
+  enable_portal: true
   kubeAuth:
     enabled: true
   auto_timestamp: true

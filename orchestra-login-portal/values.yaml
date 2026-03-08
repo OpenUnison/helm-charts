@@ -122,6 +122,7 @@ services:
   - "alive"
 
 openunison:
+  enable_portal: true
   additional_api_servers: []
   enable_end_session: true
   jit_grace_period: 0

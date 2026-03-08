@@ -3,7 +3,7 @@ apiVersion: openunison.tremolo.io/v1
 kind: AuthenticationChain
 metadata:
   name: oauth2k8s-sts
-  namespace: openunison
+  namespace: {{ .Release.Namespace }}
   annotations:
     argocd.argoproj.io/sync-wave: "40"
 spec:
