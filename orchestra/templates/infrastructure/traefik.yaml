@@ -1,20 +1,6 @@
 {{ if eq .Values.network.ingress_type "traefik" }}
 ---
 apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: sticky-cookie
-  namespace: {{ .Release.Namespace }}
-spec:
-  stickySession:
-    cookie:
-      name: openunison_sticky
-      httpOnly: true
-      secure: true
-      sameSite: none
-      path: /
----
-apiVersion: traefik.io/v1alpha1
 kind: ServersTransport
 metadata:
   name: reencrypt
