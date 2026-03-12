@@ -233,6 +233,7 @@ spec:
           import_into_ks: keypair
           name: remote-k8s-idp-sig
           tls_secret_name: remote-k8s-idp-sig{{ .Values.openunison.secret_ext }}
+          replace_if_exists: {{ .Values.openunison.generate_idp_key_secret }}
         {{ if .Values.openunison.enable_provisioning }}
         - create_data:
             ca_cert: false
