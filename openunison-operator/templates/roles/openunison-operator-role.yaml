@@ -49,5 +49,6 @@ rules:
   - rolebindings
   - ingresses
   - cronjobs
+  - secretversions
   verbs:
   - '*'

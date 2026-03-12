@@ -12,7 +12,7 @@ services:
 
 
 operator:
-  image: ghcr.io/openunison/openunison-kubernetes-operator:1.0.7
+  image: ghcr.io/openunison/openunison-kubernetes-operator:1.0.8
   validators: []
   mutators: []
   imagePullPolicy: Always
@@ -21,7 +21,7 @@ operator:
       memory: 200Mi
       cpu: 0.3
     limits:
-      memory: 200Mi
+      memory: 1000Mi
       cpu: 1.0
 
 
