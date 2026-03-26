@@ -1,3 +1,4 @@
+{{ if .Values.cluster.management.internal.enabled }}
 {{- $root := . -}}
 {{ range $role := .Values.naasRoles }}
 ---
@@ -32,4 +33,5 @@ spec:
              addToRequest: true
            - taskType: callWorkflow
              name: k8s-namespace-{{ $role.name }}
+{{ end }}
 {{ end }}

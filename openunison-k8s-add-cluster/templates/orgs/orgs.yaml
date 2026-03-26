@@ -1,3 +1,4 @@
+{{ if .Values.cluster.management.internal.enabled }}
 {{- $root := . -}}
 {{ range $role := .Values.naasRoles }}
 {{ if not $root.Values.cluster.enable_request_access }}
@@ -38,5 +39,6 @@ spec:
   showInReports: false
   showInRequestAccess: true
   uuid: org-cluster-{{ $root.Values.cluster.name }}-{{ $role.name }}
+{{ end }}
 {{ end }}
 {{ end }}

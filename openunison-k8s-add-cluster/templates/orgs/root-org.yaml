@@ -29,7 +29,7 @@ spec:
   parent: {{ .Values.cluster.parent }}
   showInPortal: true
   showInReports: false
-  showInRequestAccess: true
+  showInRequestAccess: {{ .Values.cluster.management.internal.enabled }}
   uuid: org-cluster-{{ .Values.cluster.name }}
 {{ if not .Values.cluster.enable_request_access }}
 ---

@@ -1,4 +1,4 @@
-{{ if .Values.cluster.management.enabled }}
+{{ if and .Values.cluster.management.enabled .Values.cluster.management.internal.enabled }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Workflow
