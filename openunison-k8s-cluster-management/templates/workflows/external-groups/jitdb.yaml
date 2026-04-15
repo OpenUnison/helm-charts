@@ -10,6 +10,7 @@ metadata:
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: openunison-workflows
     app.kubernetes.io/part-of: openunison
+    tremolo.io/mode: external
   annotations:
     argocd.argoproj.io/sync-wave: "40"
 spec:
@@ -31,7 +32,7 @@ spec:
                className: com.tremolosecurity.unison.proxy.auth.github.MergeGithubGroups
                params: {}
 
-           {{ if .Values.openunison.naas.groups.internal.enabled }}
+           {{ if or .Values.openunison.naas.groups.internal.enabled .Values.openunison.naas.groups.internal.sync }}
            - taskType: customTask
              className: com.tremolosecurity.provisioning.customTasks.LoadGroups
              params:
@@ -61,7 +62,7 @@ spec:
                  }
  
                  function doTask(user,request) {
-                   {{ if .Values.openunison.naas.groups.internal.enabled }}
+                   {{ if or .Values.openunison.naas.groups.internal.enabled .Values.openunison.naas.groups.internal.sync }}
                    var hasInternal = true;
                    {{ else }}
                    var hasInternal = false;
@@ -119,14 +120,19 @@ spec:
                      sql = task.getConfigManager().getProvisioningEngine().getTarget("jitdb").getProvider().getDS().getConnection();
                      try {
                        rs = sql.createStatement().executeQuery("select name from localGroups where name like '%{{ .Values.openunison.naas.groups.internal.suffix }}' OR name like 'approvers-%'");
+                       System.out.println("DEBUG looking up internal groups");
                        while (rs.next()) {
-                        knownInternalGroups.add(rs.getString("name"));
+                         const groupName = rs.getString("name");
+                         System.out.println("DEBUG group name '" + groupName + "'");
+                        knownInternalGroups.add(groupName);
                        }
+                       System.out.println("DEBUG known internal groups " + knownInternalGroups);
                      } finally {
                        sql.close();
                      }
                      for (var i=0;i<user.getGroups().size();i++) {
                        var groupName = user.getGroups().get(i);
+                       
                        if ((groupName.endsWith("{{ .Values.openunison.naas.groups.internal.suffix }}") || groupName.startsWith("approvers-")) && knownInternalGroups.has(groupName)) {
                          internalGroups.add(groupName);
                        }

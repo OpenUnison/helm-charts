@@ -56,6 +56,7 @@ spec:
   showInReports: false
   showInRequestAccess: true
   uuid: 441a2bf1-3e47-4d40-a994-99faa15f997a
+{{ end }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: Org
@@ -82,4 +83,3 @@ spec:
   showInReports: false
   showInRequestAccess: true
   uuid: ca5ad0bb-b207-41ad-93e4-cffab65dd37c
-{{ end }}
