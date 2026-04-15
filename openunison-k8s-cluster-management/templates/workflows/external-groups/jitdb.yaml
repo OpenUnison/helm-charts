@@ -120,13 +120,10 @@ spec:
                      sql = task.getConfigManager().getProvisioningEngine().getTarget("jitdb").getProvider().getDS().getConnection();
                      try {
                        rs = sql.createStatement().executeQuery("select name from localGroups where name like '%{{ .Values.openunison.naas.groups.internal.suffix }}' OR name like 'approvers-%'");
-                       System.out.println("DEBUG looking up internal groups");
                        while (rs.next()) {
                          const groupName = rs.getString("name");
-                         System.out.println("DEBUG group name '" + groupName + "'");
                         knownInternalGroups.add(groupName);
                        }
-                       System.out.println("DEBUG known internal groups " + knownInternalGroups);
                      } finally {
                        sql.close();
                      }
