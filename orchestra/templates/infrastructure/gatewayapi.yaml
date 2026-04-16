@@ -1,5 +1,6 @@
 {{ if eq .Values.network.ingress_type "gatewayapi" }}
 {{- $root := . -}}
+{{ if .Values.network.gatewayapi.gateway.create }}
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
@@ -54,6 +55,7 @@ spec:
             name: ou-tls-certificate
     {{ end }}
     {{ end }}
+{{ end }}
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -62,7 +64,11 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   parentRefs:
+  {{ if .Values.network.gatewayapi.gateway.parent_refs }}
+  {{- toYaml .Values.network.gatewayapi.gateway.parent_refs | nindent 2 }}
+  {{ else }}
   - name: openunison-{{ .Release.Name }}
+  {{ end }}
   hostnames:
   - {{ .Values.network.openunison_host }}
   {{ if eq .Values.enable_impersonation true }}
@@ -87,8 +93,11 @@ metadata:
   namespace: {{ $root.Release.Namespace }}
 spec:
   parentRefs:
-  - name: openunison-{{ $root.Release.Name }}
-    sectionName: {{ $app.name }}
+  {{ if .Values.network.gatewayapi.gateway.parent_refs }}
+  {{- toYaml .Values.network.gatewayapi.gateway.parent_refs | nindent 2 }}
+  {{ else }}
+  - name: openunison-{{ .Release.Name }}
+  {{ end }}
   hostnames:
   - {{ (urlParse $app.badgeUrl).host }}
   rules:
@@ -110,9 +119,13 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   parentRefs:
+  {{ if .Values.network.gatewayapi.gateway.kube_oidcproxy_parent_refs }}
+  {{- toYaml .Values.network.gatewayapi.gateway.kube_oidcproxy_parent_refs | nindent 2 }}
+  {{ else }}
     - name: openunison-{{ .Release.Name }}
       sectionName: kube-oidc-proxy
       namespace: {{ .Release.Namespace }}
+  {{ end }}
   hostnames:
     - {{ .Values.network.api_server_host }}
   rules:

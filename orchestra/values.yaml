@@ -17,6 +17,9 @@ network:
     entrypoints:
       plaintext: web
       tls: websecure
+  gatewayapi:
+    gateway: 
+      create: true
   kong: {}
 
 precheck:
