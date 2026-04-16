@@ -13,6 +13,13 @@ kind: IngressRoute
 metadata:
   name: https-openunison-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "50"
+    {{ range $key,$value := .Values.network.ingress_annotations }}
+    {{ if not ( eq $key "kubernetes.io/ingress.class"  )}}
+    {{ $key }}: {{ quote $value }}
+    {{ end }}
+    {{ end }}
 spec:
   entryPoints:
     - {{ .Values.network.traefik.entrypoints.tls }}
@@ -92,6 +99,13 @@ kind: IngressRoute
 metadata:
   name: http-{{ .Release.Name }}-redirect-to-https
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "50"
+    {{ range $key,$value := .Values.network.ingress_annotations }}
+    {{ if not ( eq $key "kubernetes.io/ingress.class"  )}}
+    {{ $key }}: {{ quote $value }}
+    {{ end }}
+    {{ end }}
 spec:
   entryPoints:
     - {{ .Values.network.traefik.entrypoints.plaintext }}

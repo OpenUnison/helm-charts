@@ -295,6 +295,10 @@ spec:
       version: 1
     - name: lastmile-oidc
       version: 1
+    {{ range .Values.openunison.static_keys }}
+    - name: {{ .name }}
+      version: {{ int .version }}
+    {{ end }}
     
     {{ $length := len .Values.trusted_certs }}
     {{ if eq $length 0 }}
@@ -407,6 +411,14 @@ spec:
     - name: K8S_OPENUNISON_NS
       value: "{{ .Release.Namespace }}"
   openunison_network_configuration:
+    context_root: {{ .Values.openunison.context_root }}
+    {{ if .Values.openunison.error_pages }}
+    error_pages:
+    {{ range .Values.openunison.error_pages }}
+    - code: {{ int .code }}
+      location: {{ .location }}
+    {{ end }}
+    {{ end }}
     activemq_dir: "/tmp/amq"
     allowed_client_names: []
     ciphers:
