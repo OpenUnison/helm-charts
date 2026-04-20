@@ -24,7 +24,7 @@ spec:
       params:
         target: "k8s"
         ns: "#[K8S_OPENUNISON_NS:openunison]"
-    - className: com.tremolosecurity.proxy.filters.SetupSyncTLSKeys
+    - className: com.tremolosecurity.proxy.filters.SetupSyncJs
       params:
         target: "k8s"
         ns: "#[K8S_OPENUNISON_NS:openunison]"
