@@ -94,7 +94,7 @@ metadata:
 spec:
   parentRefs:
   {{ if .Values.network.gatewayapi.gateway.parent_refs }}
-  {{- toYaml .Values.network.gatewayapi.gateway.parent_refs | nindent 2 }}
+  {{- toYaml $root.Values.network.gatewayapi.gateway.parent_refs | nindent 2 }}
   {{ else }}
   - name: openunison-{{ .Release.Name }}
   {{ end }}
