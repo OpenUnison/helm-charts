@@ -158,6 +158,7 @@ spec:
 
                 var userid = 0;
                 var groupid = 0;
+                var nonroot = false;
                 
                 if (metadata && metadata.annotations && metadata.annotations["tremolo.io/user"]   ) {
                     userid = Integer.parseInt(metadata.annotations["tremolo.io/user"]);
@@ -165,6 +166,10 @@ spec:
 
                 if (metadata && metadata.annotations && metadata.annotations["tremolo.io/group"]   ) {
                     groupid = Integer.parseInt(metadata.annotations["tremolo.io/group"]);
+                } 
+
+                if (metadata && metadata.annotations && metadata.annotations["tremolo.io/non-root"]   ) {
+                    nonroot = metadata.annotations["tremolo.io/non-root"] == "true";
                 } 
 
 
@@ -222,6 +227,9 @@ spec:
                     sideCar.securityContext.runAsGroup = groupid;
                 }
 
+                if (nonroot) {
+                    sideCar.securityContext.runAsNonRoot = true;
+                }
                 
                 var initContainers = pod.spec.initContainers;
                 if (! initContainers) {

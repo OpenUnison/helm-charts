@@ -30,11 +30,84 @@ spec:
     timeout: 900
   isApp: true
   urls:
+  - authChain: oauth2k8s-sts
+    azRules:
+    {{ if not (empty $sts.azRules) }}
+    {{ range $sts.azRules }}
+    - scope: {{ .scope }}
+      constraint: {{ .constraint }}
+    {{ end }}
+    {{ else }}
+    - constraint: o=Tremolo
+      scope: dn
+    {{ end }}
+    filterChain:
+    - className: com.tremolosecurity.proxy.filters.SetupSyncTLSKeys
+      params:
+        target: "k8s"
+        ns: "#[K8S_OPENUNISON_NS:openunison]"
+    - className: com.tremolosecurity.proxy.filters.SetupSyncJs
+      params:
+        target: "k8s"
+        ns: "#[K8S_OPENUNISON_NS:openunison]"
+    - className: com.tremolosecurity.proxy.filters.JavaScriptFilter
+      params:
+        javaScript: |-
+          GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+          ProxyConstants = Java.type("com.tremolosecurity.proxy.util.ProxyConstants");
+          System = Java.type("java.lang.System");
+          JwtClaims = Java.type("org.jose4j.jwt.JwtClaims");
+          JsonWebSignature = Java.type("org.jose4j.jws.JsonWebSignature");
+          AlgorithmIdentifiers = Java.type("org.jose4j.jws.AlgorithmIdentifiers");
+          IdpMappingType = Java.type("com.tremolosecurity.config.xml.IdpMappingType");
+          ProvisionMappingType = Java.type("com.tremolosecurity.config.xml.ProvisionMappingType");
+          MapIdentity = Java.type("com.tremolosecurity.provisioning.mapping.MapIdentity");
+          HttpServletRequestWrapper = Java.type("jakarta.servlet.http.HttpServletRequestWrapper");
+          OpenIDConnectConfig = Java.type("com.tremolosecurity.idp.providers.oidc.model.OpenIDConnectConfig");
+          GsonBuilder = Java.type("com.google.gson.GsonBuilder");
+          JsonWebKey = Java.type("org.jose4j.jwk.JsonWebKey");
+          JsonWebKeySet = Java.type("org.jose4j.jwk.JsonWebKeySet");
+          StringBuffer = Java.type("java.lang.StringBuffer");
+          MessageDigest = Java.type("java.security.MessageDigest");
+          HexFormat = Java.type("java.util.HexFormat");
+
+          function initFilter(config) {
+
+          }
+
+
+
+          function doFilter(request,response,chain) {
+            const md = MessageDigest.getInstance("SHA-256");
+            const cert = GlobalEntries.getGlobalEntries().getConfigManager().getCertificate("{{ $sts.issuer.keypair }}");
+            const digest = md.digest(cert.getEncoded());
+
+
+            
+
+            response.getWriter().println(JSON.stringify({"thumbprint":HexFormat.of().formatHex(digest).toUpperCase()}));
+            
+
+          }
+    hosts:
+    - "{{ $sts.issuer.host }}"
+    - '#[OU_HOST]'
+    
+    results: {}
+    uri: {{ $sts.path }}/sig-cert
   - authChain: anon
     azRules:
     - constraint: o=Tremolo
       scope: dn
     filterChain:
+    - className: com.tremolosecurity.proxy.filters.SetupSyncTLSKeys
+      params:
+        target: "k8s"
+        ns: "#[K8S_OPENUNISON_NS:openunison]"
+    - className: com.tremolosecurity.proxy.filters.SetupSyncJs
+      params:
+        target: "k8s"
+        ns: "#[K8S_OPENUNISON_NS:openunison]"
     - className: com.tremolosecurity.proxy.filters.JavaScriptFilter
       params:
         javaScript: |-
@@ -143,6 +216,14 @@ spec:
       scope: dn
     {{ end }}
     filterChain:
+    - className: com.tremolosecurity.proxy.filters.SetupSyncTLSKeys
+      params:
+        target: "k8s"
+        ns: "#[K8S_OPENUNISON_NS:openunison]"
+    - className: com.tremolosecurity.proxy.filters.SetupSyncJs
+      params:
+        target: "k8s"
+        ns: "#[K8S_OPENUNISON_NS:openunison]"
     - className: com.tremolosecurity.scalejs.token.ws.ScaleToken
       params:
         additionalClaims:
