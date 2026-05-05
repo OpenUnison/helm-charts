@@ -1,5 +1,5 @@
 sts:
-  image: ghcr.io/mlbiam/openunison-cli:1.1.0-7dfa6a
+  image: ghcr.io/openunison/openunison-cli:1.3.0
   openunison:
     name: orchestra
     namespace: openunison
