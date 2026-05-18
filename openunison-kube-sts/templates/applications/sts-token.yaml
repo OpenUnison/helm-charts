@@ -161,7 +161,12 @@ spec:
 
             gson = new GsonBuilder().setPrettyPrinting().create();
 
-            oidcDiscovery = new OpenIDConnectConfig("https://{{ $sts.issuer.host }}", null ,mapid);
+            {{- $localpath := $sts.issuer.path | default "" -}}
+            {{- if eq $localpath "/" -}}
+            {{- $localpath = "" -}}
+            {{- end -}}
+
+            oidcDiscovery = new OpenIDConnectConfig("https://{{ $sts.issuer.host }}{{ $localpath }}", null ,mapid);
 
             cert = GlobalEntries.getGlobalEntries().getConfigManager().getCertificate("{{ $sts.issuer.keypair }}");
             jwk = JsonWebKey.Factory.newJwk(cert.getPublicKey());
@@ -176,9 +181,9 @@ spec:
 
 
             {{ if $sts.host_in_openunison  }}
-            if (request.getRequestURI() == "/.well-known/openid-configuration") {
+            if (request.getRequestURI() == "{{ $localpath }}/.well-known/openid-configuration") {
               response.getWriter().println(gson.toJson(oidcDiscovery));  
-            } else if (request.getRequestURI() == "/certs") {
+            } else if (request.getRequestURI() == "{{ $localpath }}/certs") {
               response.getWriter().println(new JsonWebKeySet(jwk).toJson());  
             }
             {{ else }}
@@ -200,7 +205,7 @@ spec:
     
     results: {}
     {{ if $sts.host_in_openunison }}
-    uri: /
+    uri: {{ $sts.issuer.path | default "/" }}
     {{ else }}
     uri: {{ $sts.path }}/issuer-docs
     {{ end }}
@@ -236,7 +241,7 @@ spec:
         frontPage.text: STS Token
         frontPage.title: STS Token
         homeURL: /scale/
-        issuer: https://{{ $sts.issuer.host }}
+        issuer: https://{{ $sts.issuer.host }}{{ $localpath }}
         keyName: {{ $sts.issuer.keypair }}
         logoutURL: /logout
         minAlive: "15"
