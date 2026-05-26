@@ -1,22 +1,20 @@
-{{ if gt (len .Values.operator.validators) 0  }}
 ---
-apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: openunison-operator-mutators-validators-{{ .Release.Name }}
+  name: openunison-operator-{{ .Release.Name }}-webhooks
   labels:
     app.kubernetes.io/name: openunison
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: rbac
     app.kubernetes.io/part-of: openunison
   annotations:
-    argocd.argoproj.io/sync-wave: "0"
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: openunison-operator-validators-{{ .Release.Name }}
+    argocd.argoproj.io/sync-wave: "20"
 subjects:
 - kind: ServiceAccount
   name: openunison-operator
   namespace: {{ .Release.Namespace }}
-{{ end }}
+roleRef:
+  kind: ClusterRole
+  name: openunison-operator-{{ .Release.Name }}-webhooks
+  apiGroup: rbac.authorization.k8s.io

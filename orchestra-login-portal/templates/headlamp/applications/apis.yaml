@@ -79,7 +79,6 @@ spec:
 
           }
     uri: "/apis/namespaces"
-    proxyTo: ""
     authChain: login-service
     azRules:
     {{ if .Values.openunison.naas.azRules }}
@@ -268,7 +267,6 @@ spec:
 
           }
     uri: "/apis/namespaces"
-    proxyTo: ""
     authChain: login-service
     {{ if not $root.Values.enable_impersonation }}
     results:
@@ -353,7 +351,6 @@ spec:
 
           }
     uri: "/apis/namespaces"
-    proxyTo: ""
     authChain: login-service
     azRules:
     {{ if .Values.openunison.naas.azRules }}
@@ -403,7 +400,6 @@ spec:
             response.getWriter().print(JSON.stringify({"namespaces":allowedNamespaces}));
           }
     uri: "/apis/namespaces"
-    proxyTo: ""
     authChain: login-service
     azRules:
     {{ if .Values.openunison.naas.azRules }}
@@ -576,7 +572,6 @@ spec:
 
           }
     uri: "/apis/me"
-    proxyTo: ""
     authChain: login-service
     azRules:
     {{ if .Values.openunison.naas.azRules }}

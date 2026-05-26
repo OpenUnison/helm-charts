@@ -1955,6 +1955,154 @@ spec:
                               type: string
                             value:
                               type: string
+                admissions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                        - validating
+                        - mutating
+                      name:
+                        type: string
+                        minLength: 1
+                      webhooks:
+                        type: array
+                        minItems: 1
+                        items:
+                          type: object
+                          required:
+                          - name
+                          - clientConfig
+                          - rules
+                          - admissionReviewVersions
+                          - sideEffects
+                          properties:
+                            name:
+                              type: string
+                              minLength: 1
+                            clientConfig:
+                              type: object
+                              properties:
+                                url:
+                                  type: string
+                                service:
+                                  type: object
+                                  required:
+                                  - namespace
+                                  - name
+                                  properties:
+                                    namespace:
+                                      type: string
+                                    name:
+                                      type: string
+                                    path:
+                                      type: string
+                                    port:
+                                      type: integer
+                                      minimum: 1
+                                      maximum: 65535
+                              oneOf:
+                              - required:
+                                - service
+                              - required:
+                                - url
+                            rules:
+                              type: array
+                              minItems: 1
+                              items:
+                                type: object
+                                required:
+                                - operations
+                                - apiGroups
+                                - apiVersions
+                                - resources
+                                properties:
+                                  operations:
+                                    type: array
+                                    minItems: 1
+                                    items:
+                                      type: string
+                                      enum:
+                                      - CREATE
+                                      - UPDATE
+                                      - DELETE
+                                      - CONNECT
+                                      - '*'
+                                  apiGroups:
+                                    type: array
+                                    items:
+                                      type: string
+                                  apiVersions:
+                                    type: array
+                                    items:
+                                      type: string
+                                  resources:
+                                    type: array
+                                    minItems: 1
+                                    items:
+                                      type: string
+                                  scope:
+                                    type: string
+                                    enum:
+                                    - Cluster
+                                    - Namespaced
+                                    - '*'
+                            failurePolicy:
+                              type: string
+                              enum:
+                              - Ignore
+                              - Fail
+                            matchPolicy:
+                              type: string
+                              enum:
+                              - Exact
+                              - Equivalent
+                            namespaceSelector:
+                              x-kubernetes-preserve-unknown-fields: true
+                              type: object
+                            objectSelector:
+                              x-kubernetes-preserve-unknown-fields: true
+                              type: object
+                            matchConditions:
+                              type: array
+                              items:
+                                type: object
+                                required:
+                                - name
+                                - expression
+                                properties:
+                                  name:
+                                    type: string
+                                  expression:
+                                    type: string
+                            sideEffects:
+                              type: string
+                              enum:
+                              - None
+                              - NoneOnDryRun
+                            timeoutSeconds:
+                              type: integer
+                              minimum: 1
+                              maximum: 30
+                            admissionReviewVersions:
+                              type: array
+                              minItems: 1
+                              items:
+                                type: string
+                                enum:
+                                - v1
+                                - v1beta1
+                            reinvocationPolicy:
+                              type: string
+                              enum:
+                              - Never
+                              - IfNeeded
+                              description: Only valid when spec.type is mutating.
+                      
+                
                 deployment_data:
                   type: object
                   properties:

@@ -1,29 +1,23 @@
-{{ if gt (len .Values.operator.validators) 0  }}
 ---
-apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: openunison-operator-validators-{{ .Release.Name }}
-  namespace: {{ .Release.Namespace }}
+  name: openunison-operator-{{ .Release.Name }}-webhooks
   labels:
     app.kubernetes.io/name: openunison
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}
     app.kubernetes.io/component: rbac
     app.kubernetes.io/part-of: openunison
   annotations:
-    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-wave: "20"
 rules:
-- apiGroups:
-  - admissionregistration.k8s.io
-  resources:
-  - validatingwebhookconfigurations
-  resourceNames:
-  {{ range .Values.operator.validators }}
-  - {{ . }}
-  {{ end }}
+- apiGroups: ["admissionregistration.k8s.io"]
+  resources: ["validatingwebhookconfigurations"]
   verbs:
-  - 'get'
-  - 'update'
-  - 'patch'
-{{ end }}
-
+  - get
+  - list
+  - watch
+  - update
+  - patch
+  - create
+  - delete

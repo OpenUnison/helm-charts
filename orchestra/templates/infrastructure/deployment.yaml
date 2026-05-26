@@ -63,10 +63,10 @@ spec:
           value: /tmp/graaljscache
         {{ if $hasKerberos }}
         - name: JAVA_OPTS
-          value: "-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom -DunisonEnvironmentFile=/etc/openunison/ou.env -Djavax.net.ssl.trustStore=/etc/openunison/cacerts.jks -Dpolyglot.engine.WarnInterpreterOnly=false -Djava.security.krb5.conf=/etc/krb5-local/krb5.conf -Djava.security.krb5.debug=true -Djava.security.auth.login.config=/etc/krb5-local/SQLJDBCDriver.conf"
+          value: "-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom -DunisonEnvironmentFile=/etc/openunison/ou.env -Djavax.net.ssl.trustStore=/etc/openunison/cacerts.jks -Dpolyglot.engine.WarnInterpreterOnly=false -Djavax.xml.parsers.DocumentBuilderFactory=com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl -Djava.security.krb5.conf=/etc/krb5-local/krb5.conf -Djava.security.krb5.debug=true -Djava.security.auth.login.config=/etc/krb5-local/SQLJDBCDriver.conf"
         {{ else }}
         - name: JAVA_OPTS
-          value: "-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom -DunisonEnvironmentFile=/etc/openunison/ou.env -Djavax.net.ssl.trustStore=/etc/openunison/cacerts.jks -Dpolyglot.engine.WarnInterpreterOnly=false"
+          value: "-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom -DunisonEnvironmentFile=/etc/openunison/ou.env -Djavax.net.ssl.trustStore=/etc/openunison/cacerts.jks -Dpolyglot.engine.WarnInterpreterOnly=false -Djavax.xml.parsers.DocumentBuilderFactory=com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl"
         {{ end }}
         - name: fortriggerupdates
           value: changeme
@@ -116,7 +116,11 @@ spec:
             - "alive"
             {{ end }}
           failureThreshold: 10
+          {{ if .Values.openunison.enable_provisioning }}
           initialDelaySeconds: 30
+          {{ else }}
+          initialDelaySeconds: 5
+          {{ end }}
           periodSeconds: 10
           successThreshold: 1
           timeoutSeconds: 10
@@ -143,7 +147,11 @@ spec:
             - "alive"
             {{ end }}
           failureThreshold: 3
+          {{ if .Values.openunison.enable_provisioning }}
           initialDelaySeconds: 15
+          {{ else }}
+          initialDelaySeconds: 5
+          {{ end }}
           periodSeconds: 10
           successThreshold: 1
           timeoutSeconds: 10

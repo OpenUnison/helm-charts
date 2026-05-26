@@ -1,4 +1,5 @@
 {{ if eq .Values.openunison.enable_portal false }}
+{{ if not (or .Values.oidc .Values.github .Values.saml .Values.activedirectory ) }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -29,4 +30,5 @@ data:
     server.myvdroot.nameSpace=o=Tremolo
     server.myvdroot.weight=0
     server.myvdroot.root.className=net.sourceforge.myvd.inserts.RootObject
+{{ end }}
 {{ end }}

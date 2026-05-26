@@ -122,6 +122,8 @@ kind: PortalUrl
 metadata:
   name: oauth2token
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
   labels:
     app.kubernetes.io/name: openunison
     app.kubernetes.io/instance: openunison-{{ .Release.Name }}

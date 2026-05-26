@@ -210,48 +210,6 @@ roleRef:
   name: orchestra-certs-{{ .Release.Name }}
   apiGroup: rbac.authorization.k8s.io
 ---
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: openunison-operator-{{ .Release.Name }}-webhooks
-  labels:
-    app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
-    app.kubernetes.io/component: rbac
-    app.kubernetes.io/part-of: openunison
-  annotations:
-    argocd.argoproj.io/sync-wave: "20"
-rules:
-- apiGroups: ["admissionregistration.k8s.io"]
-  resources: ["validatingwebhookconfigurations"]
-  resourceNames: ["openunison-workflow-validation-{{ .Release.Name }}"]
-  verbs:
-  - get
-  - list
-  - watch
-  - update
-  - patch
----
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: openunison-operator-{{ .Release.Name }}-webhooks
-  labels:
-    app.kubernetes.io/name: openunison
-    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
-    app.kubernetes.io/component: rbac
-    app.kubernetes.io/part-of: openunison
-  annotations:
-    argocd.argoproj.io/sync-wave: "20"
-subjects:
-- kind: ServiceAccount
-  name: openunison-operator
-  namespace: {{ .Release.Namespace }}
-roleRef:
-  kind: ClusterRole
-  name: openunison-operator-{{ .Release.Name }}-webhooks
-  apiGroup: rbac.authorization.k8s.io
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -355,6 +313,12 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "20"
 rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get"]
+- apiGroups: ["apps"]
+  resources: ["replicasets","deployments"]
+  verbs: ["get"]
 - apiGroups: ["openunison.tremolo.io"]
   resources: ["trusts","portalurls","orgs","authmechs","authchains","resultgroups","applications","customazs","targets","workflows","oujobs","reports","groupmetadatas","messagelisteners","javascriptmappings","notifiers","waitforstates","endsessions","namespacegroupmetadatas","secretversions","javascripts"]
   verbs:

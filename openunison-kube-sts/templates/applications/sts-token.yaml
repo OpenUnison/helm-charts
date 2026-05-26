@@ -30,7 +30,7 @@ spec:
     timeout: 900
   isApp: true
   urls:
-  - authChain: oauth2k8s-sts
+  - authChain: oauth2k8s-sts-{{ $sts.name }}
     azRules:
     {{ if not (empty $sts.azRules) }}
     {{ range $sts.azRules }}
@@ -209,7 +209,7 @@ spec:
     {{ else }}
     uri: {{ $sts.path }}/issuer-docs
     {{ end }}
-  - authChain: oauth2k8s-sts
+  - authChain: oauth2k8s-sts-{{ $sts.name }}
     azRules:
     {{ if not (empty $sts.azRules) }}
     {{ range $sts.azRules }}
@@ -235,6 +235,11 @@ spec:
         - cluster
         - namespace
         - saname
+        {{ if $sts.additionalAttributes }}
+        {{ range $attribute := $sts.additionalAttributes }}
+        - {{ $attribute.target }}
+        {{ end }}
+        {{ end }}
         audience: {{ $sts.audience }}
         displayNameAttribute: token_sub
         expiresSeconds: "900"

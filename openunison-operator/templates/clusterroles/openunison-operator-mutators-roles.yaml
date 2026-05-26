@@ -1,4 +1,3 @@
-{{ if gt (len .Values.operator.mutators) 0  }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -17,13 +16,10 @@ rules:
   - admissionregistration.k8s.io
   resources:
   - mutatingwebhookconfigurations
-  resourceNames:
-  {{ range .Values.operator.mutators }}
-  - {{ . }}
-  {{ end }}
   verbs:
   - 'get'
   - 'update'
   - 'patch'
-{{ end }}
-
+  - 'create'
+  - 'delete'
+  - 'list'

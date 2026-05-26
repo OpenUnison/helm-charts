@@ -56,6 +56,50 @@ spec:
       value: {{ quote $value }}
       {{ end }}
     {{ end }}
+
+  {{ if not .Values.services.helm_webhook }}
+  {{ $has_sts := gt ( len .Values.sts.endpoints ) 0 }}
+  {{ $has_webhooks := gt (len .Values.admission_controllers ) 0 }}
+  {{ if or $has_sts $has_webhooks }}
+  admissions:
+  {{ if $has_webhooks}}
+  {{ toYaml .Values.admission_controllers | nindent 2 }}
+  {{ end }}
+  {{ range $sts := .Values.sts.endpoints }}
+  - type: mutating
+    name: injector-{{ $sts.name }}
+    webhooks:
+    - name: injector-{{ $sts.name }}.tremolo.io
+      clientConfig:
+        service:
+          name: openunison-{{ $root.Release.Name }}
+          namespace: {{ $root.Release.Namespace }}
+          path: "/k8s/webhooks/v1/injector-{{ $sts.name }}"
+          port: 443
+      failurePolicy: Ignore
+      reinvocationPolicy: IfNeeded
+      timeoutSeconds: 10
+      matchPolicy: Equivalent
+      namespaceSelector: {}
+      rules:
+        - operations: ["CREATE"]
+          apiGroups: [""]
+          apiVersions: ["v1"]
+          scope: "*"
+          resources: ["pods"]
+      sideEffects: NoneOnDryRun
+      admissionReviewVersions:
+      - v1
+      objectSelector:
+        matchExpressions:
+          - key: tremolo.io/{{ $sts.injector.label }}
+            operator: Exists
+  {{ end }}
+  {{ end }}
+  {{ end }}
+
+
+
   key_store:
     update_controller:
       image: {{ .Values.cert_update_image | default "docker.io/tremolosecurity/kubernetes-artifact-deployment:1.1.0" }}

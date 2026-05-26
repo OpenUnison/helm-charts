@@ -1,9 +1,11 @@
+{{- $root := . -}}
+{{ range $sts := .Values.sts.endpoints  }}
 ---
 apiVersion: openunison.tremolo.io/v1
 kind: AuthenticationChain
 metadata:
-  name: oauth2k8s-sts
-  namespace: {{ .Release.Namespace }}
+  name: oauth2k8s-sts-{{ $sts.name }}
+  namespace: {{ $root.Release.Namespace }}
   annotations:
     argocd.argoproj.io/sync-wave: "40"
 spec:
@@ -25,5 +27,20 @@ spec:
       cluster: "#[K8S_CLUSTER_NAME]"
     required: required
     secretParams: []
+  {{ if $sts.additionalAttributes }}
+  - name: map
+    required: required
+    secretParams: []
+    params:
+      map:
+      - sub|user|sub
+      - cluster|user|cluster
+      - namespace|user|namespace
+      - saname|user|saname
+      {{ range $attribute := $sts.additionalAttributes}}
+      - {{ $attribute.target }}|{{ $attribute.type }}|{{ $attribute.source }}
+      {{ end }}
+  {{ end }}
   level: 20
   root: o=Tremolo
+  {{ end }}
