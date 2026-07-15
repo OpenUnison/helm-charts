@@ -162,6 +162,11 @@ spec:
         {{- toYaml .Values.services.affinity | nindent 8 }}
       {{ end }}
       serviceAccountName: kube-management-proxy-{{ .Release.Name }}
+      {{ if not (.Capabilities.APIVersions.Has "project.openshift.io/v1/Project") }}
+      securityContext:
+        fsGroup: 10001
+        supplementalGroups: [10001]
+      {{ end }}
       containers:
       - image: {{ .Values.impersonation.jetstack_oidc_proxy_image}}
         ports:
@@ -198,8 +203,6 @@ spec:
           {{ if .Capabilities.APIVersions.Has "project.openshift.io/v1/Project" }}
           runAsNonRoot: true
           {{ else }}
-          fsGroup: 10001
-          supplementalGroups: [10001]
           seccompProfile:
             type: RuntimeDefault
           runAsNonRoot: true
