@@ -5,8 +5,6 @@ cluster:
   description: A managed remote cluster
   parent: B158BD40-0C1B-11E3-8FFD-0800200C9A66
   enable_request_access: true
-  dashboard_enabled: false
-  headlamp_enabled: true
   management:
     internal:
       enabled: true
