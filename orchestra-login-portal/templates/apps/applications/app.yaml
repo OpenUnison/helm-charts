@@ -13,7 +13,9 @@ spec:
   - hosts:
     - "{{ (urlParse $app.badgeUrl).host }}"
     filterChain:
+    {{ if not $app.skipHideCookies }}
     - className: com.tremolosecurity.proxy.filters.HideCookie
+    {{ end }}
     - className: com.tremolosecurity.proxy.filters.SetNoCacheHeaders
     {{ if $app.injectToken }}
     {{ if $root.Values.enable_impersonation }}
