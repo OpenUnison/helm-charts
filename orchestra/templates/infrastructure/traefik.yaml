@@ -80,6 +80,15 @@ spec:
           scheme: https
           serversTransport: reencrypt
     {{ end }}
+    {{ if and (.Values.openunison.management_proxy) (eq .Values.openunison.management_proxy.enabled true)  }}
+    - match: Host(`{{ .Values.openunison.management_proxy.host }}`)
+      kind: Rule 
+      services:
+        - name: kube-management-proxy-{{ .Release.Name }}
+          port: 443
+          scheme: https
+          serversTransport: reencrypt
+    {{ end }}
 
 ---
 apiVersion: traefik.io/v1alpha1
