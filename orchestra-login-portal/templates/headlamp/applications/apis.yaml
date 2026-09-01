@@ -10,7 +10,138 @@ spec:
   azTimeoutMillis: 3000
   isApp: true
   urls:
-  {{ if $root.Values.openunison.enable_provisioning }}
+  {{ if and $root.Values.headlamp.naas_satellite $root.Values.headlamp.naas_satellite.enabled  }}
+  - hosts:
+    - "#[OU_HOST]"
+    filterChain:
+    - className: com.tremolosecurity.proxy.filters.JavaScriptFilter
+      params:
+        javaScript: |-
+          GlobalEntries = Java.type("com.tremolosecurity.server.GlobalEntries");
+          HashMap = Java.type("java.util.HashMap");
+          System = Java.type("java.lang.System");
+          JwtClaims = Java.type("org.jose4j.jwt.JwtClaims");
+          JsonWebSignature = Java.type("org.jose4j.jws.JsonWebSignature");
+          ProxyConstants = Java.type("com.tremolosecurity.proxy.util.ProxyConstants");
+          AlgorithmIdentifiers = Java.type("org.jose4j.jws.AlgorithmIdentifiers");
+          Attribute = Java.type("com.tremolosecurity.saml.Attribute");
+
+          
+          function initFilter(config) {
+
+          }
+
+          function doFilter(request,response,chain) {
+            var url = request.getRequestURL();
+
+            var userData = (request.getSession().getAttribute(ProxyConstants.AUTH_CTL)).getAuthInfo();
+            var sub = userData.getAttribs().get("sub").getValues().get(0);
+            var groups = userData.getAttribs().get("groups").getValues();
+
+            var allowedNamespaces = [];
+            var foundNamespaces = {};
+
+            var isAdministrator = false;
+
+            const clusterName = "{{ .Values.k8s_cluster_name }}";
+            const prefix = "k8s-" + clusterName + "-";
+            
+
+            groups.forEach(group => {
+              if (! isAdministrator ) {
+                if (group.includes(clusterName)) {
+                  
+                  
+                  var internalAdmins = "k8s-cluster-k8s-" + clusterName + "-administrators{{.Values.openunison.naas.groups.internal.suffix }}";
+                  var externalAdmins = "k8s-cluster-k8s-" + clusterName + "-administrators{{.Values.openunison.naas.groups.external.suffix }}";
+                  
+                  {{ if $root.Values.headlamp.naas_satellite.privileged }}
+                    var k8s = GlobalEntries.getGlobalEntries().getConfigManager().getProvisioningEngine().getTarget("k8s").getProvider();
+                    var con = k8s.createClient();
+
+                    try {
+                      const breakGlassEnabled = k8s.isObjectExistsByPath(k8s.getAuthToken(),con,'/apis/rbac.authorization.k8s.io/v1/clusterrolebindings/break-glass');
+
+                      if (! breakGlassEnabled) {
+                        internalAdmins = "k8s-cluster-k8s-" + clusterName + "-privileged{{.Values.openunison.naas.groups.internal.suffix }}";
+                        externalAdmins = "k8s-cluster-k8s-" + clusterName + "-privileged{{.Values.openunison.naas.groups.external.suffix }}";
+                      }
+
+                    } finally {
+                      if (con != null) {
+                          con.getHttp().close();
+                          con.getBcm().close();
+                      }
+                    }
+                  
+                  {{ end }}
+                  
+                  
+                  var foundGroup = false;
+                  
+                  if (group == externalAdmins  ) {
+                    isAdministrator = true;
+                    allowedNamespaces = [];
+                    return;
+                  } else if (group == internalAdmins ) {
+                    isAdministrator = true;
+                    allowedNamespaces = [];
+                    return;
+                  } else if (group.includes("namespace") && group.endsWith("{{.Values.openunison.naas.groups.external.suffix }}")) {
+                    group = group.substring(0,group.lastIndexOf("{{.Values.openunison.naas.groups.external.suffix }}"));
+                    foundGroup = true;
+                  } else if (group.includes("namespace") && group.endsWith("{{.Values.openunison.naas.groups.internal.suffix }}")) {
+                    group = group.substring(0,group.lastIndexOf("{{.Values.openunison.naas.groups.internal.suffix }}"));
+                    foundGroup = true;
+                  }
+
+                  
+
+                  if (foundGroup) {
+                    
+                    const clusterStart = group.indexOf(prefix);
+                    group = group.substring(clusterStart + prefix.length);
+                    
+
+                    if (! foundNamespaces[group]) {
+                      foundNamespaces[group] = "x";
+                      allowedNamespaces.push(group);
+                    }
+                  }
+                }
+              }
+            });
+
+            if (allowedNamespaces.length == 0 && ! isAdministrator) {
+              // there are no allowed namespaces, add a fake one
+              allowedNamespaces.push("this!is!not!a!real!namespace");
+            }
+            
+            response.getWriter().print(JSON.stringify({"namespaces":allowedNamespaces}));
+            
+
+          }
+    uri: "/apis/namespaces"
+    authChain: login-service
+    azRules:
+    {{ if .Values.openunison.naas.azRules }}
+    {{ range .Values.openunison.naas.azRules }}
+    - scope: {{ .scope }}
+      constraint: {{ .constraint }}
+    {{ end }}
+    {{ else }}
+    - scope: dn
+      constraint: o=Tremolo
+    {{ end }}
+    {{ $length := len .Values.openunison.extra_az_groups }}
+    {{ if eq $length 0 }}
+    {{ else }}
+    {{ range $az_group := .Values.openunison.extra_az_groups }}
+    - scope: filter
+      constraint: (groups={{ $az_group }})
+    {{ end }}
+    {{ end }}
+  {{ else if $root.Values.openunison.enable_provisioning }}
   - hosts:
     - "#[OU_HOST]"
     filterChain:
@@ -43,6 +174,8 @@ spec:
             AddPortalRolesToUserData = Java.type("com.tremolosecurity.proxy.auth.AddPortalRolesToUserData");
             var clusterAz = request.getSession().getAttribute(AddPortalRolesToUserData.NS_SESSION_NAME);
 
+
+            
             
             
 

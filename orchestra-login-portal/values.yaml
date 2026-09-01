@@ -42,6 +42,8 @@ certs:
 trusted_certs: []
 
 headlamp:
+  naas_satellite:
+    enabled: false
   enabled: true
   service_name: headlamp
   namespace_api:
@@ -122,6 +124,7 @@ services:
   - "alive"
 
 openunison:
+  load_from_data: true
   enable_portal: true
   additional_api_servers: []
   enable_end_session: true
