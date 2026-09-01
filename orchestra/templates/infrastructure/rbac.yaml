@@ -90,6 +90,47 @@ roleRef:
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
+  name: load-breakglass-{{ .Release.Name }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+rules:
+- apiGroups:
+  - 'rbac.authorization.k8s.io'
+  resources:
+  - clusterrolebindings
+  resourceNames: 
+  - break-glass
+  verbs:
+  - get
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: load-breakglass-{{ .Release.Name }}
+  labels:
+    app.kubernetes.io/name: openunison
+    app.kubernetes.io/instance: openunison-{{ .Release.Name }}
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: openunison
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+subjects:
+- kind: ServiceAccount
+  name: openunison-{{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: load-breakglass-{{ .Release.Name }}
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
   name: list-namespaces-{{ .Release.Name }}
   labels:
     app.kubernetes.io/name: openunison
