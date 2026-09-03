@@ -184,7 +184,11 @@ spec:
                       "--cacert-path=/etc/ssl/certs/ca-certificates.crt",
                       {{ end }}
                       "/var/run/secrets/kubernetes.io/serviceaccount/token",
+                      {{ if $sts.host_in_openunison }}
+                      "https://openunison-{{ $root.Values.sts.openunison.name }}.{{ $root.Values.sts.openunison.namespace }}.svc{{ $sts.path }}/token/user",
+                      {{ else }}
                       "https://#[OU_HOST]{{ $sts.path }}/token/user",
+                      {{ end }}
                       "/tokens"
                     ],
                     "securityContext": {

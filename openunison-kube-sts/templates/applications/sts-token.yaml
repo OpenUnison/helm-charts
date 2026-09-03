@@ -91,7 +91,11 @@ spec:
           }
     hosts:
     - "{{ $sts.issuer.host }}"
+    {{ if $sts.host_in_openunison }}
+    - "openunison-{{ $root.Values.sts.openunison.name }}.{{ $root.Values.sts.openunison.namespace }}.svc"
+    {{ else }}
     - '#[OU_HOST]'
+    {{ end }}
     
     results: {}
     uri: {{ $sts.path }}/sig-cert
@@ -254,7 +258,11 @@ spec:
         tokenClassName: com.tremolosecurity.scalejs.token.sts.StsToken
         warnMinutesLeft: "5"
     hosts:
+    {{ if $sts.host_in_openunison }}
+    - "openunison-{{ $root.Values.sts.openunison.name }}.{{ $root.Values.sts.openunison.namespace }}.svc"
+    {{ else }}
     - '#[OU_HOST]'
+    {{ end }}
     results: {}
     uri: {{ $sts.path }}/token
 {{ end }}
