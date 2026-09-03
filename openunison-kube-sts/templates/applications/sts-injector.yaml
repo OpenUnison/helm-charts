@@ -96,16 +96,36 @@ spec:
                         op = "add";
                     }
 
-                    env.push({"name":"{{ $sts.injector.token_environment_variable_name }}","value":"/tokens/token.jwt"});
-                    env.push({"name":"{{ $sts.injector.label_value_environment_variable_name }}","value":awsRole});
-
-                    patches.push(
-                        {
-                            "op":op,
-                            "path":"/spec/containers/" + i + "/env",
-                            "value": env
+                    var foundToken = false;
+                    var foundRole = false;
+                    env.forEach(envVar => {
+                        if (envVar.name == "{{ $sts.injector.token_environment_variable_name }}") {
+                            foundToken = true;
                         }
-                    );
+
+                        if (envVar.name == "{{ $sts.injector.label_value_environment_variable_name }}") {
+                            foundRole = true;
+                        }
+                    });
+
+                    if (! foundToken) {
+                        env.push({"name":"{{ $sts.injector.token_environment_variable_name }}","value":"/tokens/token.jwt"});
+                    }
+
+                    
+                    if (! foundRole) {
+                        env.push({"name":"{{ $sts.injector.label_value_environment_variable_name }}","value":awsRole});
+                    }
+
+                    if (foundToken || foundRole) {
+                        patches.push(
+                            {
+                                "op":op,
+                                "path":"/spec/containers/" + i + "/env",
+                                "value": env
+                            }
+                        );
+                    }
 
                     
                     
