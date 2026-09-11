@@ -103,6 +103,8 @@ spec:
         - mountPath: /etc/extraMaps
           name: extra-maps
           readOnly: true
+        - mountPath: /tmp
+          name: tmpdir
         {{ if and .Values.kerberos  }}
         {{ if .Values.kerberos.enabled}}
         - mountPath: /etc/krb5-local
@@ -202,6 +204,8 @@ spec:
         runAsGroup: 433
       {{ end }}
       volumes:
+        - name: tmpdir
+          emptyDir: {}
         - name: extra-maps
           emptyDir: {}
         {{ if .Values.kerberos }}

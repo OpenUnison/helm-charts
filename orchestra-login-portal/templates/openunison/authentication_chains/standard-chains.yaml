@@ -14,7 +14,11 @@ metadata:
     argocd.argoproj.io/sync-wave: "30"
 spec:
   level: 20
+  {{ if .Values.openunison.load_from_data }}
   root: o=Data
+  {{ else }}
+  root: o=Tremolo
+  {{ end }}
   authMechs:
 {{ if .Values.active_directory }}
   - name: login-form

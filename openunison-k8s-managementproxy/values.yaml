@@ -19,7 +19,7 @@ cert_template:
   st: "State of Cluster"
   c: "MyCountry"
 
-image: "ghcr.io/tremolosecurity/kube-oidc-proxy:1.0.12"
+image: "ghcr.io/tremolosecurity/kube-oidc-proxy:1.0.13"
 
 certs:
   use_k8s_cm: false
