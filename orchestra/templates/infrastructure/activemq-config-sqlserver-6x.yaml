@@ -1,6 +1,7 @@
 {{ if or (and .Values.openunison.enable_provisioning .Values.openunison.amq.enabled) (and .Values.openunison.enable_provisioning .Values.openunison.enable_activemq ) }}
 {{ if not (or .Values.openunison.amq.pvc.enabled .Values.openunison.activemq_use_pvc) }}
 {{ if eq (substr 0 14 .Values.database.url)  "jdbc:sqlserver"}}
+{{ if eq .Values.openunison.amq.version 6 }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -348,6 +349,7 @@ data:
 
 
 
+{{ end }}
 {{ end }}
 {{ end }}
 {{ end }}
