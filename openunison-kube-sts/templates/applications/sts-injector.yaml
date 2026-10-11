@@ -80,12 +80,19 @@ spec:
                 var sideCarIndex = 0;
                 var currentSideCar = {};
                 var patches = [];
+                var sideCarRunOnce = false;
                 // add kerberos mounts and to each container
                 
                 if (metadata && metadata.annotations && metadata.annotations["tremolo.io/create-volume"] && metadata.annotations["tremolo.io/create-volume"] == "false"  ) {
                     injectAwsMounts = false;
                 } else {
                     injectAwsMounts = true;
+                }
+
+                if (metadata && metadata.annotations && metadata.annotations["tremolo.io/run-once"] && metadata.annotations["tremolo.io/run-once"] == "true"  ) {
+                    sideCarRunOnce = true;
+                } else {
+                    sideCarRunOnce = false;
                 }
                 
                 for (var i=0;i<pod.spec.containers.length;i++) {
@@ -222,6 +229,17 @@ spec:
                     "env": [
                         
                     ],
+                    "resources": {
+                        "requests": {
+                            "cpu": "{{ $root.Values.sts.resources.requests.cpu }}",
+                            "memory": "{{ $root.Values.sts.resources.requests.memory }}",
+                        },
+                        "limits": {
+                            "cpu": "{{ $root.Values.sts.resources.limits.cpu }}",
+                            "memory": "{{ $root.Values.sts.resources.limits.memory }}",
+                        },
+
+                    },
                     "restartPolicy": "Always",
                     "volumeMounts": [
                         {
@@ -242,6 +260,12 @@ spec:
 
 
                 };
+
+                if (sideCarRunOnce) {
+                    sideCar.args[sideCar.args.length - 1] = "--single-run";
+                    sideCar.args.push("/tokens");
+                    delete sideCar.restartPolicy;
+                }
 
                 if (userid > 0) {
                     sideCar.securityContext.runAsUser = userid;
