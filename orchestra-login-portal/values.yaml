@@ -146,7 +146,7 @@ openunison:
   groups:
     areJson: "false"
   html:
-    image: ghcr.io/openunison/openunison-k8s-react:1.0.2
+    image: ghcr.io/openunison/openunison-k8s-react:1.0.3
     legacy: false
     theme:
       headerTitle: "OpenUnison"
