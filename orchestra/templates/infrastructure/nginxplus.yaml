@@ -5,7 +5,10 @@ kind: Ingress
 metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "50"
-    nginx.org/ssl-services: openunison-{{ .Release.Name }}{{ if and (.Values.openunison.management_proxy) (eq .Values.openunison.management_proxy.enabled true)  }},kube-management-proxy-{{ .Release.Name }}{{ end }}
+    nginx.org/ssl-services: openunison-{{ .Release.Name }}{{ if and (.Values.openunison.management_proxy) (eq .Values.openunison.management_proxy.enabled true)  }},kube-management-proxy-{{ .Release.Name }}{{ end }}{{ if eq .Values.enable_impersonation true }},kube-oidc-proxy-{{ .Release.Name }}{{ end }}
+    nginx.org/websocket-services: openunison-{{ .Release.Name }}{{ if and (.Values.openunison.management_proxy) (eq .Values.openunison.management_proxy.enabled true)  }},kube-management-proxy-{{ .Release.Name }}{{ end }}{{ if eq .Values.enable_impersonation true }},kube-oidc-proxy-{{ .Release.Name }}{{ end }}
+    nginx.org/proxy-read-timeout: "{{ .Values.network.f5nginx.readtimeout | default "3600s"}}"
+    nginx.org/proxy-send-timeout: "{{ .Values.network.f5nginx.writetimeout | default "3600s"}}"
     {{ if .Values.network.f5nginx  }}
     {{ if .Values.network.f5nginx.plus  }}
     nginx.com/sticky-cookie-services: serviceName=openunison-{{ .Release.Name }} srv_id expires=1h  path=/
