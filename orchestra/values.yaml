@@ -20,6 +20,9 @@ network:
   gatewayapi:
     gateway: 
       create: true
+  f5nginx:
+    readtimeout: "3600s"
+    writetimeout: "3600s"
   kong: {}
 
 precheck:

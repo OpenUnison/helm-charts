@@ -170,6 +170,7 @@ spec:
             {{ if eq .Values.enable_impersonation true }}
             subject_alternative_names:
             - {{ .Values.network.api_server_host }}
+            - kube-oidc-proxy-{{ .Release.Name }}.{{ .Release.Namespace }}.svc
             {{ else }}
             subject_alternative_names: []
             {{ end }}
