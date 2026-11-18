@@ -24,7 +24,7 @@ spec:
             spec:
               type: object
               properties:
-                trust:
+                clientId:
                   type: string
                 audiences:
                   type: array

@@ -46,7 +46,7 @@ spec:
         - name: CA_CERTS_PATH
           value: /usr/lib/jvm/java-17-openjdk-amd64/lib/security/cacerts
         - name: JAVA_OPTS
-          value: -Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom -Dsun.net.inetaddr.ttl=0 -Djava.security.krb5.conf=/etc/krb5-local/krb5.conf -Djava.security.krb5.debug=true
+          value: -Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom -Dsun.net.inetaddr.ttl=0 -Djava.security.krb5.conf=/etc/krb5-local/krb5.conf -Djava.security.krb5.debug=true {{ .Values.openunison.extrajavaopts }}
         - name: NAMESPACE
           valueFrom:
             fieldRef:
