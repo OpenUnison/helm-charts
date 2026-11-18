@@ -24,5 +24,7 @@ operator:
       memory: 1000Mi
       cpu: 1.0
 
+openunison:
+  extrajavaopts: ""
 
   

@@ -361,7 +361,7 @@ rules:
   resources: ["replicasets","deployments"]
   verbs: ["get"]
 - apiGroups: ["openunison.tremolo.io"]
-  resources: ["trusts","portalurls","orgs","authmechs","authchains","resultgroups","applications","customazs","targets","workflows","oujobs","reports","groupmetadatas","messagelisteners","javascriptmappings","notifiers","waitforstates","endsessions","namespacegroupmetadatas","secretversions","javascripts"]
+  resources: ["trusts","portalurls","orgs","authmechs","authchains","resultgroups","applications","customazs","targets","workflows","oujobs","reports","groupmetadatas","messagelisteners","javascriptmappings","notifiers","waitforstates","endsessions","namespacegroupmetadatas","secretversions","javascripts","stsaudiences"]
   verbs:
   - get
   - list
